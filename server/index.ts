@@ -1,8 +1,17 @@
+import http from 'http';
 import app from './src/app.js';
-import dotenv from 'dotenv';
+import { env } from './src/config/env.js';
+import { db } from './src/config/db.js';
+import { logger } from './src/config/logger.js';
 
-dotenv.config();
+const server: http.Server = http.createServer(app);
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running on port ${process.env.PORT}`);
+const services = async () => {
+  Promise.all([await db.connect()]);
+};
+
+db.connect().then(() => {
+  server.listen(env.PORT, () => {
+    logger.info(`Server is running on  http://${env.HOST}:${env.PORT}`);
+  });
 });

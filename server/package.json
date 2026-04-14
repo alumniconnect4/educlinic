@@ -8,6 +8,7 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
+    
   },
   "type": "module",
   "devDependencies": {
@@ -19,10 +20,13 @@
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@types/express": "^5.0.6",
+    "chalk": "^5.6.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "log-symbols": "^7.0.1",
     "nodemon": "^3.1.14",
     "pg": "^8.20.0",
-    "tsc-watch": "^7.2.0"
+    "tsc-watch": "^7.2.0",
+    "zod": "^4.3.6"
   }
 }
