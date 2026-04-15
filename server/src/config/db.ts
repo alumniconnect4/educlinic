@@ -1,13 +1,13 @@
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../../generated/prisma/client.js';
+import { PrismaClient } from '@prisma/client';
 import { logger } from './logger.js';
 import { env } from './env.js';
 
-const connectionString = `${env.DATABASE_URL}`;
+const connectionString: string = `${env.DATABASE_URL}`;
 
-const adapter = new PrismaPg({ connectionString });
-const prisma = new PrismaClient({ adapter });
+const adapter: PrismaPg = new PrismaPg({ connectionString });
+const prisma: PrismaClient = new PrismaClient({ adapter });
 
 const connectDB = async () => {
   try {
