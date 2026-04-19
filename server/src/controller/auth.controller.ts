@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/token.js';
 import { config } from '../config/index.js';
-import { cache } from '../config/cache.js';
+import { cacheUser, getUserFromCache } from '../config/cache.js';
 import type { User } from '../../generated/prisma/browser.js';
 import { prisma } from '../config/db.js';
 
@@ -60,14 +60,14 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    let user: User | null = await cache.get<User>(email);
+    let user: User | null = await getUserFromCache(email);
 
     if (!user) {
       user = await prisma.user.findUnique({
         where: { email },
       });
       if (user) {
-        cache.set(email, user);
+        await cacheUser(user);
       }
     }
 

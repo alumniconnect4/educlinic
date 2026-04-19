@@ -1,10 +1,9 @@
 import app from './src/app.js';
 import { env } from './src/config/env.js';
-import { connectDB } from './src/config/db.js';
 import { connectRedis } from './src/config/redis.js';
 
 const startAllServices: () => Promise<void> = async () => {
-  Promise.all([await connectDB(), await connectRedis()]);
+  Promise.all([connectRedis()]);
 };
 
 startAllServices().then(() => {

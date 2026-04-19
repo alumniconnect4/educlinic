@@ -4,7 +4,9 @@ import { logger } from './logger.js';
 dotenv.config();
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['DEVELOPMENT', 'PRODUCTION', 'TEST']),
+  NODE_ENV: z
+    .enum(['DEVELOPMENT', 'PRODUCTION', 'TEST'])
+    .default('DEVELOPMENT'),
 
   HOST: z.string('HOST is required').default('localhost'),
   PORT: z
@@ -15,6 +17,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string('DATABASE_URL is required').nonempty(),
 
   JWT_ACCESS_SECRET: z.string('JWT_ACCESS_SECRET is required').min(10),
+
+  JWT_TOKEN_EXPIRY: z.coerce.number().default(86400),
 
   REDIS_HOST: z.string('REDIS_HOST is required').default('localhost'),
   REDIS_PORT: z
