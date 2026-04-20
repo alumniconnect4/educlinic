@@ -9,7 +9,9 @@
     "lint:root": "eslint ."
   },
   "devDependencies": {
+    "@types/morgan": "^1.9.10",
     "concurrently": "^9.2.1",
+    "morgan": "^1.10.1",
     "prettier": "^3.8.1"
   },
   "dependencies": {

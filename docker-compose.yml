@@ -26,3 +26,15 @@ services:
         - db
      environment:
         - ADMINER_DEFAULT_SERVER=db
+
+  redis:
+     image: redis
+     restart: always
+     ports:
+        - 6379:6379
+     env_file:
+        - .env
+     environment:
+        - REDIS_HOST=${REDIS_HOST}
+        - REDIS_PORT=${REDIS_PORT}
+        - REDIS_PASSWORD=${REDIS_PASSWORD}

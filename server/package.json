@@ -22,12 +22,17 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.3",
+    "chalk": "^5.6.2",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "log-symbols": "^7.0.1",
+    "lru-cache": "^11.3.5",
     "nodemon": "^3.1.14",
     "pg": "^8.20.0",
-    "tsc-watch": "^7.2.0"
+    "redis": "^5.12.1",
+    "tsc-watch": "^7.2.0",
+    "zod": "^4.3.6"
   }
 }
