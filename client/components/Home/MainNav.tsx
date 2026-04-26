@@ -2,9 +2,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { ArrowRight, Menu, X } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const MainNav = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const pathname = usePathname();
     
     const routes = [
         "Home",
@@ -22,19 +25,24 @@ const MainNav = () => {
                 </div>
 
                 <div className='hidden lg:flex items-center space-x-8'>
-                    {routes.map((route) => (
-                        <a 
-                            key={route} 
-                            href="#" 
-                            className={`text-sm md:text-base font-semibold py-4 border-b-2 transition-colors ${
-                                route === 'Home' 
-                                ? 'border-[#d60000] text-gray-900' 
-                                : 'border-transparent text-gray-600 hover:text-[#d60000] hover:border-[#d60000]'
-                            }`}
-                        >
-                            {route}
-                        </a>
-                    ))}
+                    {routes.map((route) => {
+                        const href = route === 'Home' ? '/' : `/${route.toLocaleLowerCase()}`;
+                        const isActive = pathname === href;
+
+                        return (
+                            <Link 
+                                key={route} 
+                                href={href}
+                                className={`text-sm md:text-base font-semibold py-4 border-b-2 transition-colors ${
+                                    isActive 
+                                    ? 'border-[#d60000] text-gray-900' 
+                                    : 'border-transparent text-gray-600 hover:text-[#d60000]'
+                                }`}
+                            >
+                                {route}
+                            </Link>
+                        );
+                    })}
                 </div>
 
                 <div className='flex items-center space-x-4'>
