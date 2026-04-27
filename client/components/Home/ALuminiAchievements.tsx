@@ -18,7 +18,7 @@ const alumniData: AlumniCardProps[] = [
     company: 'Google',
     batch: 'Batch 2018',
     branch: 'CSE',
-    image: "/alumini/sidhanshu.png"
+    image: '/alumini/sidhanshu.png',
   },
   {
     name: 'Aish Monga',
@@ -26,7 +26,7 @@ const alumniData: AlumniCardProps[] = [
     company: 'IBM',
     batch: 'Batch 2019',
     branch: 'CSE',
-    image: "/alumini/aish.png"
+    image: '/alumini/aish.png',
   },
   {
     name: 'Yerramili Tarun',
@@ -34,7 +34,7 @@ const alumniData: AlumniCardProps[] = [
     company: 'Amazon',
     batch: 'Batch 2019',
     branch: 'CSE',
-    image: "/alumini/yerramili.png"
+    image: '/alumini/yerramili.png',
   },
   {
     name: 'Raveena Monga',
@@ -42,18 +42,25 @@ const alumniData: AlumniCardProps[] = [
     company: 'Deloitte',
     batch: 'Batch 2015',
     branch: 'CSE',
-    image: "/alumini/raveena.png"
+    image: '/alumini/raveena.png',
   },
 ];
 
-const AlumniCard: React.FC<AlumniCardProps> = ({ name, role, company, batch, branch, image }) => {
+const AlumniCard: React.FC<AlumniCardProps> = ({
+  name,
+  role,
+  company,
+  batch,
+  branch,
+  image,
+}) => {
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.05)] border border-gray-100 flex flex-col transition-transform hover:-translate-y-1 duration-300">
       <div className="h-48 lg:h-78 bg-[#b8cffa] relative p-4 flex justify-end overflow-hidden">
         {image && (
-          <img 
-            src={image} 
-            alt={name} 
+          <img
+            src={image}
+            alt={name}
             className="absolute inset-0 w-full h-full object-cover object-center z-0"
           />
         )}
@@ -61,15 +68,15 @@ const AlumniCard: React.FC<AlumniCardProps> = ({ name, role, company, batch, bra
           {company}
         </div>
       </div>
-      
 
       <div className="px-6 pt-12 pb-6 relative flex-grow flex flex-col">
-        
         <div className="flex-grow">
-          <h3 className="font-bold text-[#111827] text-lg leading-tight">{name}</h3>
+          <h3 className="font-bold text-[#111827] text-lg leading-tight">
+            {name}
+          </h3>
           <p className="text-gray-500 text-sm mt-1">{role}</p>
         </div>
-        
+
         <div className="flex gap-2 mt-6">
           <span className="bg-[#f1f5f9] text-[#475569] text-xs px-3 py-1.5 rounded-full font-medium">
             {batch}
@@ -90,12 +97,13 @@ const ALuminiAchievements = () => {
         <div className="inline-flex items-center justify-center space-x-2 bg-[#fee2e2] text-[#d60000] px-4 py-1.5 rounded-full text-xs font-bold tracking-wide w-fit mb-6 uppercase">
           OUR DISTINGUISHED ALUMNI
         </div>
-        
+
         <h2 className="text-4xl md:text-[2.75rem] font-bold text-[#111827] leading-[1.1] tracking-tight mb-4">
           Alumni Achievements
         </h2>
         <p className="text-base sm:text-lg text-gray-500 max-w-2xl leading-relaxed">
-          Our graduates are making an impact at the world's most prestigious organizations.
+          Our graduates are making an impact at the world's most prestigious
+          organizations.
         </p>
       </div>
 
@@ -105,8 +113,8 @@ const ALuminiAchievements = () => {
         ))}
       </div>
 
-      <Link 
-        href="/alumni" 
+      <Link
+        href="/alumni"
         className="inline-flex items-center justify-center space-x-2 bg-[#d60000] hover:bg-[#b80000] text-white px-6 py-3.5 rounded-md font-semibold transition-all shadow-md hover:shadow-lg w-fit"
       >
         <span>View All Alumni Stories</span>
