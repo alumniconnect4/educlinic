@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/useUserStore';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 
 const AuthForm = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -29,6 +30,7 @@ const AuthForm = () => {
         setSuccess('Registered successfully! Logging you in...');
         e.target.reset();
         useUserStore.getState().setUser(res.data.user);
+        toast.success("Registered successfully! Logging you in...");
         router.push('/');
       } else {
         const res = await axios.post(`http://localhost:4000/api/auth/login`, {
@@ -39,6 +41,7 @@ const AuthForm = () => {
         setSuccess('Logged in successfully!');
         e.target.reset();
         useUserStore.getState().setUser(res.data.user);
+        toast.success("Logged in successfully! ");
         router.push('/');
       }
     } catch (err: any) {

@@ -1,8 +1,22 @@
+"use client"
 import AuthContent from '@/components/Login/AuthContent';
 import AuthForm from '@/components/Login/AuthForm';
 import AuthNav from '@/components/Login/AuthNav';
+import { useUserStore } from '@/store/useUserStore';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 const LoginPage = () => {
+  const authenticated=useUserStore.getState().isAuthenticated;
+  const router=useRouter();
+
+  useEffect(()=>{
+    if(authenticated){
+      router.push('/');
+      toast.info("You are already Logged In")
+    }
+  },[authenticated,router])
   return (
     <div className="min-h-screen w-full relative flex flex-col items-center justify-center font-sans">
       

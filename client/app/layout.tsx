@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import ConditionalNavbar from '@/components/ConditionalNavbar';
 import ConditionalFooter from '@/components/ConditionalFooter';
+import ToastProvider from '@/utils/ToastProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { 
   title: 'Alumini Portal',
   description: 'Alumini Portal',
 };
@@ -32,7 +33,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ConditionalNavbar />
+        <ToastProvider>
         {children}
+      </ToastProvider>
         <ConditionalFooter />
       </body>
     </html>
