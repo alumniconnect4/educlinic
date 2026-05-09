@@ -19,7 +19,7 @@ const MainNav = () => {
 
   const handleLogout=async()=>{
     try{
-      await axios.get('http://localhost:4000/api/auth/logout', { withCredentials: true });
+      await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, { withCredentials: true });
       useUserStore.getState().clearUser();
       useUserStore.setState({isAuthenticated:false})
       toast.success("Logged out successfully! ");

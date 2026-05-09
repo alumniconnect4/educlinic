@@ -19,7 +19,7 @@ const AuthForm = () => {
     
     try {
       if (activeTab === 'register') {
-        const res = await axios.post(`http://localhost:4000/api/auth/register`, {
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
           name: e.target.name.value,
           email: e.target.email.value,
           password: e.target.password.value,
@@ -27,26 +27,24 @@ const AuthForm = () => {
           schoolCategory: e.target.schoolCategory.value,
         }, { withCredentials: true });
         
-        setSuccess('Registered successfully! Logging you in...');
         e.target.reset();
         useUserStore.getState().setUser(res.data.user);
         toast.success("Registered successfully! Logging you in...");
         router.push('/');
       } else {
-        const res = await axios.post(`http://localhost:4000/api/auth/login`, {
+        const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
           email: e.target.email.value,
           password: e.target.password.value,
         }, { withCredentials: true });
         
-        setSuccess('Logged in successfully!');
         e.target.reset();
         useUserStore.getState().setUser(res.data.user);
         toast.success("Logged in successfully! ");
         router.push('/');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Something went wrong');
-      console.log(err);
+      toast.error(err.response?.data?.message || 'Something went wrong');
+      console.log(err)
     }
   }
 
@@ -65,7 +63,7 @@ const AuthForm = () => {
           <button 
             type="button"
             onClick={() => setActiveTab('login')}
-            className={`relative flex-1 py-3 text-center font-bold text-sm z-10 transition-colors duration-300 ${activeTab === 'login' ? 'text-[#d60000]' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`relative flex-1 py-3 text-center  font-bold text-sm z-10 transition-colors duration-300 ${activeTab === 'login' ? 'text-[#d60000]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Login
           </button>
@@ -160,7 +158,7 @@ const AuthForm = () => {
 
             <button 
               type="submit" 
-              className="w-full bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md"
+              className="w-full cursor-pointer bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md"
             >
               {activeTab === 'login' ? 'LOGIN' : 'REGISTER'}
             </button>
