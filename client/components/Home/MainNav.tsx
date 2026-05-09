@@ -16,7 +16,7 @@ const MainNav = () => {
       <div className="w-full px-6 md:px-12 lg:px-32 xl:px-58 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Image
-            src="/logo1.jpg"
+            src="/logo1.png"
             alt="College Logo"
             width={220}
             height={60}
@@ -55,10 +55,12 @@ const MainNav = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="hidden lg:flex bg-[#d60000] hover:bg-[#b30000] text-white px-6 py-2.5 rounded items-center space-x-2 font-medium transition-colors">
-            <span>Join Network</span>
-            <ArrowRight size={18} />
-          </button>
+          <Link href={'/auth'} className='hidden lg:block'>
+            <button className="cursor-pointer hidden lg:flex bg-[#d60000] hover:bg-[#b30000] text-white px-6 py-2.5 rounded items-center space-x-2 font-medium transition-colors">
+              <span>Join Network</span>
+              <ArrowRight size={18} />
+            </button>
+          </Link>
 
           <button
             className="lg:hidden text-gray-700 hover:text-[#d60000] focus:outline-none"
@@ -85,10 +87,12 @@ const MainNav = () => {
               {route}
             </Link>
           ))}
-          <button className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 mt-4 rounded flex items-center justify-center space-x-2 font-medium w-full">
-            <span>Join Network</span>
-            <ArrowRight size={18} />
-          </button>
+          <Link href={'/auth'}>
+            <button className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 mt-4 rounded flex items-center justify-center space-x-2 font-medium w-full">
+              <span>Join Network</span>
+              <ArrowRight size={18} />
+            </button>
+          </Link>
         </div>
       )}
     </div>
