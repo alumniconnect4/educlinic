@@ -1,9 +1,51 @@
 'use client';
 
+import { useUserStore } from '@/store/useUserStore';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
 const AuthForm = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const router=useRouter()
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    
+    try {
+      if (activeTab === 'register') {
+        const res = await axios.post(`http://localhost:4000/api/auth/register`, {
+          name: e.target.name.value,
+          email: e.target.email.value,
+          password: e.target.password.value,
+          role: e.target.role.value,
+          schoolCategory: e.target.schoolCategory.value,
+        }, { withCredentials: true });
+        
+        setSuccess('Registered successfully! Logging you in...');
+        e.target.reset();
+        useUserStore.getState().setUser(res.data.user);
+        router.push('/');
+      } else {
+        const res = await axios.post(`http://localhost:4000/api/auth/login`, {
+          email: e.target.email.value,
+          password: e.target.password.value,
+        }, { withCredentials: true });
+        
+        setSuccess('Logged in successfully!');
+        e.target.reset();
+        useUserStore.getState().setUser(res.data.user);
+        router.push('/');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Something went wrong');
+      console.log(err);
+    }
+  }
 
   return (
     <div className="w-full lg:w-5/12 max-w-md z-10 relative">
@@ -18,12 +60,14 @@ const AuthForm = () => {
             }}
           />
           <button 
+            type="button"
             onClick={() => setActiveTab('login')}
             className={`relative flex-1 py-3 text-center font-bold text-sm z-10 transition-colors duration-300 ${activeTab === 'login' ? 'text-[#d60000]' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Login
           </button>
           <button 
+            type="button"
             onClick={() => setActiveTab('register')}
             className={`relative flex-1 py-3 text-center font-bold text-sm z-10 transition-colors duration-300 ${activeTab === 'register' ? 'text-[#d60000]' : 'text-gray-500 hover:text-gray-700'}`}
           >
@@ -36,7 +80,10 @@ const AuthForm = () => {
             {activeTab === 'login' ? 'Welcome Back!' : 'Join the Network'}
           </h2>
 
-          <form className="relative overflow-hidden" onSubmit={(e) => e.preventDefault()}>
+          {error && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{error}</div>}
+          {success && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{success}</div>}
+
+          <form className="relative overflow-hidden" onSubmit={handleSubmit}>
             <div 
               className="transition-all duration-500 ease-in-out grid"
               style={{
@@ -49,17 +96,26 @@ const AuthForm = () => {
               <div className="overflow-hidden space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
-                  <input type="text" className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white" placeholder="John Doe" />
+                  <input type="text" name="name" className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white" placeholder="John Doe" />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Graduation Year</label>
-                  <select className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700">
-                    <option value="">Select Year</option>
-                    <option value="2024">2024</option>
-                    <option value="2023">2023</option>
-                    <option value="2022">2022</option>
-                    <option value="older">Older</option>
-                  </select>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
+                    <select name="role" className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700">
+                      <option value="USER">Student</option>
+                      <option value="ALUMNI">Alumni</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">School</label>
+                    <select name="schoolCategory" className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700">
+                      <option value="School_of_Engineering">Engineering</option>
+                      <option value="School_of_law">Law</option>
+                      <option value="School_of_agriculture">Agriculture</option>
+                      <option value="School_of_Medicine">Medicine</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -67,7 +123,7 @@ const AuthForm = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
-                <input type="email" className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white" placeholder="you@example.com" />
+                <input type="email" name="email" required className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white" placeholder="you@example.com" />
               </div>
 
               <div>
@@ -77,7 +133,7 @@ const AuthForm = () => {
                     <a href="#" className="text-xs text-[#d60000] hover:underline font-bold">Forgot?</a>
                   </div>
                 </div>
-                <input type="password" className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white" placeholder="••••••••" />
+                <input type="password" name="password" required className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white" placeholder="••••••••" />
               </div>
             </div>
 
@@ -91,7 +147,7 @@ const AuthForm = () => {
             >
               <div className="overflow-hidden">
                 <div className="flex items-start space-x-3 pt-2">
-                  <input type="checkbox" id="terms" className="mt-1 rounded border-gray-300 text-[#d60000] focus:ring-[#d60000] w-4 h-4 cursor-pointer" />
+                  <input type="checkbox" id="terms" required={activeTab === 'register'} className="mt-1 rounded border-gray-300 text-[#d60000] focus:ring-[#d60000] w-4 h-4 cursor-pointer" />
                   <label htmlFor="terms" className="text-xs text-gray-600 leading-relaxed cursor-pointer font-medium">
                     I agree to connect with the BFGI student network and abide by the community guidelines.
                   </label>
