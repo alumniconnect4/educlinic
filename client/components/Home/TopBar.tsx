@@ -3,7 +3,7 @@ import { MapPin, Phone, Clock } from 'lucide-react';
 
 const TopBar = () => {
   return (
-    <div className="bg-[#d60000] w-full py-2 px-4 md:px-12 flex flex-col lg:flex-row items-center justify-between text-white text-sm">
+    <div className="bg-[#d60000] w-full py-2 px-6 md:px-12 lg:px-32 xl:px-58 flex flex-col lg:flex-row items-center justify-between text-white text-sm">
       <div className="flex items-center space-x-4 mb-2 lg:mb-0">
         <h1 className="font-semibold tracking-wide">Alumni Portal</h1>
         <span className="hidden text-white/50 md:inline">|</span>

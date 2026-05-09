@@ -38,7 +38,7 @@ const Gallery = () => {
         </h2>
       </div>
 
-      <div className="relative w-[70%] aspect-[16/10] sm:aspect-video md:aspect-[21/9] rounded-2xl overflow-hidden shadow-2xl group bg-[#101828]">
+      <div className="relative w-[100%] aspect-[16/10] sm:aspect-video md:aspect-[21/9] rounded-2xl overflow-hidden shadow-2xl group bg-[#101828]">
         <div
           className="flex w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}

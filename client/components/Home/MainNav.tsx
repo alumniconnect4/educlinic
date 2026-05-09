@@ -13,10 +13,10 @@ const MainNav = () => {
 
   return (
     <div className="bg-white w-full shadow-sm border-b border-gray-100">
-      <div className="w-full px-4 md:px-12 py-3 flex items-center justify-between">
+      <div className="w-full px-6 md:px-12 lg:px-32 xl:px-58 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Image
-            src="/logo1.png"
+            src="/logo1.jpg"
             alt="College Logo"
             width={220}
             height={60}
@@ -71,18 +71,19 @@ const MainNav = () => {
 
       {isMenuOpen && (
         <div className="lg:hidden bg-white border-t border-gray-100 px-4 py-2 flex flex-col space-y-2 pb-6 shadow-inner">
-          {routes.map((route) => (
-            <a
+          {routes.map((route) =>
+           (
+            <Link
               key={route}
-              href="#"
+              href={`${route.toLocaleLowerCase() === 'home' ? '/' : `/${route.toLocaleLowerCase()}`}`}
               className={`text-base font-medium py-3 px-3 rounded ${
-                route === 'Home'
+                route.toLocaleLowerCase() === pathname.split('/')[1] || (pathname === '/' && route === 'Home')
                   ? 'bg-red-50 text-[#d60000]'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               {route}
-            </a>
+            </Link>
           ))}
           <button className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 mt-4 rounded flex items-center justify-center space-x-2 font-medium w-full">
             <span>Join Network</span>
