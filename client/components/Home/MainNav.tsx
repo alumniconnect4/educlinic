@@ -4,16 +4,34 @@ import Image from 'next/image';
 import { ArrowRight, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useUserStore } from '@/store/useUserStore';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 const MainNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const isAuthenticated = useUserStore((state: any) => state.isAuthenticated);
+  const router=useRouter();
 
   const routes = ['Home', 'Events', 'Alumni', 'Gallery'];
 
+  const handleLogout=async()=>{
+    try{
+      await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, { withCredentials: true });
+      useUserStore.getState().clearUser();
+      useUserStore.setState({isAuthenticated:false})
+      toast.success("Logged out successfully! ");
+      router.push('/');
+    }catch(err){
+      console.log(err);
+    }
+  }
+
   return (
     <div className="bg-white w-full shadow-sm border-b border-gray-100">
-      <div className="w-full px-4 md:px-12 py-3 flex items-center justify-between">
+      <div className="w-full px-6 md:px-12 lg:px-32 xl:px-58 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Image
             src="/logo1.png"
@@ -55,10 +73,21 @@ const MainNav = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="hidden lg:flex bg-[#d60000] hover:bg-[#b30000] text-white px-6 py-2.5 rounded items-center space-x-2 font-medium transition-colors">
-            <span>Join Network</span>
-            <ArrowRight size={18} />
-          </button>
+          {
+            isAuthenticated ? (
+                <button onClick={handleLogout} className="bg-[#d60000] hover:bg-[#b30000] text-white hidden  cursor-pointer px-4 py-3 mt-4 rounded lg:flex items-center justify-center space-x-2 font-medium w-full">
+                  <span>Logout</span>
+                  <ArrowRight size={18} />
+                </button>
+            ) : (
+              <Link href="/auth">
+                <button className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-4 py-3 mt-4 rounded flex items-center justify-center space-x-2 font-medium w-full">
+                  <span>Login</span>
+                  <ArrowRight size={18} />
+                </button>
+              </Link>
+            )
+          }
 
           <button
             className="lg:hidden text-gray-700 hover:text-[#d60000] focus:outline-none"
@@ -71,23 +100,35 @@ const MainNav = () => {
 
       {isMenuOpen && (
         <div className="lg:hidden bg-white border-t border-gray-100 px-4 py-2 flex flex-col space-y-2 pb-6 shadow-inner">
-          {routes.map((route) => (
-            <a
+          {routes.map((route) =>
+           (
+            <Link
               key={route}
-              href="#"
+              href={`${route.toLocaleLowerCase() === 'home' ? '/' : `/${route.toLocaleLowerCase()}`}`}
               className={`text-base font-medium py-3 px-3 rounded ${
-                route === 'Home'
+                route.toLocaleLowerCase() === pathname.split('/')[1] || (pathname === '/' && route === 'Home')
                   ? 'bg-red-50 text-[#d60000]'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               {route}
-            </a>
+            </Link>
           ))}
-          <button className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 mt-4 rounded flex items-center justify-center space-x-2 font-medium w-full">
-            <span>Join Network</span>
-            <ArrowRight size={18} />
-          </button>
+          {
+            isAuthenticated ? (
+              <button onClick={handleLogout} className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-4 py-3 mt-4 rounded flex items-center justify-center space-x-2 font-medium w-full">
+                <span>Logout</span>
+                <ArrowRight size={18} />
+              </button>
+            ) : (
+              <Link href="/auth">
+                <button className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 mt-4 rounded flex items-center justify-center space-x-2 font-medium w-full">
+                  <span>Join Network</span>
+                  <ArrowRight size={18} />
+                </button>
+              </Link>
+            )
+          }
         </div>
       )}
     </div>

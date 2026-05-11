@@ -29,16 +29,13 @@ const Gallery = () => {
   return (
     <section className="py-16 md:py-24 lg:py-36 px-6 md:px-12 lg:px-32 xl:px-58 w-full bg-white flex flex-col items-center">
       <div className="flex flex-col mb-10 text-left w-full">
-        <div className="inline-flex items-center justify-center space-x-2 bg-[#fee2e2] text-[#d60000] px-4 py-1.5 rounded-full text-xs font-bold tracking-wide w-fit mb-6 uppercase">
-          CAMPUS LIFE
-        </div>
 
         <h2 className="text-4xl md:text-[2.75rem] font-bold text-[#111827] leading-[1.1] tracking-tight">
           Gallery Highlights
         </h2>
       </div>
 
-      <div className="relative w-[70%] aspect-[16/10] sm:aspect-video md:aspect-[21/9] rounded-2xl overflow-hidden shadow-2xl group bg-[#101828]">
+      <div className="relative w-[100%] aspect-[16/10] sm:aspect-video md:aspect-[21/9] rounded-2xl overflow-hidden shadow-2xl group bg-[#101828]">
         <div
           className="flex w-full h-full transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)]"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
