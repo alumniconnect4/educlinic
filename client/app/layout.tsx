@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = { 
-  title: 'Alumini Portal',
-  description: 'Alumini Portal',
+  title: 'Alumni Portal',
+  description: 'Alumni Portal',
 };
 
 export default function RootLayout({
