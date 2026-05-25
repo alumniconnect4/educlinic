@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface UserStore {
+export interface UserStore {
   user: any;
   isAuthenticated: boolean;
   setUser: (user: any) => void;
@@ -16,7 +16,8 @@ export const useUserStore = create<UserStore>()(
       isAuthenticated: false,
       setUser: (user: any) => set({ user, isAuthenticated: true }),
       clearUser: () => set({ user: null, isAuthenticated: false }),
-      setIsAuthenticated: (isAuthenticated: boolean) => set({ isAuthenticated }),
+      setIsAuthenticated: (isAuthenticated: boolean) =>
+        set({ isAuthenticated }),
     }),
     {
       name: 'user-storage',

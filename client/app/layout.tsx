@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export const metadata: Metadata = { 
+export const metadata: Metadata = {
   title: 'Alumni Portal',
   description: 'Alumni Portal',
 };
@@ -33,9 +33,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ConditionalNavbar />
-        <ToastProvider>
-        {children}
-      </ToastProvider>
+        <ToastProvider>{children}</ToastProvider>
         <ConditionalFooter />
       </body>
     </html>

@@ -112,7 +112,6 @@ const UpcomingEvents = () => {
     <div className="w-full bg-black/5">
       <section className="py-16 md:py-24 px-6 md:px-12 lg:px-32 xl:px-58 w-full">
         <div className="flex flex-col mb-14">
-
           <h2 className="text-4xl md:text-[2.75rem] font-bold text-[#111827] leading-[1.1] tracking-tight mb-4">
             Upcoming Events
           </h2>

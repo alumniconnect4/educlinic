@@ -1,12 +1,11 @@
 import React from 'react';
-import { ArrowRight, ArrowDown, Award } from 'lucide-react';
+import { ArrowRight, Award } from 'lucide-react';
 
 const HeroSection = () => {
   return (
     <div className="w-full bg-white flex flex-col min-h-[calc(100vh-100px)]">
       <div className="flex-1 flex flex-col lg:flex-row items-center justify-between py-12 px-6 md:px-12 lg:px-32 xl:px-58 lg:py-20 gap-12 w-full">
         <div className="flex-1 flex flex-col items-start space-y-6 max-w-4xl z-10 w-full">
-
           <h1 className="text-4xl sm:text-5xl lg:text-[4.5rem] font-bold text-[#111827] leading-[1.1] tracking-tight">
             Connecting <br className="hidden lg:block" />
             Generations of Excellence
