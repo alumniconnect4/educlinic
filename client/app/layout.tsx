@@ -6,6 +6,8 @@ import ConditionalFooter from '@/components/ConditionalFooter';
 import ToastProvider from '@/utils/ToastProvider';
 import SplashScreen from '@/components/SplashScreen';
 import AuthProvider from '@/components/AuthProvider';
+import FloatingBell from '@/components/FloatingBell';
+import FloatingChatbot from '@/components/FloatingChatbot';
 
 const roboto = Roboto({
   weight: ['100', '300', '400', '500', '700', '900'],
@@ -40,6 +42,8 @@ export default function RootLayout({
           <ConditionalNavbar />
           <ToastProvider>{children}</ToastProvider>
           <ConditionalFooter />
+          <FloatingBell />
+          <FloatingChatbot />
         </AuthProvider>
       </body>
     </html>

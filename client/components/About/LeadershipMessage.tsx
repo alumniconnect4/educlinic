@@ -25,11 +25,10 @@ export const LeadershipMessageBlock: React.FC<LeadershipMessageBlockProps> = ({
       <div className="text-gray-800 text-sm md:text-base leading-relaxed">
         {/* Photo Container - Alternating float left vs right */}
         <div
-          className={`float-none mb-4 ${
-            isEven
+          className={`float-none mb-4 ${isEven
               ? 'sm:float-left sm:mr-6 sm:mb-3'
               : 'sm:float-right sm:ml-6 sm:mb-3'
-          } w-full sm:w-[320px] md:w-[360px] shrink-0`}
+            } w-full sm:w-[320px] md:w-[360px] shrink-0`}
         >
           <div className="bg-gray-100 p-2 sm:p-2.5 border border-gray-200 rounded">
             <div className="relative w-full aspect-[4/3] bg-white overflow-hidden rounded-xs">

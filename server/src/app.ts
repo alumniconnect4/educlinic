@@ -8,6 +8,7 @@ import postRoutes from './routes/post.routes.js';
 import followRoutes from './routes/follow.routes.js';
 import userRoutes from './routes/user.routes.js';
 import chatRoutes from './routes/chat.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 import { authMiddleware } from './middleware/auth.js';
 import { UserRole } from '../generated/prisma/enums.js';
 
@@ -40,5 +41,6 @@ app.use('/api/posts', postRoutes);
 app.use('/api/follow', followRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/ai', aiRoutes);
 
 export default app;

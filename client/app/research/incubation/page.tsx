@@ -209,7 +209,7 @@ export default function IncubationPage() {
           <div className="flex w-max">
             <div
               className="flex animate-marquee whitespace-nowrap items-center space-x-12 px-6 py-4"
-              style={{ animationDuration: '75s' }}
+              style={{ animation: 'marquee-seamless 120s linear infinite' }}
             >
               {Array(4)
                 .fill(startupLogos)
@@ -230,7 +230,7 @@ export default function IncubationPage() {
             </div>
             <div
               className="flex animate-marquee whitespace-nowrap items-center space-x-12 px-6 py-4"
-              style={{ animationDuration: '75s' }}
+              style={{ animation: 'marquee-seamless 120s linear infinite' }}
               aria-hidden="true"
             >
               {Array(4)
@@ -264,7 +264,7 @@ export default function IncubationPage() {
           <div className="flex w-max">
             <div
               className="flex animate-marquee whitespace-nowrap items-center space-x-16 px-8 py-4"
-              style={{ animationDuration: '50s' }}
+              style={{ animation: 'marquee-seamless 120s linear infinite' }}
             >
               {Array(6)
                 .fill(collaborationLogos)
@@ -285,7 +285,7 @@ export default function IncubationPage() {
             </div>
             <div
               className="flex animate-marquee whitespace-nowrap items-center space-x-16 px-8 py-4"
-              style={{ animationDuration: '50s' }}
+              style={{ animation: 'marquee-seamless 120s linear infinite' }}
               aria-hidden="true"
             >
               {Array(6)

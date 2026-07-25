@@ -27,7 +27,7 @@ export const albums = [
   },
   {
     id: 'album5',
-    title: 'Recent Event Gallery',
+    title: 'Alumni Engagement Panel & Mentoring Session Sourav Goyal',
     cover: '/gallery/events/album5.JPG',
     count: 20,
   },
