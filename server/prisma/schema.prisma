@@ -21,9 +21,14 @@ enum UserRole {
 
 enum SchoolCategory {
   School_of_Engineering
-  School_of_law
-  School_of_agriculture
-  School_of_Medicine
+  School_of_Sciences
+  School_of_Agriculture
+  School_of_Business_Studies
+  School_of_Computer_Applications
+  School_of_Humanities
+  School_of_Education
+  School_of_Law
+  School_of_Pharmacy
 }
 
 enum EventType {

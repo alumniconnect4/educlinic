@@ -37,10 +37,31 @@ export const getRoleSchoolStats = async (req: Request, res: Response) => {
             }
         });
 
+        const allSchoolsMap: Record<string, number> = {
+            "School_of_Engineering": 0,
+            "School_of_Sciences": 0,
+            "School_of_Agriculture": 0,
+            "School_of_Business_Studies": 0,
+            "School_of_Computer_Applications": 0,
+            "School_of_Humanities": 0,
+            "School_of_Education": 0,
+            "School_of_Law": 0,
+            "School_of_Pharmacy": 0,
+            "Not Specified": 0
+        };
+
+        // Populate with actual data
+        distribution.forEach(item => {
+            const key = item.schoolCategory ? item.schoolCategory : "Not Specified";
+            if (key in allSchoolsMap) {
+                allSchoolsMap[key] = item._count._all;
+            }
+        });
+
         // Format data for Recharts: [{ name: "School of Engineering", value: 120 }, ...]
-        const formattedData = distribution.map(item => ({
-            name: item.schoolCategory ? item.schoolCategory.replace(/_/g, ' ') : "Not Specified",
-            value: item._count._all
+        const formattedData = Object.entries(allSchoolsMap).map(([key, value]) => ({
+            name: key.replace(/_/g, ' '),
+            value: value
         }));
 
         return res.status(200).json(formattedData);

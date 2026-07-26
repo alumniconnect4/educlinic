@@ -57,7 +57,7 @@ export default function AdminLayout() {
   ]
 
   return (
-    <div className="flex flex-col h-screen bg-[#f0f3f5] font-sans text-slate-800 overflow-hidden">
+    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
       {/* Header spanning full width */}
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between z-20 shadow-sm flex-shrink-0 relative">
         <div 
@@ -127,20 +127,20 @@ export default function AdminLayout() {
         <aside 
           className={`${
             isSidebarOpen ? "w-[200px]" : "w-[80px]"
-          } bg-[#4a586e] flex-shrink-0 hidden md:flex flex-col shadow-lg z-10 overflow-y-auto custom-scrollbar transition-all duration-300`}
+          } bg-white flex-shrink-0 hidden md:flex flex-col shadow-sm border-r border-gray-200 z-10 overflow-y-auto custom-scrollbar transition-all duration-300`}
         >
           <nav className="flex-1 py-0">
             <ul className="space-y-0">
               {navItems.map((item) => (
-                <li key={item.name} className="border-b border-[#5a6b83]">
+                <li key={item.name} className="border-b border-gray-100">
                   <NavLink
                     to={item.path}
                     end={item.path === "/"}
                     className={({ isActive }) =>
                       `flex flex-col items-center justify-center py-4 px-2 text-[13px] transition-all border-l-[3px] ${
                         isActive
-                          ? "text-[#7abdd1] border-[#7abdd1] bg-[#3a475d]"
-                          : "text-[#9cb0cf] border-transparent hover:text-white hover:bg-[#3a475d]"
+                          ? "text-slate-900 border-slate-900 bg-slate-100 font-medium"
+                          : "text-slate-500 border-transparent hover:text-slate-900 hover:bg-slate-50"
                       }`
                     }
                   >

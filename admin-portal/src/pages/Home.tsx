@@ -4,6 +4,8 @@ import { Search, Home as HomeIcon, ChevronRight, Users, GraduationCap, ShieldChe
 import axios from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PlatformAnalytics } from "@/components/PlatformAnalytics";
+import { StatCard } from "@/components/StatCard";
 
 export default function Home() {
   const user = useAuthStore((state) => state.user);
@@ -73,100 +75,21 @@ export default function Home() {
     fetchTickets();
   }, []);
 
-  const createChartData = (value: number, color: string, label: string) => [
-    { name: label, value: value },
-    { name: "Other", value: stats.total - value > 0 ? stats.total - value : 1 }
-  ];
-
   const createPostChartData = (value: number, total: number, label: string) => [
     { name: label, value: value },
     { name: "Other", value: total - value > 0 ? total - value : 1 }
   ];
 
-  const StatCard = ({ title, value, data, linkTo }: any) => (
-    <div className="bg-white shadow-sm border border-gray-200 rounded-sm p-4 flex flex-col">
-      <div className="flex justify-between items-center pb-2 mb-4 border-b border-gray-100">
-        <h3 className="text-[#84749f] font-semibold text-lg">{title}</h3>
-        <Link to={linkTo} className="text-[#6ea2e6] text-sm hover:underline">View All</Link>
-      </div>
-
-      <div className="flex flex-col items-center">
-        <span className="text-4xl font-bold text-gray-700 mb-2">{value}</span>
-        <span className="text-xs text-gray-400 uppercase tracking-wider mb-2">Total {title}</span>
-      </div>
-
-      <div className="w-full h-[160px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={45}
-              outerRadius={65}
-              paddingAngle={2}
-              dataKey="value"
-              stroke="none"
-            >
-              <Cell fill="#84749f" />
-              <Cell fill="#f1f5f9" />
-            </Pie>
-            <Tooltip formatter={(val: number) => val === (stats.total - value) ? ["Others", "Category"] : [val, title]} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-
   return (
     <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
-      {/* Breadcrumb & Search Bar */}
-      <div className="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 shadow-sm">
-        <div className="flex items-center text-sm text-gray-500">
-          <HomeIcon className="w-4 h-4 mr-2" />
-          <span>DashBoard</span>
-          <ChevronRight className="w-4 h-4 mx-1" />
-          <span className="text-gray-400">Overview</span>
-        </div>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="search..."
-            className="pl-4 pr-10 py-1.5 border border-gray-200 rounded-full text-sm w-64 focus:outline-none focus:border-blue-400"
-          />
-          <Search className="w-4 h-4 absolute right-3 top-2.5 text-gray-400" />
-        </div>
-      </div>
 
-      <div className="p-4 sm:p-6 flex-1 bg-[#f0f3f5]">
-        <h2 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-300 pb-2">Platform Analytics</h2>
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${user?.role === "SUPER_ADMIN" ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
-          <StatCard
-            title="Registered Students"
-            value={stats.users}
-            data={createChartData(stats.users, "#84749f", "Students")}
-            linkTo="/analytics/USER"
-          />
-          <StatCard
-            title="Registered Alumni"
-            value={stats.alumni}
-            data={createChartData(stats.alumni, "#84749f", "Alumni")}
-            linkTo="/analytics/ALUMNI"
-          />
-          {user?.role === "SUPER_ADMIN" && (
-            <StatCard
-              title="Platform Admins"
-              value={stats.admins}
-              data={createChartData(stats.admins, "#84749f", "Admins")}
-              linkTo="/analytics/ADMIN"
-            />
-          )}
-        </div>
+      <div className="p-4 sm:p-6 flex-1 bg-transparent">
+        <PlatformAnalytics stats={stats} user={user} />
 
         {/* Events Analytics Rectangular Card */}
         <div className="mt-8 bg-white shadow-sm border border-gray-200 rounded-sm">
           <div className="flex justify-between items-center p-4 border-b border-gray-100">
-            <h3 className="text-[#84749f] font-semibold text-lg">Events Analytics</h3>
+            <h3 className="text-slate-600 font-semibold text-lg">Events Analytics</h3>
             <Link to="/events" className="text-[#6ea2e6] text-sm hover:underline">View All</Link>
           </div>
           <div className="overflow-x-auto">
@@ -207,7 +130,7 @@ export default function Home() {
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider">Community Engagement</h3>
           </div>
-          
+
           <div className="p-6 space-y-6">
             {/* Top 3 Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -247,12 +170,14 @@ export default function Home() {
               <StatCard 
                 title="Posts by Students" 
                 value={communityStats.studentPosts} 
+                total={communityStats.totalPosts}
                 data={createPostChartData(communityStats.studentPosts, communityStats.totalPosts, "Student Posts")}
                 linkTo="/posts"
               />
               <StatCard 
                 title="Posts by Alumni" 
                 value={communityStats.alumniPosts} 
+                total={communityStats.totalPosts}
                 data={createPostChartData(communityStats.alumniPosts, communityStats.totalPosts, "Alumni Posts")}
                 linkTo="/posts"
               />
@@ -266,7 +191,7 @@ export default function Home() {
             <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider">Help Tickets Analytics</h3>
             <Link to="/help-tickets" className="text-[#6ea2e6] text-sm hover:underline">View All</Link>
           </div>
-          
+
           <div className="p-6 space-y-6">
             {/* Latest 2 Unresolved Tickets */}
             <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
