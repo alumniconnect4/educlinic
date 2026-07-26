@@ -1,0 +1,371 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Search, Home as HomeIcon, ChevronRight, Users, GraduationCap, ShieldCheck, MessageSquare, MessageCircle, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import axios from "axios";
+import { useAuthStore } from "@/store/useAuthStore";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+
+export default function Home() {
+  const user = useAuthStore((state) => state.user);
+  const [stats, setStats] = useState({ users: 0, alumni: 0, admins: 0, total: 0 });
+  const [recentEvents, setRecentEvents] = useState<any[]>([]);
+  const [communityStats, setCommunityStats] = useState({
+    totalPosts: 0,
+    postsThisMonth: 0,
+    studentPosts: 0,
+    alumniPosts: 0,
+    commentsThisMonth: 0
+  });
+  const [ticketStats, setTicketStats] = useState({
+    latestTickets: [],
+    unresolvedCount: 0,
+    resolvedCount: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/admin-portal/analytics/overview", {
+          withCredentials: true
+        });
+        setStats(response.data);
+      } catch (err) {
+        console.error("Failed to fetch overview stats", err);
+      }
+    };
+
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/admin-portal/analytics/recent-events", {
+          withCredentials: true
+        });
+        setRecentEvents(response.data);
+      } catch (err) {
+        console.error("Failed to fetch recent events", err);
+      }
+    };
+
+    const fetchCommunity = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/admin-portal/analytics/community", {
+          withCredentials: true
+        });
+        setCommunityStats(response.data);
+      } catch (err) {
+        console.error("Failed to fetch community stats", err);
+      }
+    };
+
+    const fetchTickets = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/admin-portal/analytics/help-tickets", {
+          withCredentials: true
+        });
+        setTicketStats(response.data);
+      } catch (err) {
+        console.error("Failed to fetch help ticket stats", err);
+      }
+    };
+
+    fetchStats();
+    fetchEvents();
+    fetchCommunity();
+    fetchTickets();
+  }, []);
+
+  const createChartData = (value: number, color: string, label: string) => [
+    { name: label, value: value },
+    { name: "Other", value: stats.total - value > 0 ? stats.total - value : 1 }
+  ];
+
+  const createPostChartData = (value: number, total: number, label: string) => [
+    { name: label, value: value },
+    { name: "Other", value: total - value > 0 ? total - value : 1 }
+  ];
+
+  const StatCard = ({ title, value, data, linkTo }: any) => (
+    <div className="bg-white shadow-sm border border-gray-200 rounded-sm p-4 flex flex-col">
+      <div className="flex justify-between items-center pb-2 mb-4 border-b border-gray-100">
+        <h3 className="text-[#84749f] font-semibold text-lg">{title}</h3>
+        <Link to={linkTo} className="text-[#6ea2e6] text-sm hover:underline">View All</Link>
+      </div>
+
+      <div className="flex flex-col items-center">
+        <span className="text-4xl font-bold text-gray-700 mb-2">{value}</span>
+        <span className="text-xs text-gray-400 uppercase tracking-wider mb-2">Total {title}</span>
+      </div>
+
+      <div className="w-full h-[160px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={45}
+              outerRadius={65}
+              paddingAngle={2}
+              dataKey="value"
+              stroke="none"
+            >
+              <Cell fill="#84749f" />
+              <Cell fill="#f1f5f9" />
+            </Pie>
+            <Tooltip formatter={(val: number) => val === (stats.total - value) ? ["Others", "Category"] : [val, title]} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
+      {/* Breadcrumb & Search Bar */}
+      <div className="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 shadow-sm">
+        <div className="flex items-center text-sm text-gray-500">
+          <HomeIcon className="w-4 h-4 mr-2" />
+          <span>DashBoard</span>
+          <ChevronRight className="w-4 h-4 mx-1" />
+          <span className="text-gray-400">Overview</span>
+        </div>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="search..."
+            className="pl-4 pr-10 py-1.5 border border-gray-200 rounded-full text-sm w-64 focus:outline-none focus:border-blue-400"
+          />
+          <Search className="w-4 h-4 absolute right-3 top-2.5 text-gray-400" />
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-6 flex-1 bg-[#f0f3f5]">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 border-b border-gray-300 pb-2">Platform Analytics</h2>
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${user?.role === "SUPER_ADMIN" ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
+          <StatCard
+            title="Registered Students"
+            value={stats.users}
+            data={createChartData(stats.users, "#84749f", "Students")}
+            linkTo="/analytics/USER"
+          />
+          <StatCard
+            title="Registered Alumni"
+            value={stats.alumni}
+            data={createChartData(stats.alumni, "#84749f", "Alumni")}
+            linkTo="/analytics/ALUMNI"
+          />
+          {user?.role === "SUPER_ADMIN" && (
+            <StatCard
+              title="Platform Admins"
+              value={stats.admins}
+              data={createChartData(stats.admins, "#84749f", "Admins")}
+              linkTo="/analytics/ADMIN"
+            />
+          )}
+        </div>
+
+        {/* Events Analytics Rectangular Card */}
+        <div className="mt-8 bg-white shadow-sm border border-gray-200 rounded-sm">
+          <div className="flex justify-between items-center p-4 border-b border-gray-100">
+            <h3 className="text-[#84749f] font-semibold text-lg">Events Analytics</h3>
+            <Link to="/events" className="text-[#6ea2e6] text-sm hover:underline">View All</Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-100 text-sm font-semibold text-gray-700">
+                  <th className="p-4 w-2/5">Subject(Title)</th>
+                  <th className="p-4 w-1/5">Type</th>
+                  <th className="p-4 w-1/5">Created By</th>
+                  <th className="p-4 w-1/5 text-right">Start Date</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm text-gray-600">
+                {recentEvents.length > 0 ? recentEvents.map((ev, index) => (
+                  <tr key={ev.id || index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <td className="p-4 align-middle min-w-0">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded bg-teal-600 flex items-center justify-center text-white mr-3 font-bold text-xs flex-shrink-0">EV</div>
+                        <span className="truncate max-w-[150px] sm:max-w-[250px] md:max-w-[350px]" title={ev.name}>{ev.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 align-middle">{ev.eventType}</td>
+                    <td className="p-4 align-middle">{ev.organizedBy}</td>
+                    <td className="p-4 align-middle text-right">{new Date(ev.startDate).toLocaleDateString()}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={4} className="p-4 text-center text-gray-400">No events found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Community Engagement Unified Component */}
+        <div className="mt-8 bg-[#f8f9fa] border border-gray-200 shadow-sm rounded-sm mb-8">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider">Community Engagement</h3>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            {/* Top 3 Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-5 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Posts</p>
+                  <h4 className="text-2xl font-bold text-[#344767]">{communityStats.totalPosts}</h4>
+                </div>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-50/30 text-blue-400">
+                  <FileText className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Posts This Month</p>
+                  <h4 className="text-2xl font-bold text-[#344767]">{communityStats.postsThisMonth}</h4>
+                </div>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-green-50/30 text-green-400">
+                  <FileText className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm">
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Comments (This Month)</p>
+                  <h4 className="text-2xl font-bold text-[#344767]">{communityStats.commentsThisMonth}</h4>
+                </div>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-50/30 text-purple-400">
+                  <MessageCircle className="w-4 h-4" />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom 2 Charts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <StatCard 
+                title="Posts by Students" 
+                value={communityStats.studentPosts} 
+                data={createPostChartData(communityStats.studentPosts, communityStats.totalPosts, "Student Posts")}
+                linkTo="/posts"
+              />
+              <StatCard 
+                title="Posts by Alumni" 
+                value={communityStats.alumniPosts} 
+                data={createPostChartData(communityStats.alumniPosts, communityStats.totalPosts, "Alumni Posts")}
+                linkTo="/posts"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Help Tickets Analytics Component */}
+        <div className="mt-8 bg-[#f8f9fa] border border-gray-200 shadow-sm rounded-sm mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider">Help Tickets Analytics</h3>
+            <Link to="/help-tickets" className="text-[#6ea2e6] text-sm hover:underline">View All</Link>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            {/* Latest 2 Unresolved Tickets */}
+            <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Latest Unresolved Tickets</h4>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {ticketStats.latestTickets && ticketStats.latestTickets.length > 0 ? (
+                  ticketStats.latestTickets.map((ticket: any) => (
+                    <div key={ticket.id} className="p-5 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                      <div>
+                        <h5 className="text-sm font-semibold text-gray-800">{ticket.title}</h5>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">{ticket.description}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-[10px] text-gray-400">by {ticket.createdBy?.name || 'Unknown'}</span>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <span className="text-[10px] font-bold px-2 py-1 rounded bg-yellow-50 text-yellow-600 border border-yellow-100 uppercase">{ticket.status}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-gray-400 text-sm">No ticket pending</div>
+                )}
+              </div>
+            </div>
+
+            {/* Ticket Stats and Chart */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-6">
+                <div className="bg-white p-5 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm h-full">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Unresolved Tickets</p>
+                    <h4 className="text-2xl font-bold text-[#84749f]">{ticketStats.unresolvedCount}</h4>
+                  </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#84749f]/10 text-[#84749f]">
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                </div>
+
+                <div className="bg-white p-5 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm h-full">
+                  <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Solved Tickets</p>
+                    <h4 className="text-2xl font-bold text-[#6ea2e6]">{ticketStats.resolvedCount}</h4>
+                  </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#6ea2e6]/10 text-[#6ea2e6]">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-5 border border-gray-200 rounded-sm shadow-sm lg:col-span-2 flex flex-col">
+                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">Ticket Resolution Ratio</h4>
+                <div className="flex-1 w-full min-h-[160px] h-full flex items-center justify-center">
+                  {(ticketStats.unresolvedCount > 0 || ticketStats.resolvedCount > 0) ? (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            { name: 'Unresolved', value: ticketStats.unresolvedCount },
+                            { name: 'Resolved', value: ticketStats.resolvedCount }
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={75}
+                          paddingAngle={3}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          <Cell fill="#84749f" />
+                          <Cell fill="#6ea2e6" />
+                        </Pie>
+                        <Tooltip formatter={(value: number, name: string) => [value, name]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <span className="text-sm text-gray-400">No ticket data available</span>
+                  )}
+                </div>
+                {(ticketStats.unresolvedCount > 0 || ticketStats.resolvedCount > 0) && (
+                  <div className="flex justify-center gap-6 mt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-[#84749f]"></div>
+                      <span className="text-xs text-gray-500">Unresolved</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-[#6ea2e6]"></div>
+                      <span className="text-xs text-gray-500">Resolved</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}

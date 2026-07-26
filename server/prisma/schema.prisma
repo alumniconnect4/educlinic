@@ -36,6 +36,17 @@ enum EventVisibility {
   DEPARTMENTAL
 }
 
+enum TicketStatus {
+  OPEN
+  RESOLVED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
   id             Int             @id @default(autoincrement())
   name           String
@@ -60,6 +71,7 @@ model User {
   blocksInitiated  Block[]         @relation("BlocksInitiated")
   blocksReceived   Block[]         @relation("BlocksReceived")
   clearedChats     ClearedChat[]   @relation("UserClearedChats")
+  helpTickets      HelpTicket[]
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
@@ -101,6 +113,20 @@ model Registration {
   updatedAt DateTime @updatedAt
 
   @@unique([eventId, userId])
+}
+
+model HelpTicket {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  
+  createdBy   User @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById Int
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Post {
