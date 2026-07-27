@@ -48,7 +48,7 @@ const formatDate = (dateString: string) => {
 };
 
 export default function EventsClient() {
-  const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming');
+  const [filter, setFilter] = useState<'upcoming' | 'past' | 'current'>('upcoming');
   const [page, setPage] = useState(1);
   const [events, setEvents] = useState<Event[]>([]);
   const [totalPages, setTotalPages] = useState(1);
@@ -101,6 +101,15 @@ export default function EventsClient() {
           </button>
           <button
             onClick={() => {
+              setFilter('current');
+              setPage(1);
+            }}
+            className={`px-5 py-2 rounded text-sm font-medium transition-all ${filter === 'current' ? 'bg-white shadow-sm text-[#a62025]' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Current
+          </button>
+          <button
+            onClick={() => {
               setFilter('past');
               setPage(1);
             }}
@@ -111,20 +120,24 @@ export default function EventsClient() {
         </div>
 
         <div className="flex flex-col gap-2 min-h-[300px]">
-          {loading || events.length === 0
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex gap-4 items-start p-3 rounded-lg border border-transparent animate-pulse"
-                >
-                  <div className="min-w-[55px] h-[55px] bg-gray-200 rounded-md"></div>
-                  <div className="flex flex-col gap-2 w-full mt-1">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  </div>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex gap-4 items-start p-3 rounded-lg border border-transparent animate-pulse"
+              >
+                <div className="min-w-[55px] h-[55px] bg-gray-200 rounded-md"></div>
+                <div className="flex flex-col gap-2 w-full mt-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
-              ))
-            : events.map((event) => {
+              </div>
+            ))
+          ) : events.length === 0 ? (
+            <div className="p-4 text-center text-gray-500 text-xs italic">
+              No events found.
+            </div>
+          ) : events.map((event) => {
                 const { month, day } = formatDate(event.startDate);
                 return (
                   <div
@@ -177,21 +190,26 @@ export default function EventsClient() {
 
       <div className="lg:col-span-8">
         <div className="grid grid-cols-1 gap-6 h-full items-start">
-          {loading || events.length === 0
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <article
-                  key={i}
-                  className="group flex flex-col sm:flex-row h-[220px] bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-gray-100 animate-pulse"
-                >
-                  <div className="w-full sm:w-[35%] bg-gray-200"></div>
-                  <div className="flex-1 p-6 gap-3">
-                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-                  </div>
-                </article>
-              ))
-            : events.map((event, index) => {
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <article
+                key={i}
+                className="group flex flex-col sm:flex-row h-[220px] bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-gray-100 animate-pulse"
+              >
+                <div className="w-full sm:w-[35%] bg-gray-200"></div>
+                <div className="flex-1 p-6 gap-3">
+                  <div className="h-5 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                </div>
+              </article>
+            ))
+          ) : events.length === 0 ? (
+            <div className="bg-white border border-gray-200 rounded-lg p-10 text-center text-gray-500">
+              <p className="font-semibold text-gray-700">No events scheduled</p>
+              <p className="text-sm mt-1">Check back later for new events!</p>
+            </div>
+          ) : events.map((event, index) => {
                 const { fullDate, time } = formatDate(event.startDate);
                 return (
                   <div
