@@ -27,6 +27,19 @@ const canManageEvent = (
   owner: { id: number; role: UserRoleEnum }
 ) => actor.id === owner.id || roleRank[actor.role] > roleRank[owner.role];
 
+const canModifyEvent = (
+  userId: number,
+  userRole: UserRoleEnum,
+  event: { createdById: number; permissionMode: string; permittedAdminIds: number[] }
+) => {
+  if (userRole === UserRole.SUPER_ADMIN) return true;
+  if (event.createdById === userId) return true;
+  if (event.permissionMode === 'HYBRID' && event.permittedAdminIds.includes(userId)) {
+    return true;
+  }
+  return false;
+};
+
 export const createEvent = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
@@ -44,6 +57,8 @@ export const createEvent = async (req: Request, res: Response) => {
       visibility,
       startDate,
       endDate,
+      permissionMode,
+      permittedAdminIds,
     } = req.body;
 
     if (
@@ -89,7 +104,8 @@ export const createEvent = async (req: Request, res: Response) => {
         });
         finalImageUrl = cloudinaryUpload.secure_url;
       } catch (error) {
-        return res.status(500).json({ message: 'Image upload failed', error });
+        console.error('Cloudinary upload failed, falling back to original URL/base64:', error);
+        finalImageUrl = imageUrl;
       }
     }
 
@@ -104,6 +120,8 @@ export const createEvent = async (req: Request, res: Response) => {
         startDate: parsedStartDate,
         endDate: parsedEndDate,
         createdById: req.user.id,
+        permissionMode: permissionMode ?? "NONE",
+        permittedAdminIds: permittedAdminIds ? permittedAdminIds.map(Number) : [],
         ...(finalImageUrl && { imageUrl: finalImageUrl }),
       },
     });
@@ -144,18 +162,24 @@ export const getEventById = async (req: Request, res: Response) => {
 export const getAllEvents = async (_req: Request, res: Response) => {
   try {
     const { limit, offset } = _req.params;
-    const { filter } = _req.query;
+    const { filter, createdById } = _req.query;
 
     const take = limit ? parseInt(limit as string, 10) : 8;
     const skip = offset ? parseInt(offset as string, 10) : 0;
 
     const now = new Date();
-    const where =
+    const where: any =
       filter === 'upcoming'
         ? { startDate: { gte: now } }
         : filter === 'past'
-          ? { startDate: { lt: now } }
-          : {};
+          ? { endDate: { lt: now } }
+          : filter === 'current'
+            ? { startDate: { lte: now }, endDate: { gte: now } }
+            : {};
+
+    if (createdById) {
+      where.createdById = Number(createdById);
+    }
 
     const [events, total] = await Promise.all([
       prisma.event.findMany({
@@ -204,7 +228,7 @@ export const updateEvent = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    if (!canManageEvent(req.user, existingEvent.createdBy)) {
+    if (!canModifyEvent(req.user.id, req.user.role, existingEvent)) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
@@ -212,11 +236,14 @@ export const updateEvent = async (req: Request, res: Response) => {
       name,
       description,
       organizedBy,
+      imageUrl,
       place,
       eventType,
       visibility,
       startDate,
       endDate,
+      permissionMode,
+      permittedAdminIds,
     } = req.body;
 
     const parsedStartDate =
@@ -249,6 +276,23 @@ export const updateEvent = async (req: Request, res: Response) => {
         .json({ message: 'endDate must be after startDate' });
     }
 
+    let finalImageUrl = undefined;
+    if (imageUrl !== undefined) {
+      if (imageUrl) {
+        try {
+          const cloudinaryUpload = await cloudinary.uploader.upload(imageUrl, {
+            folder: 'events',
+          });
+          finalImageUrl = cloudinaryUpload.secure_url;
+        } catch (error) {
+          console.error('Cloudinary upload failed in update, falling back to original URL/base64:', error);
+          finalImageUrl = imageUrl;
+        }
+      } else {
+        finalImageUrl = null;
+      }
+    }
+
     const updatedEvent = await prisma.event.update({
       where: { id },
       data: {
@@ -260,6 +304,9 @@ export const updateEvent = async (req: Request, res: Response) => {
         ...(visibility !== undefined ? { visibility } : {}),
         ...(parsedStartDate ? { startDate: parsedStartDate } : {}),
         ...(parsedEndDate ? { endDate: parsedEndDate } : {}),
+        ...(finalImageUrl !== undefined ? { imageUrl: finalImageUrl } : {}),
+        ...(permissionMode !== undefined ? { permissionMode } : {}),
+        ...(permittedAdminIds !== undefined ? { permittedAdminIds: permittedAdminIds.map(Number) } : {}),
       },
     });
 
@@ -301,7 +348,7 @@ export const deleteEvent = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    if (!canManageEvent(req.user, existingEvent.createdBy)) {
+    if (!canModifyEvent(req.user.id, req.user.role, existingEvent)) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 
@@ -382,3 +429,37 @@ export const registerEvent = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
+export const getEventRegistrations = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const id = Number(req.params.id);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid event id' });
+    }
+
+    const registrations = await prisma.registration.findMany({
+      where: { eventId: id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json({ registrations });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+

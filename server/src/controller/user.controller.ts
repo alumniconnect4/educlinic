@@ -7,10 +7,13 @@ export const getAllUsers = async (req: Request, res: Response) => {
     const search = (req.query.search as string) || '';
     const limit = parseInt(req.query.limit as string) || 16;
     const skip = parseInt(req.query.skip as string) || 0;
+    const role = req.query.role as string;
 
     const whereClause: any = {};
 
-    if (userId) {
+    if (role) {
+      whereClause.role = role;
+    } else if (userId) {
       let followingIds: number[] = [];
       if (!search) {
         const following = await prisma.follow.findMany({
