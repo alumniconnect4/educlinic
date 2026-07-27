@@ -30,11 +30,11 @@ const canManageEvent = (
 const canModifyEvent = (
   userId: number,
   userRole: UserRoleEnum,
-  event: { createdById: number; permissionMode: string; permittedAdminIds: number[] }
+  event: { createdById: number; permissionMode?: string | null; permittedAdminIds?: number[] | null }
 ) => {
   if (userRole === UserRole.SUPER_ADMIN) return true;
   if (event.createdById === userId) return true;
-  if (event.permissionMode === 'HYBRID' && event.permittedAdminIds.includes(userId)) {
+  if (event.permissionMode === 'HYBRID' && Array.isArray(event.permittedAdminIds) && event.permittedAdminIds.includes(userId)) {
     return true;
   }
   return false;

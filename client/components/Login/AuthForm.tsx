@@ -5,12 +5,31 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
+import { Eye, Trash2, Upload, CheckCircle2, X } from 'lucide-react';
 
 const AuthForm = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [selectedRole, setSelectedRole] = useState<'USER' | 'ALUMNI'>('USER');
+  const [idCardUrl, setIdCardUrl] = useState<string>('');
+  const [degreeUrl, setDegreeUrl] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [previewModal, setPreviewModal] = useState<{ url: string; title: string } | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'idCard' | 'degree' | 'avatar') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (type === 'idCard') setIdCardUrl(reader.result as string);
+      if (type === 'degree') setDegreeUrl(reader.result as string);
+      if (type === 'avatar') setAvatarUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -19,22 +38,58 @@ const AuthForm = () => {
 
     try {
       if (activeTab === 'register') {
+        const role = e.target.role.value as 'USER' | 'ALUMNI';
+
+        if (!avatarUrl) {
+          setError('Profile avatar image is compulsory for registration.');
+          toast.error('Profile avatar image is compulsory for registration.');
+          return;
+        }
+        
+        if (role === 'USER' && !idCardUrl) {
+          setError('Student registration requires uploading an ID Card.');
+          toast.error('Student registration requires uploading an ID Card.');
+          return;
+        }
+
+        if (role === 'ALUMNI' && !idCardUrl && !degreeUrl) {
+          setError('Alumni registration requires uploading either an ID Card or Degree Certificate.');
+          toast.error('Alumni registration requires uploading either an ID Card or Degree Certificate.');
+          return;
+        }
+
         const res = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
           {
             name: e.target.name.value,
             email: e.target.email.value,
             password: e.target.password.value,
-            role: e.target.role.value,
+            role,
             schoolCategory: e.target.schoolCategory.value,
+            avatarUrl,
+            idCardUrl,
+            degreeUrl,
           },
           { withCredentials: true }
         );
 
         e.target.reset();
-        useUserStore.getState().setUser(res.data.user);
-        toast.success('Registered successfully! Logging you in...');
-        router.push('/');
+        setIdCardUrl('');
+        setDegreeUrl('');
+        setAvatarUrl('');
+        if (res.data.user?.isVerified === false) {
+          setSuccess(
+            'Registration request submitted! Your account is pending administrator review and approval. An administrator will verify your application soon.'
+          );
+          toast.info(
+            'Registration submitted! Awaiting admin approval before you can log in.'
+          );
+          setActiveTab('login');
+        } else {
+          useUserStore.getState().setUser(res.data.user);
+          toast.success('Registered successfully! Logging you in...');
+          router.push('/');
+        }
       } else {
         const res = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
@@ -47,11 +102,13 @@ const AuthForm = () => {
 
         e.target.reset();
         useUserStore.getState().setUser(res.data.user);
-        toast.success('Logged in successfully! ');
+        toast.success('Logged in successfully!');
         router.push('/');
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Something went wrong');
+      const msg = err.response?.data?.message || 'Something went wrong';
+      setError(msg);
+      toast.error(msg);
       console.log(err);
     }
   };
@@ -130,6 +187,8 @@ const AuthForm = () => {
                     </label>
                     <select
                       name="role"
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value as 'USER' | 'ALUMNI')}
                       className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700"
                     >
                       <option value="USER">Student</option>
@@ -142,14 +201,326 @@ const AuthForm = () => {
                     </label>
                     <select
                       name="schoolCategory"
-                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700"
+                      required={activeTab === 'register'}
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700 text-sm"
                     >
-                      <option value="School_of_Engineering">Engineering</option>
-                      <option value="School_of_law">Law</option>
-                      <option value="School_of_agriculture">Agriculture</option>
-                      <option value="School_of_Medicine">Medicine</option>
+                      <option value="">Select School</option>
+                      <option value="School_of_Engineering">School of Engineering</option>
+                      <option value="School_of_Sciences">School of Sciences</option>
+                      <option value="School_of_Agriculture">School of Agriculture</option>
+                      <option value="School_of_Business_Studies">School of Business Studies</option>
+                      <option value="School_of_Computer_Applications">School of Computer Applications</option>
+                      <option value="School_of_Humanities">School of Humanities</option>
+                      <option value="School_of_Education">School of Education</option>
+                      <option value="School_of_Law">School of Law</option>
+                      <option value="School_of_Pharmacy">School of Pharmacy</option>
                     </select>
                   </div>
+                </div>
+
+                {/* Profile Avatar Upload (Compulsory) */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Profile Avatar <span className="text-[#d60000]">* Required</span>
+                  </label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'avatar')}
+                    className="hidden"
+                    id="profile-avatar-upload"
+                  />
+
+                  {avatarUrl ? (
+                    <div className="flex items-center justify-between border border-green-200 rounded-md p-2 bg-green-50/60 shadow-sm">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewModal({ url: avatarUrl, title: 'Profile Avatar' })}
+                          className="relative group flex-shrink-0 cursor-pointer"
+                          title="Click to view full avatar"
+                        >
+                          <img
+                            src={avatarUrl}
+                            alt="Avatar Preview"
+                            className="w-10 h-10 object-cover rounded-full border border-green-300 group-hover:opacity-80 transition-opacity"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Eye className="w-3.5 h-3.5 text-white" />
+                          </div>
+                        </button>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1 text-xs font-semibold text-green-800">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                            <span className="truncate">Avatar Uploaded</span>
+                          </div>
+                          <span className="text-[11px] text-gray-500 block truncate">Compulsory profile image set</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewModal({ url: avatarUrl, title: 'Profile Avatar' })}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </button>
+                        <label
+                          htmlFor="profile-avatar-upload"
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 bg-gray-200/70 hover:bg-gray-200 px-2 py-1 rounded cursor-pointer transition-colors"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          Change
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setAvatarUrl('')}
+                          className="inline-flex items-center justify-center p-1 text-red-600 hover:text-red-800 bg-red-100/60 hover:bg-red-100 rounded transition-colors cursor-pointer"
+                          title="Remove avatar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-gray-300 rounded-md p-2.5 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
+                      <label htmlFor="profile-avatar-upload" className="cursor-pointer flex flex-col items-center justify-center gap-1">
+                        <Upload className="w-4 h-4 text-gray-400" />
+                        <span className="text-xs text-gray-600 font-medium hover:text-[#d60000]">
+                          Click to upload Profile Avatar Image (JPG/PNG)
+                        </span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* Verification Document Uploads */}
+                <div className="space-y-3 pt-1">
+                  {selectedRole === 'USER' ? (
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        Student ID Card <span className="text-[#d60000]">* Required</span>
+                      </label>
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, 'idCard')}
+                        className="hidden"
+                        id="student-id-upload"
+                      />
+
+                      {idCardUrl ? (
+                        <div className="flex items-center justify-between border border-green-200 rounded-md p-2 bg-green-50/60 shadow-sm">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewModal({ url: idCardUrl, title: 'Student ID Card' })}
+                              className="relative group flex-shrink-0 cursor-pointer"
+                              title="Click to view full image"
+                            >
+                              <img
+                                src={idCardUrl}
+                                alt="ID Card Preview"
+                                className="w-11 h-11 object-cover rounded border border-green-300 group-hover:opacity-80 transition-opacity"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Eye className="w-3.5 h-3.5 text-white" />
+                              </div>
+                            </button>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1 text-xs font-semibold text-green-800">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                                <span className="truncate">ID Card Uploaded</span>
+                              </div>
+                              <span className="text-[11px] text-gray-500 block truncate">Ready for verification</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewModal({ url: idCardUrl, title: 'Student ID Card' })}
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              View
+                            </button>
+                            <label
+                              htmlFor="student-id-upload"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-gray-900 bg-gray-200/70 hover:bg-gray-200 px-2 py-1 rounded cursor-pointer transition-colors"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              Change
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setIdCardUrl('')}
+                              className="inline-flex items-center justify-center p-1 text-red-600 hover:text-red-800 bg-red-100/60 hover:bg-red-100 rounded transition-colors cursor-pointer"
+                              title="Remove image"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border border-dashed border-gray-300 rounded-md p-3 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
+                          <label htmlFor="student-id-upload" className="cursor-pointer flex flex-col items-center justify-center gap-1">
+                            <Upload className="w-5 h-5 text-gray-400" />
+                            <span className="text-xs text-gray-600 font-medium hover:text-[#d60000]">
+                              Click to upload Student ID Card (JPG/PNG)
+                            </span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-0.5">
+                        Verification Document <span className="text-[#d60000]">* (ID Card or Degree)</span>
+                      </label>
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, 'idCard')}
+                        className="hidden"
+                        id="alumni-id-upload"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, 'degree')}
+                        className="hidden"
+                        id="alumni-degree-upload"
+                      />
+
+                      <div className="space-y-2">
+                        {/* ID Card section */}
+                        {idCardUrl ? (
+                          <div className="flex items-center justify-between border border-green-200 rounded-md p-2 bg-green-50/60 shadow-sm">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewModal({ url: idCardUrl, title: 'Alumni ID Card' })}
+                                className="relative group flex-shrink-0 cursor-pointer"
+                              >
+                                <img
+                                  src={idCardUrl}
+                                  alt="ID Card Preview"
+                                  className="w-10 h-10 object-cover rounded border border-green-300 group-hover:opacity-80 transition-opacity"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Eye className="w-3 h-3 text-white" />
+                                </div>
+                              </button>
+                              <div className="min-w-0">
+                                <span className="text-xs font-semibold text-green-800 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> ID Card Attached
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewModal({ url: idCardUrl, title: 'Alumni ID Card' })}
+                                className="px-2 py-0.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye className="w-3 h-3" /> View
+                              </button>
+                              <label
+                                htmlFor="alumni-id-upload"
+                                className="px-2 py-0.5 text-xs font-semibold text-gray-700 bg-gray-200/70 hover:bg-gray-200 rounded cursor-pointer transition-colors"
+                              >
+                                Change
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setIdCardUrl('')}
+                                className="p-1 text-red-600 bg-red-100/60 hover:bg-red-100 rounded transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {/* Degree section */}
+                        {degreeUrl ? (
+                          <div className="flex items-center justify-between border border-green-200 rounded-md p-2 bg-green-50/60 shadow-sm">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewModal({ url: degreeUrl, title: 'Degree Certificate' })}
+                                className="relative group flex-shrink-0 cursor-pointer"
+                              >
+                                <img
+                                  src={degreeUrl}
+                                  alt="Degree Preview"
+                                  className="w-10 h-10 object-cover rounded border border-green-300 group-hover:opacity-80 transition-opacity"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Eye className="w-3 h-3 text-white" />
+                                </div>
+                              </button>
+                              <div className="min-w-0">
+                                <span className="text-xs font-semibold text-green-800 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> Degree Attached
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewModal({ url: degreeUrl, title: 'Degree Certificate' })}
+                                className="px-2 py-0.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye className="w-3 h-3" /> View
+                              </button>
+                              <label
+                                htmlFor="alumni-degree-upload"
+                                className="px-2 py-0.5 text-xs font-semibold text-gray-700 bg-gray-200/70 hover:bg-gray-200 rounded cursor-pointer transition-colors"
+                              >
+                                Change
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => setDegreeUrl('')}
+                                className="p-1 text-red-600 bg-red-100/60 hover:bg-red-100 rounded transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {/* Upload buttons grid if either/both missing */}
+                        {(!idCardUrl || !degreeUrl) && (
+                          <div className="grid grid-cols-2 gap-3">
+                            {!idCardUrl && (
+                              <div className="border border-dashed border-gray-300 rounded-md p-2.5 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
+                                <label htmlFor="alumni-id-upload" className="cursor-pointer block">
+                                  <span className="text-[11px] text-gray-600 font-semibold hover:text-[#d60000] flex items-center justify-center gap-1">
+                                    <Upload className="w-3.5 h-3.5 text-gray-400" /> Upload ID Card
+                                  </span>
+                                </label>
+                              </div>
+                            )}
+                            {!degreeUrl && (
+                              <div className="border border-dashed border-gray-300 rounded-md p-2.5 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
+                                <label htmlFor="alumni-degree-upload" className="cursor-pointer block">
+                                  <span className="text-[11px] text-gray-600 font-semibold hover:text-[#d60000] flex items-center justify-center gap-1">
+                                    <Upload className="w-3.5 h-3.5 text-gray-400" /> Upload Degree
+                                  </span>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -223,15 +594,59 @@ const AuthForm = () => {
 
             <button
               type="submit"
-              className="w-full cursor-pointer bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md"
+              className="w-full cursor-pointer bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md uppercase tracking-wider text-sm"
             >
-              {activeTab === 'login' ? 'LOGIN' : 'REGISTER'}
+              {activeTab === 'login' ? 'Login' : 'Send Approval Request'}
             </button>
           </form>
         </div>
+
+        {/* Modal for previewing uploaded verification document */}
+        {previewModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+            onClick={() => setPreviewModal(null)}
+          >
+            <div
+              className="bg-white rounded-xl max-w-lg w-full overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh] border border-gray-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <h3 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-[#d60000]" />
+                  {previewModal.title} Preview
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setPreviewModal(null)}
+                  className="text-gray-400 hover:text-gray-700 rounded-lg p-1 hover:bg-gray-200/60 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4 flex items-center justify-center bg-gray-900/5 overflow-auto flex-1">
+                <img
+                  src={previewModal.url}
+                  alt={previewModal.title}
+                  className="max-h-[60vh] max-w-full object-contain rounded shadow-lg border border-gray-200"
+                />
+              </div>
+              <div className="p-3 border-t border-gray-100 flex justify-end bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => setPreviewModal(null)}
+                  className="px-4 py-1.5 text-xs font-bold bg-gray-800 hover:bg-gray-900 text-white rounded-md transition-colors cursor-pointer"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default AuthForm;
+

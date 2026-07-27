@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
 interface AuthState {
-  user: { name: string, role: string } | null;
-  login: (user: { name: string, role: string }) => void;
+  user: { id?: number; name: string; role: string; email?: string; [key: string]: any } | null;
+  login: (user: any) => void;
   logout: () => void;
   isAuthenticated: () => boolean;
 }
@@ -10,7 +10,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: localStorage.getItem('adminUser') ? JSON.parse(localStorage.getItem('adminUser')!) : null,
 
-  login: (user: { name: string, role: string }) => {
+  login: (user: any) => {
     localStorage.setItem('adminUser', JSON.stringify(user));
     set({ user });
   },

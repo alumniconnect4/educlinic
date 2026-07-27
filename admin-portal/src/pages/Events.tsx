@@ -1,51 +1,20 @@
-<<<<<<< HEAD
-import { Search, CalendarDays as EventsIcon, ChevronRight } from "lucide-react"
-
-export default function Events() {
-  return (
-    <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
-      {/* Breadcrumb & Search Bar */}
-      <div className="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 shadow-sm">
-        <div className="flex items-center text-sm text-gray-500">
-          <EventsIcon className="w-4 h-4 mr-2" />
-          <span>Events</span>
-          <ChevronRight className="w-4 h-4 mx-1" />
-          <span className="text-gray-400">Overview</span>
-        </div>
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder="search..." 
-            className="pl-4 pr-10 py-1.5 border border-gray-200 rounded-full text-sm w-64 focus:outline-none focus:border-blue-400"
-          />
-          <Search className="w-4 h-4 absolute right-3 top-2.5 text-gray-400" />
-        </div>
-      </div>
-
-      <div className="p-4 sm:p-6 space-y-6 flex-1">
-        {/* Content will be added here later */}
-      </div>
-    </div>
-  )
-}
-=======
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../utils/api.ts';
 import { useAuth } from '../context/AuthContext.tsx';
-import { 
-  Calendar, 
-  MapPin, 
-  Grid, 
-  List, 
-  Search, 
-  Trash2, 
-  Edit3, 
-  Users, 
-  Plus, 
-  ChevronLeft, 
-  ChevronRight, 
-  Loader2, 
+import {
+  Calendar,
+  MapPin,
+  Grid,
+  List,
+  Search,
+  Trash2,
+  Edit3,
+  Users,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
   X,
   AlertTriangle
 } from 'lucide-react';
@@ -82,7 +51,7 @@ export const Events: React.FC = () => {
     }
     return false;
   };
-  
+
   // Filters and Pagination
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'upcoming' | 'past'>('all');
@@ -99,16 +68,16 @@ export const Events: React.FC = () => {
     try {
       const offset = page * limit;
       let url = `/events/all-events/${limit}/${offset}`;
-      
+
       const queryParams: string[] = [];
       if (filterType !== 'all') {
         queryParams.push(`filter=${filterType}`);
       }
-      
+
       if (queryParams.length > 0) {
         url += `?${queryParams.join('&')}`;
       }
-      
+
       const response = await apiRequest<{ events: Event[], total: number }>(url);
       setEvents(response.events);
       setTotal(response.total);
@@ -147,7 +116,7 @@ export const Events: React.FC = () => {
     }
   };
 
-  const filteredEvents = events.filter(e => 
+  const filteredEvents = events.filter(e =>
     e.name.toLowerCase().includes(search.toLowerCase()) ||
     e.organizedBy.toLowerCase().includes(search.toLowerCase()) ||
     e.place.toLowerCase().includes(search.toLowerCase())
@@ -195,11 +164,10 @@ export const Events: React.FC = () => {
               <button
                 key={type}
                 onClick={() => handleFilterChange(type)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
-                  filterType === type 
-                    ? 'bg-white text-secondary shadow-sm' 
+                className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${filterType === type
+                    ? 'bg-white text-secondary shadow-sm'
                     : 'text-muted-foreground hover:text-secondary'
-                }`}
+                  }`}
               >
                 {type}
               </button>
@@ -209,18 +177,16 @@ export const Events: React.FC = () => {
           <div className="flex items-center bg-gray-100 p-1 rounded-xl">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all ${
-                viewMode === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-secondary'
-              }`}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-secondary'
+                }`}
               title="Grid View"
             >
               <Grid className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded-lg transition-all ${
-                viewMode === 'table' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-secondary'
-              }`}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white text-primary shadow-sm' : 'text-muted-foreground hover:text-secondary'
+                }`}
               title="Table View"
             >
               <List className="h-4 w-4" />
@@ -252,21 +218,20 @@ export const Events: React.FC = () => {
             });
 
             return (
-              <div 
+              <div
                 key={event.id}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col transition-all duration-300 hover:shadow-lg hover:scale-[1.01]"
               >
                 {/* Event Image */}
                 <div className="h-48 bg-gray-100 relative overflow-hidden">
-                  <img 
-                    src={event.imageUrl || 'https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173'} 
+                  <img
+                    src={event.imageUrl || 'https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173'}
                     alt={event.name}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold text-white uppercase shadow-sm ${
-                      event.eventType === 'ONLINE' ? 'bg-purple-600' : 'bg-blue-600'
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold text-white uppercase shadow-sm ${event.eventType === 'ONLINE' ? 'bg-purple-600' : 'bg-blue-600'
+                      }`}>
                       {event.eventType}
                     </span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-extrabold text-secondary uppercase bg-white/95 shadow-sm">
@@ -352,8 +317,8 @@ export const Events: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
                         <div className="h-10 w-16 rounded bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
-                          <img 
-                            src={event.imageUrl || 'https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173'} 
+                          <img
+                            src={event.imageUrl || 'https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173'}
                             alt={event.name}
                             className="w-full h-full object-cover"
                           />
@@ -381,9 +346,8 @@ export const Events: React.FC = () => {
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-extrabold ${
-                        event.eventType === 'ONLINE' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-extrabold ${event.eventType === 'ONLINE' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
                         {event.eventType}
                       </span>
                     </td>
@@ -459,10 +423,10 @@ export const Events: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
           <div className="fixed inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setDeleteEventId(null)} />
-          
+
           {/* Modal Container */}
           <div className="relative bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-150">
-            <button 
+            <button
               onClick={() => setDeleteEventId(null)}
               className="absolute top-4 right-4 text-muted-foreground hover:text-secondary p-1 rounded-lg transition-colors"
             >
@@ -515,4 +479,5 @@ export const Events: React.FC = () => {
     </div>
   );
 };
->>>>>>> c34b6fd (admin-portal-making)
+
+export default Events;
