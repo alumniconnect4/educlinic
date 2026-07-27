@@ -125,9 +125,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
@@ -138,6 +140,7 @@
     0% {
       transform: translateX(0);
     }
+
     100% {
       transform: translateX(-100%);
     }
