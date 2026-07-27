@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import { Toaster } from "sonner"
-import { AuthProvider } from "./context/AuthContext"
 import Login from "./pages/Login"
 import Home from "./pages/Home"
 import AnalyticsDetail from "./pages/AnalyticsDetail"
@@ -22,51 +21,49 @@ import Settings from "./pages/Settings"
 const App = () => {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Toaster 
-          position="bottom-right" 
-          richColors 
-          toastOptions={{
-            style: {
-              padding: '16px 20px',
-              fontSize: '14px',
-              borderRadius: '8px',
-              minWidth: '320px'
-            }
-          }}
-        />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          {/* Protected Admin Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            {/* Dashboard */}
-            <Route index element={<Home />} />
+      <Toaster
+        position="bottom-right"
+        richColors
+        toastOptions={{
+          style: {
+            padding: '16px 20px',
+            fontSize: '14px',
+            borderRadius: '8px',
+            minWidth: '320px'
+          }
+        }}
+      />
+      <Routes>
+        <Route path="/login" element={<Login />} />
 
-            {/* Manage Users (Nested) */}
-            <Route path="users" element={<ManageUsersLayout />}>
-              <Route index element={<ManageAdmins />} />
-              <Route path="admins" element={<ManageAdmins />} />
-              <Route path="alumni-students" element={<ManageAlumniStudents />} />
-              <Route path="pending-requests" element={<PendingRequestsPage />} />
-            </Route>
+        {/* Protected Admin Routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* Dashboard */}
+          <Route index element={<Home />} />
 
-            {/* Other Navigation Tabs */}
-            <Route path="events" element={<Events />} />
-            <Route path="gallery" element={<Gallery />} />
-            <Route path="help-tickets" element={<HelpTickets />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="analytics/:role" element={<AnalyticsDetail />} />
+          {/* Manage Users (Nested) */}
+          <Route path="users" element={<ManageUsersLayout />}>
+            <Route index element={<ManageAdmins />} />
+            <Route path="admins" element={<ManageAdmins />} />
+            <Route path="alumni-students" element={<ManageAlumniStudents />} />
+            <Route path="pending-requests" element={<PendingRequestsPage />} />
           </Route>
-        </Routes>
-      </AuthProvider>
+
+          {/* Other Navigation Tabs */}
+          <Route path="events" element={<Events />} />
+          <Route path="gallery" element={<Gallery />} />
+          <Route path="help-tickets" element={<HelpTickets />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="analytics/:role" element={<AnalyticsDetail />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   )
 }
