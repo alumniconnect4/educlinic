@@ -6,8 +6,9 @@ import type { EventItem } from "./CreateEventForm"
 interface ViewEventModalProps {
   event: EventItem | null
   onClose: () => void
-  onEdit: (event: EventItem) => void
-  onDelete: (event: EventItem) => void
+  onEdit?: (event: EventItem) => void
+  onDelete?: (event: EventItem) => void
+  onShare?: (event: EventItem) => void
 }
 
 const DEFAULT_EVENT_IMAGE =
@@ -17,7 +18,8 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
   event,
   onClose,
   onEdit,
-  onDelete
+  onDelete,
+  onShare
 }) => {
   if (!event) return null
 
@@ -317,7 +319,7 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
         <div className="shrink-0 bg-gray-100 border-t border-gray-300 px-6 py-3 flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
-            onClick={handleCopyLink}
+            onClick={onShare ? () => onShare(event) : handleCopyLink}
             className="px-3.5 py-1.5 bg-white hover:bg-gray-200 border border-gray-400 text-slate-800 font-bold uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Share2 className="w-3.5 h-3.5 text-[#a82020]" />
@@ -325,28 +327,32 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
           </button>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                onClose()
-                onEdit(event)
-              }}
-              className="px-4 py-1.5 border border-gray-400 bg-white hover:bg-gray-200 text-slate-800 font-bold uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Pencil className="w-3.5 h-3.5 text-blue-700" />
-              <span>EDIT EVENT</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onClose()
-                onDelete(event)
-              }}
-              className="px-4 py-1.5 border border-red-300 bg-white hover:bg-red-50 text-red-700 font-bold uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>DELETE EVENT</span>
-            </button>
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  onEdit(event)
+                }}
+                className="px-4 py-1.5 border border-gray-400 bg-white hover:bg-gray-200 text-slate-800 font-bold uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Pencil className="w-3.5 h-3.5 text-blue-700" />
+                <span>EDIT EVENT</span>
+              </button>
+            )}
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  onDelete(event)
+                }}
+                className="px-4 py-1.5 border border-red-300 bg-white hover:bg-red-50 text-red-700 font-bold uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>DELETE EVENT</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}

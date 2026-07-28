@@ -3,9 +3,9 @@ import { FolderPlus, Upload, X, Loader2, Link2 } from "lucide-react"
 
 export interface CreateAlbumFormData {
   name: string
-  description: string
   category: string
   coverImageUrl: string
+  description?: string
 }
 
 export interface AlbumItem {
@@ -26,6 +26,7 @@ interface CreateAlbumFormProps {
 }
 
 export const ALBUM_CATEGORIES = [
+  "Conference",
   "Convocation",
   "Cultural Events",
   "Sports",
@@ -137,19 +138,6 @@ export const CreateAlbumForm: React.FC<CreateAlbumFormProps> = ({ onSubmit, isCr
               <option key={cat} value={cat}>{cat}</option>
             ))}
           </select>
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className={labelClass}>Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Brief description of the album..."
-            rows={3}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-sm bg-white placeholder-gray-300 text-slate-800 focus:outline-none focus:border-slate-800 transition-colors resize-none"
-          />
         </div>
 
         {/* Cover Image */}

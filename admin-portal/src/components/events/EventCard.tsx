@@ -1,6 +1,7 @@
 import React from "react"
 import { Calendar, MapPin, Share2, Pencil, Trash2, Users } from "lucide-react"
 import type { EventItem } from "./CreateEventForm"
+export type { EventItem }
 
 interface EventCardProps {
   event: EventItem

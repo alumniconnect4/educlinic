@@ -30,6 +30,8 @@ export interface CreateEventFormData {
   registrationLimit?: number | "" | null
 }
 
+export type EventFormData = CreateEventFormData;
+
 export interface EventItem extends CreateEventFormData {
   id: number
   createdAt?: string

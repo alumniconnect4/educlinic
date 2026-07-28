@@ -130,18 +130,6 @@ export const EditAlbumModal: React.FC<EditAlbumModalProps> = ({
           </div>
 
           <div>
-            <label className={labelClass}>Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Brief description of the album..."
-              rows={3}
-              className={`${inputClass} resize-none`}
-            />
-          </div>
-
-          <div>
             <label className={labelClass}>Cover Image</label>
 
             <div className="flex bg-slate-100 p-0.5 rounded-sm border border-slate-200 text-xs font-medium mb-3">

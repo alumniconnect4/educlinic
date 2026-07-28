@@ -20,6 +20,7 @@ router.post('/register/:id', authMiddleware(), registerEvent);
 router.get('/registrations/:id/:limit/:offset', adminMiddleware, getEventRegistrations);
 router.delete('/registrations/:id', adminMiddleware, unregisterEventRegistration);
 router.get('/all-events/:limit/:offset', getAllEvents);
+router.get('/all/:limit/:offset', getAllEvents);
 router.get('/:id', getEventById);
 router.patch('/update/:id', adminMiddleware, updateEvent);
 router.delete('/delete/:id', adminMiddleware, deleteEvent);

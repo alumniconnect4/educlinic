@@ -3,6 +3,7 @@ import { Search, UserPlus, Users, ShieldCheck, GraduationCap, Pencil, Trash2, X,
 import { toast } from "sonner"
 import axios, { isAxiosError } from "axios"
 import { useAuthStore } from "@/store/useAuthStore"
+import { Skeleton } from "@/components/ui/Skeleton"
 
 interface AdminUser {
   id: number
@@ -45,6 +46,7 @@ export default function ManageAdmins() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isTableLoading, setIsTableLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
   // View Admin Modal & Zoom State
@@ -76,6 +78,7 @@ export default function ManageAdmins() {
   })
 
   const fetchAdmins = async () => {
+    setIsTableLoading(true)
     try {
       const response = await axios.get(
         `http://localhost:4000/api/admin-portal/admins?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`, 
@@ -86,6 +89,8 @@ export default function ManageAdmins() {
       setTotalPages(response.data.totalPages)
     } catch (err) {
       console.error("Failed to fetch admins", err)
+    } finally {
+      setIsTableLoading(false)
     }
   }
 
@@ -384,7 +389,25 @@ export default function ManageAdmins() {
               </tr>
             </thead>
             <tbody className="text-sm text-gray-600">
-              {admins.length === 0 ? (
+              {isTableLoading ? (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i} className="border-b border-gray-100">
+                    <td className="py-3.5 px-6">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-8 h-8 rounded-full shrink-0" />
+                        <div className="space-y-1 flex-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-40" /></td>
+                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-28 mx-auto" /></td>
+                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-16 mx-auto" /></td>
+                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-12 mx-auto" /></td>
+                  </tr>
+                ))
+              ) : admins.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-gray-400 font-medium">
                     No administrators found.

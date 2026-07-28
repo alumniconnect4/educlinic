@@ -3,6 +3,7 @@ import { X, Images, Tag, Loader2, Trash2, ImagePlus, CheckSquare, Square, Eye } 
 import axios from "axios"
 import { toast } from "sonner"
 import type { AlbumItem } from "./CreateAlbumForm"
+import { Skeleton } from "@/components/ui/Skeleton"
 
 interface GalleryImageItem {
   id: number
@@ -230,9 +231,10 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
-            <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400">
-              <Loader2 className="w-7 h-7 animate-spin text-slate-800" />
-              <span className="text-xs font-medium">Loading album photos...</span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <Skeleton key={i} className="aspect-square rounded-sm" />
+              ))}
             </div>
           ) : images.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400 border border-dashed border-gray-200 rounded-sm">

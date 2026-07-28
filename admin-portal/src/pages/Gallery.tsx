@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Image as ImageIcon, Search, Images, Loader2, Trash2, X } from "lucide-react"
+import { Search, Images, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 import axios from "axios"
 
@@ -8,6 +8,7 @@ import { AlbumCard } from "@/components/gallery/AlbumCard"
 import { AddImagesModal } from "@/components/gallery/AddImagesModal"
 import { EditAlbumModal } from "@/components/gallery/EditAlbumModal"
 import { ViewAlbumModal } from "@/components/gallery/ViewAlbumModal"
+import { Skeleton } from "@/components/ui/Skeleton"
 
 export default function Gallery() {
   const [albums, setAlbums] = useState<AlbumItem[]>([])
@@ -253,9 +254,23 @@ export default function Gallery() {
           {/* Album Cards List Body */}
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
             {isLoading ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400">
-                <Loader2 className="w-7 h-7 animate-spin text-slate-800" />
-                <span className="text-xs font-medium">Loading albums...</span>
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex flex-col sm:flex-row bg-white border border-gray-200 rounded-sm overflow-hidden p-0 gap-4">
+                    <Skeleton className="sm:w-56 md:w-64 h-44 shrink-0" />
+                    <div className="flex-1 p-5 flex flex-col justify-between space-y-3">
+                      <div className="space-y-2">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <Skeleton className="h-8 w-24" />
+                        <Skeleton className="h-8 w-28" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : albums.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400 border border-dashed border-gray-200 rounded-sm">

@@ -276,8 +276,34 @@ export default function Settings() {
         )
 
         if (res.data.url) {
-          setProfileData((prev) => ({ ...prev, avatarUrl: res.data.url }))
-          toast.success("Profile image adjusted and uploaded successfully!")
+          const newAvatarUrl = res.data.url
+
+          // Save avatarUrl immediately to profile in database
+          const updateRes = await axios.put(
+            "http://localhost:4000/api/admin-portal/profile",
+            {
+              name: profileData.name.trim(),
+              email: profileData.email.trim(),
+              avatarUrl: newAvatarUrl,
+              bio: profileData.bio.trim() || null,
+              gender: profileData.gender || null,
+              socialLink: profileData.socialLink.trim() || null,
+              schoolCategory: profileData.schoolCategory || null
+            },
+            { withCredentials: true }
+          )
+
+          const updatedUser = updateRes.data.user || { ...user, avatarUrl: newAvatarUrl }
+
+          setProfileData((prev) => ({ ...prev, avatarUrl: updatedUser.avatarUrl || newAvatarUrl }))
+          if (user) {
+            login({
+              ...user,
+              avatarUrl: updatedUser.avatarUrl || newAvatarUrl
+            })
+          }
+
+          toast.success("Profile picture updated successfully!")
           setShowAdjustModal(false)
           
           if (fileInputRef.current) {

@@ -1,43 +1,44 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { CalendarDays, Search, Loader2, Calendar } from "lucide-react"
+import { CalendarDays, Search, Calendar } from "lucide-react"
 import { toast } from "sonner"
 import axios from "axios"
 
-import { CreateEventForm, type CreateEventFormData, type EventItem } from "@/components/events/CreateEventForm"
-import { EventCard } from "@/components/events/EventCard"
-import { ViewEventModal } from "@/components/events/ViewEventModal"
+import { CreateEventForm, type EventFormData } from "@/components/events/CreateEventForm"
+import { EventCard, type EventItem } from "@/components/events/EventCard"
 import { EditEventModal } from "@/components/events/EditEventModal"
+import { ViewEventModal } from "@/components/events/ViewEventModal"
+import { DeleteEventModal } from "@/components/events/DeleteEventModal"
+import { Skeleton } from "@/components/ui/Skeleton"
 
 export default function Events() {
   const navigate = useNavigate()
-  // State for events and pagination
   const [events, setEvents] = useState<EventItem[]>([])
   const [total, setTotal] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 6
+  const itemsPerPage = 5
   const [isLoading, setIsLoading] = useState(false)
 
-  // Filters & search
-  const [searchQuery, setSearchQuery] = useState("")
+  // Filters & Search
   const [filterType, setFilterType] = useState<"ALL" | "UPCOMING" | "PAST">("ALL")
+  const [searchQuery, setSearchQuery] = useState("")
 
-  // Form submission loading states
+  // Form & Modals state
   const [isCreating, setIsCreating] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
-  // Modal active states
-  const [viewingEvent, setViewingEvent] = useState<EventItem | null>(null)
-  const [editingEvent, setEditingEvent] = useState<EventItem | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  // Fetch Events from API
-  // Fetch Events from API across all events
+  const [editingEvent, setEditingEvent] = useState<EventItem | null>(null)
+  const [viewingEvent, setViewingEvent] = useState<EventItem | null>(null)
+  const [deletingEvent, setDeletingEvent] = useState<EventItem | null>(null)
+
+  // Fetch events from backend API
   const fetchEvents = async () => {
     setIsLoading(true)
     try {
       const offset = (currentPage - 1) * itemsPerPage
       const params = new URLSearchParams()
-      if (filterType === "UPCOMING") params.append("filter", "upcoming")
-      if (filterType === "PAST") params.append("filter", "past")
+      if (filterType !== "ALL") params.append("filter", filterType)
       if (searchQuery.trim()) params.append("search", searchQuery.trim())
 
       const queryString = params.toString() ? `?${params.toString()}` : ""
@@ -62,39 +63,30 @@ export default function Events() {
     return () => clearTimeout(timer)
   }, [currentPage, filterType, searchQuery])
 
-  // Events returned from API are filtered across all database events and sorted latest added first
-  const filteredEvents = [...events].sort((a, b) => {
-    if (a.createdAt && b.createdAt) {
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    }
-    return b.id - a.id
-  })
-
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage))
 
-  // Create Event Handler
-  const handleCreateEvent = async (formData: CreateEventFormData) => {
-    if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-      toast.error("End date must be after start date")
-      return
-    }
-
+  // Handlers
+  const handleCreateEvent = async (formData: EventFormData) => {
     setIsCreating(true)
     try {
       await axios.post(
         "http://localhost:4000/api/events/create",
         {
           name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          organizedBy: formData.organizedBy.trim(),
-          place: formData.place.trim(),
-          eventType: formData.eventType,
+          description: formData.description?.trim() || undefined,
+          organizedBy: formData.organizedBy?.trim() || undefined,
+          place: formData.place?.trim() || undefined,
+          eventType: formData.eventType || "OFFLINE",
           visibility: formData.visibility || "GLOBAL",
-          startDate: formData.startDate,
-          endDate: formData.endDate,
+          startDate: formData.startDate ? new Date(formData.startDate).toISOString() : new Date().toISOString(),
+          endDate: formData.endDate ? new Date(formData.endDate).toISOString() : undefined,
           imageUrl: formData.imageUrl || undefined,
-          startRegistrationsNow: formData.startRegistrationsNow ?? true,
-          registrationLimit: formData.registrationLimit ? Number(formData.registrationLimit) : null
+          registrationLimit: typeof formData.registrationLimit === "number"
+            ? formData.registrationLimit
+            : formData.registrationLimit
+            ? parseInt(String(formData.registrationLimit), 10)
+            : undefined,
+          startRegistrationsNow: formData.startRegistrationsNow ?? true
         },
         { withCredentials: true }
       )
@@ -110,29 +102,24 @@ export default function Events() {
     }
   }
 
-  // Update Event Handler
   const handleUpdateEvent = async (eventId: number, updatedData: any) => {
-    if (new Date(updatedData.endDate) <= new Date(updatedData.startDate)) {
-      toast.error("End date must be after start date")
-      return
-    }
-
     setIsUpdating(true)
     try {
       await axios.patch(
         `http://localhost:4000/api/events/update/${eventId}`,
         {
-          name: updatedData.name.trim(),
+          name: updatedData.title.trim(),
           description: updatedData.description.trim() || undefined,
-          organizedBy: updatedData.organizedBy.trim(),
-          place: updatedData.place.trim(),
-          eventType: updatedData.eventType,
+          date: updatedData.date ? new Date(updatedData.date).toISOString() : undefined,
+          startTime: updatedData.startTime.trim() || undefined,
+          endTime: updatedData.endTime.trim() || undefined,
+          location: updatedData.location.trim() || undefined,
+          organizer: updatedData.organizer.trim() || undefined,
+          category: updatedData.category.trim() || undefined,
+          posterUrl: updatedData.posterUrl || undefined,
           visibility: updatedData.visibility || "GLOBAL",
-          startDate: updatedData.startDate,
-          endDate: updatedData.endDate,
-          imageUrl: updatedData.imageUrl || undefined,
-          startRegistrationsNow: updatedData.startRegistrationsNow ?? true,
-          registrationLimit: updatedData.registrationLimit ? Number(updatedData.registrationLimit) : null
+          registrationLimit: updatedData.registrationLimit ? parseInt(updatedData.registrationLimit) : undefined,
+          startRegistrationsNow: updatedData.startRegistrationsNow ?? true
         },
         { withCredentials: true }
       )
@@ -148,42 +135,33 @@ export default function Events() {
     }
   }
 
-  // Delete Event Handler
-  const executeDeleteEvent = async (eventId: number) => {
+  const handleDeleteConfirm = async () => {
+    if (!deletingEvent) return
+    setIsDeleting(true)
     try {
       await axios.delete(
-        `http://localhost:4000/api/events/delete/${eventId}`,
+        `http://localhost:4000/api/events/delete/${deletingEvent.id}`,
         { withCredentials: true }
       )
+
       toast.success("Event deleted successfully!")
+      setDeletingEvent(null)
       fetchEvents()
     } catch (error: any) {
       console.error("Failed to delete event:", error)
       toast.error(error.response?.data?.message || "Failed to delete event")
+    } finally {
+      setIsDeleting(false)
     }
   }
 
-  const handleDeleteEvent = (ev: EventItem) => {
-    toast(`Delete event "${ev.name}"?`, {
-      description: "This action cannot be undone. All registrations will also be removed.",
-      duration: 8000,
-      action: {
-        label: "Confirm",
-        onClick: () => executeDeleteEvent(ev.id)
-      },
-      cancel: {
-        label: "Cancel",
-        onClick: () => {}
-      }
-    })
+  const handleShareEvent = (event: EventItem) => {
+    const url = `${window.location.origin}/events#event-${event.id}`
+    navigator.clipboard.writeText(url)
+    toast.success("Event link copied to clipboard!")
   }
 
-  // Share / Copy Event URL Handler
-  const handleShareEvent = (ev: EventItem) => {
-    const eventUrl = `http://localhost:3000/events/${ev.id}`
-    navigator.clipboard.writeText(eventUrl)
-    toast.success(`Copied Event URL: ${eventUrl}`)
-  }
+  const filteredEvents = events
 
   return (
     <div className="w-full h-[calc(100vh-64px)] min-h-[640px] p-6 lg:p-8 flex flex-col">
@@ -216,7 +194,7 @@ export default function Events() {
                     setFilterType("ALL")
                     setCurrentPage(1)
                   }}
-                  className={`px-3 py-1 rounded transition-colors ${filterType === "ALL"
+                  className={`px-3 py-1 rounded transition-colors cursor-pointer ${filterType === "ALL"
                       ? "bg-white text-slate-900 shadow-2xs font-bold"
                       : "text-slate-600 hover:text-slate-900"
                     }`}
@@ -229,7 +207,7 @@ export default function Events() {
                     setFilterType("UPCOMING")
                     setCurrentPage(1)
                   }}
-                  className={`px-3 py-1 rounded transition-colors ${filterType === "UPCOMING"
+                  className={`px-3 py-1 rounded transition-colors cursor-pointer ${filterType === "UPCOMING"
                       ? "bg-white text-slate-900 shadow-2xs font-bold"
                       : "text-slate-600 hover:text-slate-900"
                     }`}
@@ -242,7 +220,7 @@ export default function Events() {
                     setFilterType("PAST")
                     setCurrentPage(1)
                   }}
-                  className={`px-3 py-1 rounded transition-colors ${filterType === "PAST"
+                  className={`px-3 py-1 rounded transition-colors cursor-pointer ${filterType === "PAST"
                       ? "bg-white text-slate-900 shadow-2xs font-bold"
                       : "text-slate-600 hover:text-slate-900"
                     }`}
@@ -271,9 +249,23 @@ export default function Events() {
           {/* Cards List Body */}
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
             {isLoading ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400">
-                <Loader2 className="w-7 h-7 animate-spin text-slate-800" />
-                <span className="text-xs font-medium">Loading events...</span>
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex flex-col sm:flex-row bg-white border border-gray-200 rounded-sm overflow-hidden p-0 gap-4">
+                    <Skeleton className="sm:w-56 md:w-64 h-44 shrink-0" />
+                    <div className="flex-1 p-5 flex flex-col justify-between space-y-3">
+                      <div className="space-y-2">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <Skeleton className="h-8 w-24" />
+                        <Skeleton className="h-8 w-24" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredEvents.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400 border border-dashed border-gray-200 rounded-sm">
@@ -291,7 +283,7 @@ export default function Events() {
                     event={event}
                     onShare={handleShareEvent}
                     onEdit={(ev) => setEditingEvent(ev)}
-                    onDelete={(ev) => handleDeleteEvent(ev)}
+                    onDelete={(ev) => setDeletingEvent(ev)}
                     onView={(ev) => setViewingEvent(ev)}
                     onViewRegistrations={(ev) =>
                       navigate(`/events/${ev.id}/registrations`)
@@ -302,7 +294,7 @@ export default function Events() {
             )}
           </div>
 
-          {/* Pagination Footer matching Admin Portal */}
+          {/* Pagination Footer */}
           {total > 0 && (
             <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between shrink-0 text-xs text-gray-600">
               <div>
@@ -322,7 +314,7 @@ export default function Events() {
                   type="button"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  className="px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
                   Previous
                 </button>
@@ -331,7 +323,7 @@ export default function Events() {
                     key={num}
                     type="button"
                     onClick={() => setCurrentPage(num)}
-                    className={`px-3 py-1.5 rounded border text-xs font-bold transition-colors ${currentPage === num
+                    className={`px-3 py-1.5 rounded border text-xs font-bold transition-colors cursor-pointer ${currentPage === num
                         ? "border-slate-800 bg-slate-800 text-white"
                         : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                       }`}
@@ -343,7 +335,7 @@ export default function Events() {
                   type="button"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  className="px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                  className="px-3 py-1.5 rounded border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
                   Next
                 </button>
@@ -354,20 +346,31 @@ export default function Events() {
       </div>
 
       {/* Modals */}
-      <ViewEventModal
-        event={viewingEvent}
-        onClose={() => setViewingEvent(null)}
-        onEdit={(ev) => setEditingEvent(ev)}
-        onDelete={(ev) => handleDeleteEvent(ev)}
-      />
+      {editingEvent && (
+        <EditEventModal
+          event={editingEvent}
+          onClose={() => setEditingEvent(null)}
+          onSubmit={handleUpdateEvent}
+          isUpdating={isUpdating}
+        />
+      )}
 
-      <EditEventModal
-        event={editingEvent}
-        onClose={() => setEditingEvent(null)}
-        onSubmit={handleUpdateEvent}
-        isUpdating={isUpdating}
-      />
+      {viewingEvent && (
+        <ViewEventModal
+          event={viewingEvent}
+          onClose={() => setViewingEvent(null)}
+          onShare={handleShareEvent}
+        />
+      )}
 
+      {deletingEvent && (
+        <DeleteEventModal
+          event={deletingEvent}
+          onClose={() => setDeletingEvent(null)}
+          onConfirm={handleDeleteConfirm}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   )
 }
