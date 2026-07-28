@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Search,
@@ -14,188 +14,188 @@ import {
   AlertCircle,
   FileText,
   CheckCircle2,
-  Trash2
-} from "lucide-react"
-import { toast } from "sonner"
-import axios from "axios"
+  Trash2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import axios from 'axios';
 
 interface RegistrationItem {
-  id: number
-  eventId: number
-  userId: number
-  name: string
-  email: string
-  countryCode?: string
-  contactNo?: string
-  companyOrCollege?: string
-  graduationYear?: string
-  linkedInUrl?: string
-  createdAt: string
-  user?: UserRecord
+  id: number;
+  eventId: number;
+  userId: number;
+  name: string;
+  email: string;
+  countryCode?: string;
+  contactNo?: string;
+  companyOrCollege?: string;
+  graduationYear?: string;
+  linkedInUrl?: string;
+  createdAt: string;
+  user?: UserRecord;
 }
 
 interface UserRecord {
-  id: number
-  name: string
-  email: string
-  avatarUrl?: string | null
-  role: string
-  isVerified?: boolean
-  schoolCategory?: string | null
-  bio?: string | null
-  gender?: string | null
-  socialLink?: string | null
-  idCardUrl?: string | null
-  degreeUrl?: string | null
-  createdAt?: string
-  contactNo?: string | null
+  id: number;
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+  role: string;
+  isVerified?: boolean;
+  schoolCategory?: string | null;
+  bio?: string | null;
+  gender?: string | null;
+  socialLink?: string | null;
+  idCardUrl?: string | null;
+  degreeUrl?: string | null;
+  createdAt?: string;
+  contactNo?: string | null;
 }
 
-const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`
+const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
 
 interface EventInfo {
-  id: number
-  name: string
-  registrationLimit?: number | null
-  startRegistrationsNow?: boolean
-  eventType: string
-  visibility: string
+  id: number;
+  name: string;
+  registrationLimit?: number | null;
+  startRegistrationsNow?: boolean;
+  eventType: string;
+  visibility: string;
 }
 
 export default function EventRegistrations() {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
-  const [registrations, setRegistrations] = useState<RegistrationItem[]>([])
-  const [eventInfo, setEventInfo] = useState<EventInfo | null>(null)
-  const [total, setTotal] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const itemsPerPage = 10
+  const [registrations, setRegistrations] = useState<RegistrationItem[]>([]);
+  const [eventInfo, setEventInfo] = useState<EventInfo | null>(null);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const itemsPerPage = 10;
 
   const verifiedRegistrations = registrations.filter(
     (reg) => reg.user && reg.user.isVerified === true
-  )
+  );
 
   const handleUserClick = (user?: UserRecord) => {
     if (!user) {
-      toast.error("User details not available")
-      return
+      toast.error('User details not available');
+      return;
     }
-    navigate("/users/alumni-students", { state: { viewingUser: user } })
-  }
+    navigate('/users/alumni-students', { state: { viewingUser: user } });
+  };
 
   const executeUnregister = async (regId: number, regName: string) => {
     try {
       await axios.delete(
         `http://localhost:4000/api/events/registrations/${regId}`,
         { withCredentials: true }
-      )
-      toast.success(`Successfully unregistered ${regName}`)
-      fetchRegistrations()
+      );
+      toast.success(`Successfully unregistered ${regName}`);
+      fetchRegistrations();
     } catch (err: any) {
-      console.error("Error unregistering user:", err)
+      console.error('Error unregistering user:', err);
       toast.error(
-        err.response?.data?.message || "Failed to unregister user from event"
-      )
+        err.response?.data?.message || 'Failed to unregister user from event'
+      );
     }
-  }
+  };
 
   const handleUnregister = (regId: number, regName: string) => {
     toast(`Unregister "${regName}"?`, {
       description: "This will remove them from this event's registrations.",
       duration: 8000,
       action: {
-        label: "Confirm",
-        onClick: () => executeUnregister(regId, regName)
+        label: 'Confirm',
+        onClick: () => executeUnregister(regId, regName),
       },
       cancel: {
-        label: "Cancel",
-        onClick: () => {}
-      }
-    })
-  }
+        label: 'Cancel',
+        onClick: () => {},
+      },
+    });
+  };
 
   const fetchRegistrations = async () => {
-    if (!id) return
-    setIsLoading(true)
+    if (!id) return;
+    setIsLoading(true);
     try {
-      const offset = (currentPage - 1) * itemsPerPage
+      const offset = (currentPage - 1) * itemsPerPage;
       const response = await axios.get(
         `http://localhost:4000/api/events/registrations/${id}/${itemsPerPage}/${offset}?search=${encodeURIComponent(searchQuery)}`,
         { withCredentials: true }
-      )
-      setRegistrations(response.data.registrations || [])
-      setTotal(response.data.total || 0)
+      );
+      setRegistrations(response.data.registrations || []);
+      setTotal(response.data.total || 0);
       if (response.data.event) {
-        setEventInfo(response.data.event)
+        setEventInfo(response.data.event);
       }
     } catch (err: any) {
-      console.error("Error fetching registrations:", err)
+      console.error('Error fetching registrations:', err);
       toast.error(
-        err.response?.data?.message || "Failed to load event registrations"
-      )
+        err.response?.data?.message || 'Failed to load event registrations'
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchRegistrations()
-  }, [id, currentPage, searchQuery])
+    fetchRegistrations();
+  }, [id, currentPage, searchQuery]);
 
-  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage))
+  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
 
   const handleExportCSV = () => {
     if (verifiedRegistrations.length === 0) {
-      toast.error("No verified registrations to export")
-      return
+      toast.error('No verified registrations to export');
+      return;
     }
 
     const headers = [
-      "ID",
-      "Name",
-      "Email",
-      "Phone",
-      "Organization/College",
-      "Graduation Year",
-      "LinkedIn URL",
-      "Registered On"
-    ]
+      'ID',
+      'Name',
+      'Email',
+      'Phone',
+      'Organization/College',
+      'Graduation Year',
+      'LinkedIn URL',
+      'Registered On',
+    ];
 
     const rows = verifiedRegistrations.map((reg) => [
       reg.id,
       `"${reg.name.replace(/"/g, '""')}"`,
       `"${reg.email}"`,
-      `"${(reg.countryCode || "") + " " + (reg.contactNo || "")}"`,
-      `"${(reg.companyOrCollege || "").replace(/"/g, '""')}"`,
-      `"${reg.graduationYear || ""}"`,
-      `"${reg.linkedInUrl || ""}"`,
-      `"${new Date(reg.createdAt).toLocaleString()}"`
-    ])
+      `"${(reg.countryCode || '') + ' ' + (reg.contactNo || '')}"`,
+      `"${(reg.companyOrCollege || '').replace(/"/g, '""')}"`,
+      `"${reg.graduationYear || ''}"`,
+      `"${reg.linkedInUrl || ''}"`,
+      `"${new Date(reg.createdAt).toLocaleString()}"`,
+    ]);
 
     const csvContent =
-      "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
 
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement("a")
-    link.setAttribute("href", encodedUri)
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
     link.setAttribute(
-      "download",
-      `event_${id}_registrations_${new Date().toISOString().split("T")[0]}.csv`
-    )
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    toast.success("Exported registrations to CSV")
-  }
+      'download',
+      `event_${id}_registrations_${new Date().toISOString().split('T')[0]}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Exported registrations to CSV');
+  };
 
   const isLimitReached =
     eventInfo?.registrationLimit &&
     eventInfo.registrationLimit > 0 &&
-    total >= eventInfo.registrationLimit
+    total >= eventInfo.registrationLimit;
 
   return (
     <div className="w-full min-h-[calc(100vh-64px)] p-6 lg:p-8 flex flex-col bg-[#f8fafc] text-slate-800 font-sans">
@@ -204,7 +204,7 @@ export default function EventRegistrations() {
         <div>
           <button
             type="button"
-            onClick={() => navigate("/events")}
+            onClick={() => navigate('/events')}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-slate-900 mb-2 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -217,7 +217,8 @@ export default function EventRegistrations() {
             </span>
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Review and manage all student and alumni registrations for this event.
+            Review and manage all student and alumni registrations for this
+            event.
           </p>
         </div>
 
@@ -249,7 +250,9 @@ export default function EventRegistrations() {
             Event Type
           </span>
           <span className="text-lg font-bold text-slate-800 mt-1 block capitalize">
-            {eventInfo?.eventType ? eventInfo.eventType.toLowerCase() : "General"}
+            {eventInfo?.eventType
+              ? eventInfo.eventType.toLowerCase()
+              : 'General'}
           </span>
         </div>
         <div className="bg-white border border-gray-200 rounded-sm p-4 shadow-sm">
@@ -275,10 +278,10 @@ export default function EventRegistrations() {
             Total Registrations
           </span>
           <span className="text-lg font-bold text-slate-800 mt-1 block">
-            {total}{" "}
+            {total}{' '}
             {eventInfo?.registrationLimit
               ? `of ${eventInfo.registrationLimit} limit`
-              : ""}
+              : ''}
           </span>
         </div>
       </div>
@@ -294,23 +297,23 @@ export default function EventRegistrations() {
               placeholder="Search by registrant name, email, institution, or contact..."
               value={searchQuery}
               onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setCurrentPage(1)
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
               }}
               className="w-full h-9 pl-9 pr-3 text-sm bg-white border border-gray-300 rounded-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors text-gray-700 placeholder-gray-400"
             />
           </div>
 
           <div className="text-xs text-gray-500 font-medium">
-            Showing{" "}
+            Showing{' '}
             <strong className="font-bold text-slate-800">
               {total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
-            </strong>{" "}
-            to{" "}
+            </strong>{' '}
+            to{' '}
             <strong className="font-bold text-slate-800">
               {Math.min(currentPage * itemsPerPage, total)}
-            </strong>{" "}
-            of <strong className="font-bold text-slate-900">{total}</strong>{" "}
+            </strong>{' '}
+            of <strong className="font-bold text-slate-900">{total}</strong>{' '}
             entries
           </div>
         </div>
@@ -321,9 +324,15 @@ export default function EventRegistrations() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold text-gray-700 uppercase tracking-wider sticky top-0 z-10">
                 <th className="py-3.5 px-6 text-center w-16">S.No</th>
-                <th className="py-3.5 px-6 text-left w-[26%]">Registrant Details</th>
-                <th className="py-3.5 px-6 text-left w-[22%]">Email & Contact No.</th>
-                <th className="py-3.5 px-6 text-left w-[18%]">Institution / Organization</th>
+                <th className="py-3.5 px-6 text-left w-[26%]">
+                  Registrant Details
+                </th>
+                <th className="py-3.5 px-6 text-left w-[22%]">
+                  Email & Contact No.
+                </th>
+                <th className="py-3.5 px-6 text-left w-[18%]">
+                  Institution / Organization
+                </th>
                 <th className="py-3.5 px-6 text-center w-[10%]">Grad. Year</th>
                 <th className="py-3.5 px-6 text-center w-[10%]">Profile</th>
                 <th className="py-3.5 px-6 text-left w-[14%]">Registered On</th>
@@ -333,7 +342,10 @@ export default function EventRegistrations() {
             <tbody className="divide-y divide-gray-100 text-gray-600">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center text-gray-400 font-medium">
+                  <td
+                    colSpan={8}
+                    className="py-16 text-center text-gray-400 font-medium"
+                  >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Loader2 className="w-6 h-6 animate-spin text-slate-700" />
                       <span className="text-xs font-semibold text-slate-700">
@@ -344,7 +356,10 @@ export default function EventRegistrations() {
                 </tr>
               ) : verifiedRegistrations.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-16 text-center text-gray-400 font-medium">
+                  <td
+                    colSpan={8}
+                    className="py-16 text-center text-gray-400 font-medium"
+                  >
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Users className="w-8 h-8 text-gray-300 mb-1" />
                       <span className="text-sm font-semibold text-slate-700">
@@ -352,15 +367,15 @@ export default function EventRegistrations() {
                       </span>
                       <span className="text-xs text-gray-400">
                         {searchQuery
-                          ? "No records match your active search criteria."
-                          : "No users have registered for this event yet."}
+                          ? 'No records match your active search criteria.'
+                          : 'No users have registered for this event yet.'}
                       </span>
                     </div>
                   </td>
                 </tr>
               ) : (
                 verifiedRegistrations.map((reg, index) => {
-                  const serialNo = (currentPage - 1) * itemsPerPage + index + 1
+                  const serialNo = (currentPage - 1) * itemsPerPage + index + 1;
                   return (
                     <tr
                       key={reg.id}
@@ -403,7 +418,7 @@ export default function EventRegistrations() {
                             <div className="flex items-center gap-1.5 text-xs text-gray-500">
                               <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                               <span>
-                                {reg.countryCode ? `${reg.countryCode} ` : ""}
+                                {reg.countryCode ? `${reg.countryCode} ` : ''}
                                 {reg.contactNo}
                               </span>
                             </div>
@@ -433,7 +448,7 @@ export default function EventRegistrations() {
                         {reg.linkedInUrl ? (
                           <a
                             href={
-                              reg.linkedInUrl.startsWith("http")
+                              reg.linkedInUrl.startsWith('http')
                                 ? reg.linkedInUrl
                                 : `https://${reg.linkedInUrl}`
                             }
@@ -455,13 +470,13 @@ export default function EventRegistrations() {
                           <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                           <span>
                             {new Date(reg.createdAt).toLocaleDateString(
-                              "en-US",
+                              'en-US',
                               {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit"
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
                               }
                             )}
                           </span>
@@ -479,7 +494,7 @@ export default function EventRegistrations() {
                         </button>
                       </td>
                     </tr>
-                  )
+                  );
                 })
               )}
             </tbody>
@@ -490,15 +505,15 @@ export default function EventRegistrations() {
         {total > 0 && (
           <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between shrink-0 text-xs text-gray-600 flex-wrap gap-3">
             <div>
-              Showing{" "}
+              Showing{' '}
               <strong className="font-bold text-slate-800">
                 {Math.min((currentPage - 1) * itemsPerPage + 1, total)}
-              </strong>{" "}
-              to{" "}
+              </strong>{' '}
+              to{' '}
               <strong className="font-bold text-slate-800">
                 {Math.min(currentPage * itemsPerPage, total)}
-              </strong>{" "}
-              of <strong className="font-bold text-slate-900">{total}</strong>{" "}
+              </strong>{' '}
+              of <strong className="font-bold text-slate-900">{total}</strong>{' '}
               entries
             </div>
 
@@ -519,8 +534,8 @@ export default function EventRegistrations() {
                     onClick={() => setCurrentPage(num)}
                     className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-colors cursor-pointer ${
                       currentPage === num
-                        ? "border-slate-800 bg-slate-800 text-white"
-                        : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        ? 'border-slate-800 bg-slate-800 text-white'
+                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     {num}
@@ -541,7 +556,6 @@ export default function EventRegistrations() {
           </div>
         )}
       </div>
-
     </div>
-  )
+  );
 }

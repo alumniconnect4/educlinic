@@ -13,12 +13,18 @@ const AuthForm = () => {
   const [idCardUrl, setIdCardUrl] = useState<string>('');
   const [degreeUrl, setDegreeUrl] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string>('');
-  const [previewModal, setPreviewModal] = useState<{ url: string; title: string } | null>(null);
+  const [previewModal, setPreviewModal] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'idCard' | 'degree' | 'avatar') => {
+  const handleFileUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'idCard' | 'degree' | 'avatar'
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -45,7 +51,7 @@ const AuthForm = () => {
           toast.error('Profile avatar image is compulsory for registration.');
           return;
         }
-        
+
         if (role === 'USER' && !idCardUrl) {
           setError('Student registration requires uploading an ID Card.');
           toast.error('Student registration requires uploading an ID Card.');
@@ -53,8 +59,12 @@ const AuthForm = () => {
         }
 
         if (role === 'ALUMNI' && !idCardUrl && !degreeUrl) {
-          setError('Alumni registration requires uploading either an ID Card or Degree Certificate.');
-          toast.error('Alumni registration requires uploading either an ID Card or Degree Certificate.');
+          setError(
+            'Alumni registration requires uploading either an ID Card or Degree Certificate.'
+          );
+          toast.error(
+            'Alumni registration requires uploading either an ID Card or Degree Certificate.'
+          );
           return;
         }
 
@@ -188,7 +198,9 @@ const AuthForm = () => {
                     <select
                       name="role"
                       value={selectedRole}
-                      onChange={(e) => setSelectedRole(e.target.value as 'USER' | 'ALUMNI')}
+                      onChange={(e) =>
+                        setSelectedRole(e.target.value as 'USER' | 'ALUMNI')
+                      }
                       className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700"
                     >
                       <option value="USER">Student</option>
@@ -205,15 +217,31 @@ const AuthForm = () => {
                       className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-gray-700 text-sm"
                     >
                       <option value="">Select School</option>
-                      <option value="School_of_Engineering">School of Engineering</option>
-                      <option value="School_of_Sciences">School of Sciences</option>
-                      <option value="School_of_Agriculture">School of Agriculture</option>
-                      <option value="School_of_Business_Studies">School of Business Studies</option>
-                      <option value="School_of_Computer_Applications">School of Computer Applications</option>
-                      <option value="School_of_Humanities">School of Humanities</option>
-                      <option value="School_of_Education">School of Education</option>
+                      <option value="School_of_Engineering">
+                        School of Engineering
+                      </option>
+                      <option value="School_of_Sciences">
+                        School of Sciences
+                      </option>
+                      <option value="School_of_Agriculture">
+                        School of Agriculture
+                      </option>
+                      <option value="School_of_Business_Studies">
+                        School of Business Studies
+                      </option>
+                      <option value="School_of_Computer_Applications">
+                        School of Computer Applications
+                      </option>
+                      <option value="School_of_Humanities">
+                        School of Humanities
+                      </option>
+                      <option value="School_of_Education">
+                        School of Education
+                      </option>
                       <option value="School_of_Law">School of Law</option>
-                      <option value="School_of_Pharmacy">School of Pharmacy</option>
+                      <option value="School_of_Pharmacy">
+                        School of Pharmacy
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -221,7 +249,8 @@ const AuthForm = () => {
                 {/* Profile Avatar Upload (Compulsory) */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Profile Avatar <span className="text-[#d60000]">* Required</span>
+                    Profile Avatar{' '}
+                    <span className="text-[#d60000]">* Required</span>
                   </label>
 
                   <input
@@ -237,7 +266,12 @@ const AuthForm = () => {
                       <div className="flex items-center gap-2.5 min-w-0">
                         <button
                           type="button"
-                          onClick={() => setPreviewModal({ url: avatarUrl, title: 'Profile Avatar' })}
+                          onClick={() =>
+                            setPreviewModal({
+                              url: avatarUrl,
+                              title: 'Profile Avatar',
+                            })
+                          }
                           className="relative group flex-shrink-0 cursor-pointer"
                           title="Click to view full avatar"
                         >
@@ -255,13 +289,20 @@ const AuthForm = () => {
                             <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
                             <span className="truncate">Avatar Uploaded</span>
                           </div>
-                          <span className="text-[11px] text-gray-500 block truncate">Compulsory profile image set</span>
+                          <span className="text-[11px] text-gray-500 block truncate">
+                            Compulsory profile image set
+                          </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                         <button
                           type="button"
-                          onClick={() => setPreviewModal({ url: avatarUrl, title: 'Profile Avatar' })}
+                          onClick={() =>
+                            setPreviewModal({
+                              url: avatarUrl,
+                              title: 'Profile Avatar',
+                            })
+                          }
                           className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -286,7 +327,10 @@ const AuthForm = () => {
                     </div>
                   ) : (
                     <div className="border border-dashed border-gray-300 rounded-md p-2.5 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
-                      <label htmlFor="profile-avatar-upload" className="cursor-pointer flex flex-col items-center justify-center gap-1">
+                      <label
+                        htmlFor="profile-avatar-upload"
+                        className="cursor-pointer flex flex-col items-center justify-center gap-1"
+                      >
                         <Upload className="w-4 h-4 text-gray-400" />
                         <span className="text-xs text-gray-600 font-medium hover:text-[#d60000]">
                           Click to upload Profile Avatar Image (JPG/PNG)
@@ -301,7 +345,8 @@ const AuthForm = () => {
                   {selectedRole === 'USER' ? (
                     <div>
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                        Student ID Card <span className="text-[#d60000]">* Required</span>
+                        Student ID Card{' '}
+                        <span className="text-[#d60000]">* Required</span>
                       </label>
 
                       <input
@@ -317,7 +362,12 @@ const AuthForm = () => {
                           <div className="flex items-center gap-2.5 min-w-0">
                             <button
                               type="button"
-                              onClick={() => setPreviewModal({ url: idCardUrl, title: 'Student ID Card' })}
+                              onClick={() =>
+                                setPreviewModal({
+                                  url: idCardUrl,
+                                  title: 'Student ID Card',
+                                })
+                              }
                               className="relative group flex-shrink-0 cursor-pointer"
                               title="Click to view full image"
                             >
@@ -333,15 +383,24 @@ const AuthForm = () => {
                             <div className="min-w-0">
                               <div className="flex items-center gap-1 text-xs font-semibold text-green-800">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                                <span className="truncate">ID Card Uploaded</span>
+                                <span className="truncate">
+                                  ID Card Uploaded
+                                </span>
                               </div>
-                              <span className="text-[11px] text-gray-500 block truncate">Ready for verification</span>
+                              <span className="text-[11px] text-gray-500 block truncate">
+                                Ready for verification
+                              </span>
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                             <button
                               type="button"
-                              onClick={() => setPreviewModal({ url: idCardUrl, title: 'Student ID Card' })}
+                              onClick={() =>
+                                setPreviewModal({
+                                  url: idCardUrl,
+                                  title: 'Student ID Card',
+                                })
+                              }
                               className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors cursor-pointer"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -366,7 +425,10 @@ const AuthForm = () => {
                         </div>
                       ) : (
                         <div className="border border-dashed border-gray-300 rounded-md p-3 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
-                          <label htmlFor="student-id-upload" className="cursor-pointer flex flex-col items-center justify-center gap-1">
+                          <label
+                            htmlFor="student-id-upload"
+                            className="cursor-pointer flex flex-col items-center justify-center gap-1"
+                          >
                             <Upload className="w-5 h-5 text-gray-400" />
                             <span className="text-xs text-gray-600 font-medium hover:text-[#d60000]">
                               Click to upload Student ID Card (JPG/PNG)
@@ -378,7 +440,10 @@ const AuthForm = () => {
                   ) : (
                     <div className="space-y-2">
                       <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-0.5">
-                        Verification Document <span className="text-[#d60000]">* (ID Card or Degree)</span>
+                        Verification Document{' '}
+                        <span className="text-[#d60000]">
+                          * (ID Card or Degree)
+                        </span>
                       </label>
 
                       <input
@@ -403,7 +468,12 @@ const AuthForm = () => {
                             <div className="flex items-center gap-2 min-w-0">
                               <button
                                 type="button"
-                                onClick={() => setPreviewModal({ url: idCardUrl, title: 'Alumni ID Card' })}
+                                onClick={() =>
+                                  setPreviewModal({
+                                    url: idCardUrl,
+                                    title: 'Alumni ID Card',
+                                  })
+                                }
                                 className="relative group flex-shrink-0 cursor-pointer"
                               >
                                 <img
@@ -417,14 +487,20 @@ const AuthForm = () => {
                               </button>
                               <div className="min-w-0">
                                 <span className="text-xs font-semibold text-green-800 flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> ID Card Attached
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />{' '}
+                                  ID Card Attached
                                 </span>
                               </div>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <button
                                 type="button"
-                                onClick={() => setPreviewModal({ url: idCardUrl, title: 'Alumni ID Card' })}
+                                onClick={() =>
+                                  setPreviewModal({
+                                    url: idCardUrl,
+                                    title: 'Alumni ID Card',
+                                  })
+                                }
                                 className="px-2 py-0.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors flex items-center gap-1 cursor-pointer"
                               >
                                 <Eye className="w-3 h-3" /> View
@@ -452,7 +528,12 @@ const AuthForm = () => {
                             <div className="flex items-center gap-2 min-w-0">
                               <button
                                 type="button"
-                                onClick={() => setPreviewModal({ url: degreeUrl, title: 'Degree Certificate' })}
+                                onClick={() =>
+                                  setPreviewModal({
+                                    url: degreeUrl,
+                                    title: 'Degree Certificate',
+                                  })
+                                }
                                 className="relative group flex-shrink-0 cursor-pointer"
                               >
                                 <img
@@ -466,14 +547,20 @@ const AuthForm = () => {
                               </button>
                               <div className="min-w-0">
                                 <span className="text-xs font-semibold text-green-800 flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> Degree Attached
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />{' '}
+                                  Degree Attached
                                 </span>
                               </div>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
                               <button
                                 type="button"
-                                onClick={() => setPreviewModal({ url: degreeUrl, title: 'Degree Certificate' })}
+                                onClick={() =>
+                                  setPreviewModal({
+                                    url: degreeUrl,
+                                    title: 'Degree Certificate',
+                                  })
+                                }
                                 className="px-2 py-0.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-colors flex items-center gap-1 cursor-pointer"
                               >
                                 <Eye className="w-3 h-3" /> View
@@ -500,18 +587,26 @@ const AuthForm = () => {
                           <div className="grid grid-cols-2 gap-3">
                             {!idCardUrl && (
                               <div className="border border-dashed border-gray-300 rounded-md p-2.5 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
-                                <label htmlFor="alumni-id-upload" className="cursor-pointer block">
+                                <label
+                                  htmlFor="alumni-id-upload"
+                                  className="cursor-pointer block"
+                                >
                                   <span className="text-[11px] text-gray-600 font-semibold hover:text-[#d60000] flex items-center justify-center gap-1">
-                                    <Upload className="w-3.5 h-3.5 text-gray-400" /> Upload ID Card
+                                    <Upload className="w-3.5 h-3.5 text-gray-400" />{' '}
+                                    Upload ID Card
                                   </span>
                                 </label>
                               </div>
                             )}
                             {!degreeUrl && (
                               <div className="border border-dashed border-gray-300 rounded-md p-2.5 bg-gray-50 text-center hover:bg-gray-100/80 transition-colors">
-                                <label htmlFor="alumni-degree-upload" className="cursor-pointer block">
+                                <label
+                                  htmlFor="alumni-degree-upload"
+                                  className="cursor-pointer block"
+                                >
                                   <span className="text-[11px] text-gray-600 font-semibold hover:text-[#d60000] flex items-center justify-center gap-1">
-                                    <Upload className="w-3.5 h-3.5 text-gray-400" /> Upload Degree
+                                    <Upload className="w-3.5 h-3.5 text-gray-400" />{' '}
+                                    Upload Degree
                                   </span>
                                 </label>
                               </div>
@@ -649,4 +744,3 @@ const AuthForm = () => {
 };
 
 export default AuthForm;
-

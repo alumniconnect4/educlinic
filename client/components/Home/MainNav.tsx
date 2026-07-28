@@ -60,7 +60,7 @@ const navigation: RouteItem[] = [
     name: 'Gallery',
     subRoutes: [
       { name: 'Campus Life', path: '/gallery/campus-life' },
-      { name: 'Events', path: '/gallery/events' }
+      { name: 'Events', path: '/gallery/events' },
     ],
   },
   {
@@ -187,19 +187,21 @@ const MainNav = () => {
                         ? (e) => handleLinkClick(e, item.path!, item.name)
                         : undefined
                     }
-                    className={`inline-flex items-center text-[15px] font-semibold pb-1 border-b-2 transition-colors ${isActive
+                    className={`inline-flex items-center text-[15px] font-semibold pb-1 border-b-2 transition-colors ${
+                      isActive
                         ? 'border-[#d60000] text-gray-900'
                         : 'border-transparent text-gray-600 hover:text-[#d60000] hover:border-[#d60000]'
-                      }`}
+                    }`}
                   >
                     {item.name}
                   </Link>
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-1 text-[15px] font-semibold pb-1 border-b-2 transition-colors cursor-pointer group-hover:text-[#d60000] group-hover:border-[#d60000] ${isActive
+                    className={`inline-flex items-center gap-1 text-[15px] font-semibold pb-1 border-b-2 transition-colors cursor-pointer group-hover:text-[#d60000] group-hover:border-[#d60000] ${
+                      isActive
                         ? 'border-[#d60000] text-gray-900'
                         : 'border-transparent text-gray-600'
-                      }`}
+                    }`}
                   >
                     {item.name}
                     <ChevronDown size={16} className="mt-0.5" />
@@ -272,8 +274,9 @@ const MainNav = () => {
 
       {/* Sidebar */}
       <div
-        className={`xl:hidden fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-white z-[70] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
+        className={`xl:hidden fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-white z-[70] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${
+          isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white z-10">
           <Image
@@ -299,10 +302,11 @@ const MainNav = () => {
                 {item.path ? (
                   <Link
                     href={item.path}
-                    className={`block text-base font-medium py-3 px-4 rounded-lg transition-colors duration-200 ${pathname === item.path
+                    className={`block text-base font-medium py-3 px-4 rounded-lg transition-colors duration-200 ${
+                      pathname === item.path
                         ? 'bg-red-50 text-[#d60000]'
                         : 'text-gray-700 hover:bg-red-50 hover:text-[#d60000]'
-                      }`}
+                    }`}
                     onClick={(e) =>
                       item.path?.startsWith('http')
                         ? handleLinkClick(e, item.path, item.name, true)
@@ -336,10 +340,11 @@ const MainNav = () => {
                         <Link
                           key={sub.name}
                           href={sub.path}
-                          className={`block text-sm py-2 px-3 rounded-md transition-colors duration-200 ${pathname === sub.path
+                          className={`block text-sm py-2 px-3 rounded-md transition-colors duration-200 ${
+                            pathname === sub.path
                               ? 'bg-red-50 text-[#d60000] font-medium'
                               : 'text-gray-500 hover:bg-red-50 hover:text-[#d60000]'
-                            }`}
+                          }`}
                           onClick={(e) =>
                             sub.path.startsWith('http')
                               ? handleLinkClick(e, sub.path, sub.name, true)
@@ -384,4 +389,3 @@ const MainNav = () => {
 };
 
 export default MainNav;
-

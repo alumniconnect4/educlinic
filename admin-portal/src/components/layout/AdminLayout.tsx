@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react"
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom"
+import { useState, useRef, useEffect } from 'react';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -13,71 +13,93 @@ import {
   Key,
   LogOut,
   ShieldCheck,
-  Clock
-} from "lucide-react"
-import { useAuthStore } from "@/store/useAuthStore"
-import axios from "axios"
+  Clock,
+  MapPin,
+  Phone,
+} from 'lucide-react';
+import { useAuthStore } from '@/store/useAuthStore';
+import axios from 'axios';
 
 export default function AdminLayout() {
-  const logout = useAuthStore((state) => state.logout)
-  const user = useAuthStore((state) => state.user)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
+  const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false)
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
-      await axios.get("http://localhost:4000/api/admin-portal/logout", {
+      await axios.get('http://localhost:4000/api/admin-portal/logout', {
         withCredentials: true,
-      })
+      });
     } catch (err) {
-      console.error("Logout failed", err)
+      console.error('Logout failed', err);
     } finally {
-      logout()
-      navigate("/login")
+      logout();
+      navigate('/login');
     }
-  }
+  };
 
   const navItems = [
-    { name: "DashBoard", path: "/", icon: LayoutDashboard },
+    { name: 'DashBoard', path: '/', icon: LayoutDashboard },
     {
-      name: "Manage Users",
-      path: "/users",
+      name: 'Manage Users',
+      path: '/users',
       icon: Users,
       subItems: [
-        { name: "Manage Admins", path: "/users/admins", icon: ShieldCheck },
-        { name: "Manage Alumni & Students", path: "/users/alumni-students", icon: User },
-        { name: "Pending Requests", path: "/users/pending-requests", icon: Clock }
-      ]
+        { name: 'Manage Admins', path: '/users/admins', icon: ShieldCheck },
+        {
+          name: 'Manage Alumni & Students',
+          path: '/users/alumni-students',
+          icon: User,
+        },
+        {
+          name: 'Pending Requests',
+          path: '/users/pending-requests',
+          icon: Clock,
+        },
+      ],
     },
-    { name: "Events", path: "/events", icon: CalendarDays },
-    { name: "Gallery", path: "/gallery", icon: ImageIcon },
-    { name: "Help Tickets", path: "/help-tickets", icon: HelpCircle },
-    { name: "Settings", path: "/settings", icon: Settings },
-  ]
+    { name: 'Events', path: '/events', icon: CalendarDays },
+    { name: 'Gallery', path: '/gallery', icon: ImageIcon },
+    { name: 'Help Tickets', path: '/help-tickets', icon: HelpCircle },
+    { name: 'Settings', path: '/settings', icon: Settings },
+  ];
 
   return (
     <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
       {/* Header spanning full width */}
       <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between z-20 shadow-sm flex-shrink-0 relative">
         <div
-          className={`${isSidebarOpen ? "w-[200px] px-2 justify-between" : "w-[80px] px-0 justify-center"
-            } h-full flex items-center border-r border-gray-200 transition-all duration-300 flex-shrink-0 bg-white z-30`}
+          className={`${
+            isSidebarOpen
+              ? 'w-[200px] px-2 justify-between'
+              : 'w-[80px] px-0 justify-center'
+          } h-full flex items-center border-r border-gray-200 transition-all duration-300 flex-shrink-0 bg-white z-30`}
         >
-          <div className={`overflow-hidden transition-all duration-300 flex items-center ${isSidebarOpen ? "w-[140px] opacity-100" : "w-0 opacity-0"}`}>
-            <img src="/logo1.png" alt="EduClinic Logo" className="max-h-12 w-auto object-contain flex-shrink-0 min-w-[120px]" />
+          <div
+            className={`overflow-hidden transition-all duration-300 flex items-center ${isSidebarOpen ? 'w-[140px] opacity-100' : 'w-0 opacity-0'}`}
+          >
+            <img
+              src="/logo1.png"
+              alt="EduClinic Logo"
+              className="max-h-12 w-auto object-contain flex-shrink-0 min-w-[120px]"
+            />
           </div>
           <button
             className={`p-2 text-[#7abdd1] hover:text-[#5caebd] hidden md:flex items-center justify-center flex-shrink-0`}
@@ -102,7 +124,8 @@ export default function AdminLayout() {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
               <div className="hidden sm:flex items-center text-[13px] text-gray-600 font-medium uppercase tracking-wide">
-                {user?.name} <ChevronDown className="w-4 h-4 ml-2 text-gray-400" />
+                {user?.name}{' '}
+                <ChevronDown className="w-4 h-4 ml-2 text-gray-400" />
               </div>
             </div>
 
@@ -120,7 +143,7 @@ export default function AdminLayout() {
                   className="px-4 py-2.5 border-b border-gray-100 flex items-center text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    navigate("/settings", { state: { tab: "password" } });
+                    navigate('/settings', { state: { tab: 'password' } });
                   }}
                 >
                   <Key className="w-4 h-4 mr-3 text-gray-400" />
@@ -142,31 +165,38 @@ export default function AdminLayout() {
       <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar */}
         <aside
-          className={`${isSidebarOpen ? "w-[200px]" : "w-[80px]"
-            } bg-white flex-shrink-0 hidden md:flex flex-col shadow-sm border-r border-gray-200 z-30 transition-all duration-300 relative`}
+          className={`${
+            isSidebarOpen ? 'w-[200px]' : 'w-[80px]'
+          } bg-white flex-shrink-0 hidden md:flex flex-col shadow-sm border-r border-gray-200 z-30 transition-all duration-300 relative`}
         >
           <nav className="flex-1 py-0">
             <ul className="space-y-0">
               {navItems.map((item) => {
-                const isActive = item.path === "/"
-                  ? location.pathname === "/"
-                  : location.pathname.startsWith(item.path);
+                const isActive =
+                  item.path === '/'
+                    ? location.pathname === '/'
+                    : location.pathname.startsWith(item.path);
 
                 return (
-                  <li key={item.name} className="border-b border-gray-100 relative group">
+                  <li
+                    key={item.name}
+                    className="border-b border-gray-100 relative group"
+                  >
                     {item.subItems ? (
                       <div
-                        className={
-                          `flex flex-col items-center justify-center py-4 px-2 text-[13px] transition-all border-l-[3px] cursor-pointer select-none ${isActive
-                            ? "text-slate-900 border-slate-900 bg-slate-100 font-medium"
-                            : "text-slate-500 border-transparent hover:text-slate-900 hover:bg-slate-50"
-                          }`
-                        }
+                        className={`flex flex-col items-center justify-center py-4 px-2 text-[13px] transition-all border-l-[3px] cursor-pointer select-none ${
+                          isActive
+                            ? 'text-slate-900 border-slate-900 bg-slate-100 font-medium'
+                            : 'text-slate-500 border-transparent hover:text-slate-900 hover:bg-slate-50'
+                        }`}
                       >
                         <item.icon className="w-7 h-7 mb-1" strokeWidth={1.2} />
                         <span
-                          className={`text-center font-normal tracking-wide whitespace-nowrap overflow-hidden transition-all duration-300 ${isSidebarOpen ? "opacity-100 h-auto mt-1" : "opacity-0 h-0 m-0"
-                            }`}
+                          className={`text-center font-normal tracking-wide whitespace-nowrap overflow-hidden transition-all duration-300 ${
+                            isSidebarOpen
+                              ? 'opacity-100 h-auto mt-1'
+                              : 'opacity-0 h-0 m-0'
+                          }`}
                         >
                           {item.name}
                         </span>
@@ -174,18 +204,20 @@ export default function AdminLayout() {
                     ) : (
                       <NavLink
                         to={item.path}
-                        end={item.path === "/"}
-                        className={
-                          `flex flex-col items-center justify-center py-4 px-2 text-[13px] transition-all border-l-[3px] ${isActive
-                            ? "text-slate-900 border-slate-900 bg-slate-100 font-medium"
-                            : "text-slate-500 border-transparent hover:text-slate-900 hover:bg-slate-50"
-                          }`
-                        }
+                        end={item.path === '/'}
+                        className={`flex flex-col items-center justify-center py-4 px-2 text-[13px] transition-all border-l-[3px] ${
+                          isActive
+                            ? 'text-slate-900 border-slate-900 bg-slate-100 font-medium'
+                            : 'text-slate-500 border-transparent hover:text-slate-900 hover:bg-slate-50'
+                        }`}
                       >
                         <item.icon className="w-7 h-7 mb-1" strokeWidth={1.2} />
                         <span
-                          className={`text-center font-normal tracking-wide whitespace-nowrap overflow-hidden transition-all duration-300 ${isSidebarOpen ? "opacity-100 h-auto mt-1" : "opacity-0 h-0 m-0"
-                            }`}
+                          className={`text-center font-normal tracking-wide whitespace-nowrap overflow-hidden transition-all duration-300 ${
+                            isSidebarOpen
+                              ? 'opacity-100 h-auto mt-1'
+                              : 'opacity-0 h-0 m-0'
+                          }`}
                         >
                           {item.name}
                         </span>
@@ -205,9 +237,10 @@ export default function AdminLayout() {
                                 key={sub.name}
                                 to={sub.path}
                                 className={({ isActive: isSubActive }) =>
-                                  `flex items-center px-3 py-2 text-xs rounded-md transition-colors ${isSubActive
-                                    ? "bg-slate-100 text-slate-900 font-bold"
-                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium"
+                                  `flex items-center px-3 py-2 text-xs rounded-md transition-colors ${
+                                    isSubActive
+                                      ? 'bg-slate-100 text-slate-900 font-bold'
+                                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium'
                                   }`
                                 }
                               >
@@ -220,7 +253,7 @@ export default function AdminLayout() {
                       </div>
                     )}
                   </li>
-                )
+                );
               })}
             </ul>
           </nav>
@@ -232,5 +265,5 @@ export default function AdminLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

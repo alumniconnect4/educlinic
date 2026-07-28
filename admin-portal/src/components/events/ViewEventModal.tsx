@@ -1,53 +1,53 @@
-import React from "react"
-import { X, Pencil, Trash2, Share2 } from "lucide-react"
-import { toast } from "sonner"
-import type { EventItem } from "./CreateEventForm"
+import React from 'react';
+import { X, Pencil, Trash2, Share2 } from 'lucide-react';
+import { toast } from 'sonner';
+import type { EventItem } from './CreateEventForm';
 
 interface ViewEventModalProps {
-  event: EventItem | null
-  onClose: () => void
-  onEdit?: (event: EventItem) => void
-  onDelete?: (event: EventItem) => void
-  onShare?: (event: EventItem) => void
+  event: EventItem | null;
+  onClose: () => void;
+  onEdit?: (event: EventItem) => void;
+  onDelete?: (event: EventItem) => void;
+  onShare?: (event: EventItem) => void;
 }
 
 const DEFAULT_EVENT_IMAGE =
-  "https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+  'https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
 export const ViewEventModal: React.FC<ViewEventModalProps> = ({
   event,
   onClose,
   onEdit,
   onDelete,
-  onShare
+  onShare,
 }) => {
-  if (!event) return null
+  if (!event) return null;
 
   const formatEventDate = (dateString: string) => {
     try {
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) return dateString
-      const datePart = date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric"
-      })
-      const timePart = date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      })
-      return `${datePart}, ${timePart}`
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const datePart = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      const timePart = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return `${datePart}, ${timePart}`;
     } catch {
-      return dateString
+      return dateString;
     }
-  }
+  };
 
   const handleCopyLink = () => {
-    const url = `http://localhost:3000/events/${event.id}`
-    navigator.clipboard.writeText(url)
-    toast.success(`Copied Event URL: ${url}`)
-  }
+    const url = `http://localhost:3000/events/${event.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success(`Copied Event URL: ${url}`);
+  };
 
   const renderMarkdownDescription = (text: string) => {
     if (!text)
@@ -55,11 +55,11 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
         <p className="text-gray-500 italic">
           No description provided for this event.
         </p>
-      )
+      );
 
-    const lines = text.split(/\r?\n/)
-    const elements: React.ReactNode[] = []
-    let listItems: string[] = []
+    const lines = text.split(/\r?\n/);
+    const elements: React.ReactNode[] = [];
+    let listItems: string[] = [];
 
     const flushList = () => {
       if (listItems.length > 0) {
@@ -74,24 +74,24 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
               </li>
             ))}
           </ul>
-        )
-        listItems = []
+        );
+        listItems = [];
       }
-    }
+    };
 
     const formatInlineMarkdown = (line: string): React.ReactNode => {
       // Check for markdown image ![alt](url)
-      const imgRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g
-      const imgMatch = imgRegex.exec(line)
+      const imgRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+      const imgMatch = imgRegex.exec(line);
       if (imgMatch) {
         return (
           <span className="block my-3">
             <img
               src={imgMatch[2]}
-              alt={imgMatch[1] || "Event image"}
+              alt={imgMatch[1] || 'Event image'}
               className="max-h-72 w-auto rounded-lg border border-gray-200 shadow-xs object-contain"
               onError={(e) => {
-                ;(e.target as HTMLImageElement).style.display = "none"
+                (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
             {imgMatch[1] && (
@@ -100,21 +100,21 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
               </span>
             )}
           </span>
-        )
+        );
       }
 
       // Format links [title](url) and **bold**
-      const parts: React.ReactNode[] = []
-      let remaining = line
-      let idx = 0
+      const parts: React.ReactNode[] = [];
+      let remaining = line;
+      let idx = 0;
       const tokenRegex =
-        /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(\*\*([^*]+)\*\*)/g
-      let lastIndex = 0
-      let match: RegExpExecArray | null
+        /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(\*\*([^*]+)\*\*)/g;
+      let lastIndex = 0;
+      let match: RegExpExecArray | null;
 
       while ((match = tokenRegex.exec(remaining)) !== null) {
         if (match.index > lastIndex) {
-          parts.push(remaining.substring(lastIndex, match.index))
+          parts.push(remaining.substring(lastIndex, match.index));
         }
         if (match[1]) {
           parts.push(
@@ -127,33 +127,33 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
             >
               {match[2]}
             </a>
-          )
+          );
         } else if (match[4]) {
           parts.push(
             <strong key={idx++} className="font-bold text-slate-900">
               {match[5]}
             </strong>
-          )
+          );
         }
-        lastIndex = tokenRegex.lastIndex
+        lastIndex = tokenRegex.lastIndex;
       }
 
       if (lastIndex < remaining.length) {
-        parts.push(remaining.substring(lastIndex))
+        parts.push(remaining.substring(lastIndex));
       }
 
-      return parts.length > 0 ? parts : line
-    }
+      return parts.length > 0 ? parts : line;
+    };
 
     lines.forEach((rawLine, idx) => {
-      const line = rawLine.trim()
-      if (line.startsWith("- ") || line.startsWith("* ")) {
-        listItems.push(line.substring(2))
+      const line = rawLine.trim();
+      if (line.startsWith('- ') || line.startsWith('* ')) {
+        listItems.push(line.substring(2));
       } else {
-        flushList()
+        flushList();
         if (!line) {
-          elements.push(<div key={`space-${idx}`} className="h-2" />)
-        } else if (line.startsWith("### ")) {
+          elements.push(<div key={`space-${idx}`} className="h-2" />);
+        } else if (line.startsWith('### ')) {
           elements.push(
             <h4
               key={`h4-${idx}`}
@@ -161,8 +161,8 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
             >
               {formatInlineMarkdown(line.substring(4))}
             </h4>
-          )
-        } else if (line.startsWith("## ")) {
+          );
+        } else if (line.startsWith('## ')) {
           elements.push(
             <h3
               key={`h3-${idx}`}
@@ -170,8 +170,8 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
             >
               {formatInlineMarkdown(line.substring(3))}
             </h3>
-          )
-        } else if (line.startsWith("# ")) {
+          );
+        } else if (line.startsWith('# ')) {
           elements.push(
             <h2
               key={`h2-${idx}`}
@@ -179,7 +179,7 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
             >
               {formatInlineMarkdown(line.substring(2))}
             </h2>
-          )
+          );
         } else {
           elements.push(
             <p
@@ -188,14 +188,14 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
             >
               {formatInlineMarkdown(line)}
             </p>
-          )
+          );
         }
       }
-    })
-    flushList()
+    });
+    flushList();
 
-    return <div className="space-y-1.5">{elements}</div>
-  }
+    return <div className="space-y-1.5">{elements}</div>;
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -228,7 +228,7 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
               alt={event.name}
               className="w-full h-full object-cover"
               onError={(e) => {
-                ;(e.target as HTMLImageElement).src = DEFAULT_EVENT_IMAGE
+                (e.target as HTMLImageElement).src = DEFAULT_EVENT_IMAGE;
               }}
             />
           </div>
@@ -287,7 +287,7 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
               <div className="bg-white sm:w-2/3 p-3 font-semibold text-slate-800">
                 {event.registrationLimit
                   ? `${event.registrationLimit} seats available`
-                  : "Unlimited (No restriction)"}
+                  : 'Unlimited (No restriction)'}
               </div>
             </div>
 
@@ -296,9 +296,9 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
                 STATUS & VISIBILITY
               </div>
               <div className="bg-white sm:w-2/3 p-3 font-semibold text-slate-800">
-                {event.startRegistrationsNow ?? true
-                  ? "Registrations Open"
-                  : "Starts Later"}{" "}
+                {(event.startRegistrationsNow ?? true)
+                  ? 'Registrations Open'
+                  : 'Starts Later'}{' '}
                 — {event.visibility} ({event.eventType})
               </div>
             </div>
@@ -331,8 +331,8 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onClose()
-                  onEdit(event)
+                  onClose();
+                  onEdit(event);
                 }}
                 className="px-4 py-1.5 border border-gray-400 bg-white hover:bg-gray-200 text-slate-800 font-bold uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
               >
@@ -344,8 +344,8 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onClose()
-                  onDelete(event)
+                  onClose();
+                  onDelete(event);
                 }}
                 className="px-4 py-1.5 border border-red-300 bg-white hover:bg-red-50 text-red-700 font-bold uppercase text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
               >
@@ -364,5 +364,5 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

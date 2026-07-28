@@ -1,21 +1,21 @@
-import React from "react"
-import { AlertCircle, Loader2 } from "lucide-react"
-import type { EventItem } from "./CreateEventForm"
+import React from 'react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import type { EventItem } from './CreateEventForm';
 
 interface DeleteEventModalProps {
-  event: EventItem | null
-  onClose: () => void
-  onConfirm: () => Promise<void>
-  isDeleting: boolean
+  event: EventItem | null;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+  isDeleting: boolean;
 }
 
 export const DeleteEventModal: React.FC<DeleteEventModalProps> = ({
   event,
   onClose,
   onConfirm,
-  isDeleting
+  isDeleting,
 }) => {
-  if (!event) return null
+  if (!event) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -28,7 +28,7 @@ export const DeleteEventModal: React.FC<DeleteEventModalProps> = ({
             DELETE EVENT CONFIRMATION
           </h3>
           <p className="text-xs text-gray-500 mt-1">
-            Are you sure you want to delete{" "}
+            Are you sure you want to delete{' '}
             <strong className="text-slate-800 font-bold">{event.name}</strong>?
             This action cannot be undone.
           </p>
@@ -59,5 +59,5 @@ export const DeleteEventModal: React.FC<DeleteEventModalProps> = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

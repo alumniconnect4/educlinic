@@ -23,7 +23,9 @@ export default function GeneralGalleryPage() {
               Campus Gallery
             </h1>
             <p className="text-xs md:text-sm text-gray-300 mt-3 font-medium leading-relaxed">
-              Explore dynamic moments, infrastructure highlights, sports accomplishments, and student academic life captured across our campuses.
+              Explore dynamic moments, infrastructure highlights, sports
+              accomplishments, and student academic life captured across our
+              campuses.
             </p>
           </div>
         </div>

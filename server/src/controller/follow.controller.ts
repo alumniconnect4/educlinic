@@ -261,16 +261,14 @@ export const getFollowCounts = async (req: Request, res: Response) => {
       hasBlockedMe = !!theirBlock;
     }
 
-    return res
-      .status(200)
-      .json({
-        followersCount,
-        followingCount,
-        isFollowing,
-        isFollowingMe,
-        blockedByMe,
-        hasBlockedMe,
-      });
+    return res.status(200).json({
+      followersCount,
+      followingCount,
+      isFollowing,
+      isFollowingMe,
+      blockedByMe,
+      hasBlockedMe,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });

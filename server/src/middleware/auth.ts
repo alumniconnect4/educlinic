@@ -60,7 +60,10 @@ export const authMiddleware =
 
       if (!userId && token) {
         try {
-          const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as { id: number, role: string };
+          const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as {
+            id: number;
+            role: string;
+          };
           if (decoded && decoded.id) {
             userId = decoded.id;
           }

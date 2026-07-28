@@ -1,12 +1,81 @@
 'use client';
 import React, { useState } from 'react';
 import Image from 'next/image';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const ContactPage = () => {
+  const router = useRouter();
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [isSubmittingSuccess, setIsSubmittingSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({
+    type: null,
+    message: '',
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus({ type: null, message: '' });
+
+    try {
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      const response = await axios.post(
+        `${apiUrl}/admin-portal/help-tickets`,
+        formData
+      );
+
+      if (response.status === 201) {
+        setFormData({ name: '', email: '', phone: '', message: '' });
+        setIsSubmittingSuccess(true);
+        const ticketId = response.data.ticket.id;
+        setTimeout(() => {
+          router.push(`/contact/success?ticketId=${ticketId}`);
+        }, 600);
+      } else {
+        setStatus({
+          type: 'error',
+          message:
+            response.data.message || 'Something went wrong. Please try again.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Error submitting contact form:', error);
+      setStatus({
+        type: 'error',
+        message:
+          error.response?.data?.message ||
+          'Failed to submit the form. Please check your network connection.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white pb-16">
+    <div
+      className={`min-h-screen bg-white pb-16 transition-all duration-700 ease-in-out ${
+        isSubmittingSuccess ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
+      }`}
+    >
       <div className="w-full h-[400px] lg:h-[450px] relative bg-gray-100">
         {!isMapLoaded && (
           <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center animate-pulse">
@@ -86,10 +155,13 @@ const ContactPage = () => {
               Please fill out the form and we will contact you asap.
             </p>
 
-            <form className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div>
                 <input
                   type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   placeholder="Full Name"
                   className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none"
                   required
@@ -98,6 +170,9 @@ const ContactPage = () => {
               <div>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="Email"
                   className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none"
                   required
@@ -106,6 +181,9 @@ const ContactPage = () => {
               <div>
                 <input
                   type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
                   placeholder="Your Mobile No."
                   className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none"
                   required
@@ -113,23 +191,39 @@ const ContactPage = () => {
               </div>
               <div>
                 <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
                   placeholder="Message"
+                  maxLength={500}
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none resize-none"
                   required
                 ></textarea>
+                <div className="text-right text-[11px] text-gray-400 mt-1 select-none">
+                  {formData.message.length}/500 characters
+                </div>
               </div>
+
+              {status.type && (
+                <div
+                  className={`text-sm px-4 py-2 rounded-sm ${
+                    status.type === 'success'
+                      ? 'bg-green-600/35 text-green-200'
+                      : 'bg-red-600/35 text-red-200'
+                  }`}
+                >
+                  {status.message}
+                </div>
+              )}
 
               <div className="mt-2">
                 <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Form submission is mock only for now!');
-                  }}
-                  className="bg-[#f0a500] hover:bg-[#d99500] text-white font-bold py-3 px-8 rounded shadow-md transition-colors w-max"
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#f0a500] hover:bg-[#d99500] text-white font-bold py-3 px-8 rounded shadow-md transition-colors w-max disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send
+                  {loading ? 'Sending...' : 'Send'}
                 </button>
               </div>
             </form>

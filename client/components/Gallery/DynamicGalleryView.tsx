@@ -11,7 +11,7 @@ import {
   Search,
   Loader2,
   Calendar,
-  Image as ImageIcon
+  Image as ImageIcon,
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -25,12 +25,12 @@ interface GalleryItem {
 
 interface DynamicGalleryViewProps {
   initialCategory?: string; // If provided, default to this category
-  showFilters?: boolean;     // Whether to allow switching categories
+  showFilters?: boolean; // Whether to allow switching categories
 }
 
 export default function DynamicGalleryView({
   initialCategory = 'ALL',
-  showFilters = true
+  showFilters = true,
 }: DynamicGalleryViewProps) {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -73,7 +73,7 @@ export default function DynamicGalleryView({
     const matchesCategory =
       selectedCategory === 'ALL' ||
       item.category.toLowerCase() === selectedCategory.toLowerCase();
-    
+
     const matchesSearch =
       item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -129,7 +129,6 @@ export default function DynamicGalleryView({
     <div className="w-full">
       {/* Search & Category Filter Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-150">
-        
         {/* Category Buttons */}
         {showFilters ? (
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none select-none">
@@ -160,7 +159,12 @@ export default function DynamicGalleryView({
         ) : (
           <div className="text-gray-500 font-medium text-sm flex items-center gap-2">
             <ImageIcon size={16} className="text-[#a62025]" />
-            <span>Category: <strong className="font-bold text-gray-800">{selectedCategory}</strong></span>
+            <span>
+              Category:{' '}
+              <strong className="font-bold text-gray-800">
+                {selectedCategory}
+              </strong>
+            </span>
           </div>
         )}
 
@@ -186,9 +190,13 @@ export default function DynamicGalleryView({
       ) : filteredItems.length === 0 ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
           <ImageIcon className="w-10 h-10 text-gray-300" />
-          <span className="text-base font-bold text-gray-700">No Media Found</span>
+          <span className="text-base font-bold text-gray-700">
+            No Media Found
+          </span>
           <span className="text-xs text-gray-450 max-w-xs text-center">
-            {searchQuery ? 'Try adjusting your search criteria.' : 'Check back later as new images are uploaded.'}
+            {searchQuery
+              ? 'Try adjusting your search criteria.'
+              : 'Check back later as new images are uploaded.'}
           </span>
         </div>
       ) : (
@@ -227,7 +235,7 @@ export default function DynamicGalleryView({
                   <span>
                     {new Date(item.createdAt).toLocaleDateString('en-US', {
                       month: 'short',
-                      year: 'numeric'
+                      year: 'numeric',
                     })}
                   </span>
                 </div>
@@ -298,7 +306,9 @@ export default function DynamicGalleryView({
                 alt={filteredItems[selectedIndex].description}
                 fill
                 className="object-contain"
-                unoptimized={filteredItems[selectedIndex].url.startsWith('data:image')}
+                unoptimized={filteredItems[selectedIndex].url.startsWith(
+                  'data:image'
+                )}
               />
             </div>
 
@@ -309,10 +319,12 @@ export default function DynamicGalleryView({
                   {filteredItems[selectedIndex].category}
                 </span>
                 <span className="text-[10px] text-zinc-400 font-bold uppercase">
-                  {new Date(filteredItems[selectedIndex].createdAt).toLocaleDateString('en-US', {
+                  {new Date(
+                    filteredItems[selectedIndex].createdAt
+                  ).toLocaleDateString('en-US', {
                     day: 'numeric',
                     month: 'long',
-                    year: 'numeric'
+                    year: 'numeric',
                   })}
                 </span>
               </div>

@@ -1,279 +1,335 @@
-import { useState, useEffect } from "react"
-import { Search, UserPlus, Users, GraduationCap, Pencil, Trash2, Upload, Clock, Eye, X, Mail, ShieldCheck, FileText, ExternalLink, CheckCircle2 } from "lucide-react"
-import { toast } from "sonner"
-import axios, { isAxiosError } from "axios"
-import { Link, useLocation, useNavigate } from "react-router-dom"
+import { useState, useEffect } from 'react';
+import {
+  Search,
+  UserPlus,
+  Users,
+  GraduationCap,
+  Pencil,
+  Trash2,
+  Upload,
+  Clock,
+  Eye,
+  X,
+  Mail,
+  ShieldCheck,
+  FileText,
+  ExternalLink,
+  CheckCircle2,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import axios, { isAxiosError } from 'axios';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface UserRecord {
-  id: number
-  name: string
-  email: string
-  role: "USER" | "ALUMNI" | "ADMIN" | "SUPER_ADMIN"
-  schoolCategory?: string
-  avatarUrl?: string
-  idCardUrl?: string
-  degreeUrl?: string
-  bio?: string
-  gender?: string
-  socialLink?: string
-  isVerified: boolean
-  createdAt: string
-  updatedAt?: string
+  id: number;
+  name: string;
+  email: string;
+  role: 'USER' | 'ALUMNI' | 'ADMIN' | 'SUPER_ADMIN';
+  schoolCategory?: string;
+  avatarUrl?: string;
+  idCardUrl?: string;
+  degreeUrl?: string;
+  bio?: string;
+  gender?: string;
+  socialLink?: string;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
-const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`
+const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
 
 const SCHOOL_OPTIONS = [
-  { label: "Select School (Optional)", value: "" },
-  { label: "School of Engineering", value: "School_of_Engineering" },
-  { label: "School of Sciences", value: "School_of_Sciences" },
-  { label: "School of Agriculture", value: "School_of_Agriculture" },
-  { label: "School of Business Studies", value: "School_of_Business_Studies" },
-  { label: "School of Computer Applications", value: "School_of_Computer_Applications" },
-  { label: "School of Humanities", value: "School_of_Humanities" },
-  { label: "School of Education", value: "School_of_Education" },
-  { label: "School of Law", value: "School_of_Law" },
-  { label: "School of Pharmacy", value: "School_of_Pharmacy" }
-]
+  { label: 'Select School (Optional)', value: '' },
+  { label: 'School of Engineering', value: 'School_of_Engineering' },
+  { label: 'School of Sciences', value: 'School_of_Sciences' },
+  { label: 'School of Agriculture', value: 'School_of_Agriculture' },
+  { label: 'School of Business Studies', value: 'School_of_Business_Studies' },
+  {
+    label: 'School of Computer Applications',
+    value: 'School_of_Computer_Applications',
+  },
+  { label: 'School of Humanities', value: 'School_of_Humanities' },
+  { label: 'School of Education', value: 'School_of_Education' },
+  { label: 'School of Law', value: 'School_of_Law' },
+  { label: 'School of Pharmacy', value: 'School_of_Pharmacy' },
+];
 
 export default function ManageAlumniStudents() {
-  const [users, setUsers] = useState<UserRecord[]>([])
-  const [total, setTotal] = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 8
+  const [users, setUsers] = useState<UserRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
-  const [isLoading, setIsLoading] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [roleFilter, setRoleFilter] = useState<"ALL" | "USER" | "ALUMNI">("ALL")
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>(
+    'ALL'
+  );
 
   // Pending Requests Count State
-  const [pendingCount, setPendingCount] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0);
 
   // View User Modal State
-  const [viewingUser, setViewingUser] = useState<UserRecord | null>(null)
-  const [previewImageModal, setPreviewImageModal] = useState<{ url: string; title: string } | null>(null)
+  const [viewingUser, setViewingUser] = useState<UserRecord | null>(null);
+  const [previewImageModal, setPreviewImageModal] = useState<{
+    url: string;
+    title: string;
+  } | null>(null);
 
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (location.state && (location.state as any).viewingUser) {
-      setViewingUser((location.state as any).viewingUser)
+      setViewingUser((location.state as any).viewingUser);
       // Clear state so modal doesn't reopen after refresh/navigation
-      navigate(location.pathname, { replace: true, state: {} })
+      navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location, navigate])
+  }, [location, navigate]);
 
   // Create Form State
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "USER" as "USER" | "ALUMNI",
-    schoolCategory: "",
-    avatarUrl: ""
-  })
+    name: '',
+    email: '',
+    password: '',
+    role: 'USER' as 'USER' | 'ALUMNI',
+    schoolCategory: '',
+    avatarUrl: '',
+  });
 
   // Edit Modal State
-  const [editingUser, setEditingUser] = useState<UserRecord | null>(null)
+  const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
   const [editFormData, setEditFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "USER" as "USER" | "ALUMNI",
-    schoolCategory: "",
-    avatarUrl: "",
-    idCardUrl: "",
-    degreeUrl: "",
-    bio: "",
-    gender: "",
-    socialLink: "",
-    isVerified: true
-  })
+    name: '',
+    email: '',
+    password: '',
+    role: 'USER' as 'USER' | 'ALUMNI',
+    schoolCategory: '',
+    avatarUrl: '',
+    idCardUrl: '',
+    degreeUrl: '',
+    bio: '',
+    gender: '',
+    socialLink: '',
+    isVerified: true,
+  });
 
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`, 
+        `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
         { withCredentials: true }
-      )
-      setUsers(response.data.data)
-      setTotal(response.data.total)
-      setTotalPages(response.data.totalPages)
+      );
+      setUsers(response.data.data);
+      setTotal(response.data.total);
+      setTotalPages(response.data.totalPages);
     } catch (err) {
-      console.error("Failed to fetch users", err)
+      console.error('Failed to fetch users', err);
     }
-  }
+  };
 
   useEffect(() => {
-    let ignore = false
-    axios.get("http://localhost:4000/api/admin-portal/pending-requests", { withCredentials: true })
-      .then(res => {
-        if (!ignore) setPendingCount(res.data.total ?? 0)
+    let ignore = false;
+    axios
+      .get('http://localhost:4000/api/admin-portal/pending-requests', {
+        withCredentials: true,
       })
-      .catch(err => console.error("Failed to fetch pending requests count", err))
-    return () => { ignore = true }
-  }, [])
-
-  useEffect(() => {
-    let ignore = false
-    const timer = setTimeout(() => {
-      axios.get(
-        `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`, 
-        { withCredentials: true }
-      )
-      .then(res => {
-        if (!ignore) {
-          setUsers(res.data.data)
-          setTotal(res.data.total)
-          setTotalPages(res.data.totalPages)
-        }
+      .then((res) => {
+        if (!ignore) setPendingCount(res.data.total ?? 0);
       })
-      .catch(err => console.error("Failed to fetch users", err))
-    }, 300)
+      .catch((err) =>
+        console.error('Failed to fetch pending requests count', err)
+      );
     return () => {
-      ignore = true
-      clearTimeout(timer)
-    }
-  }, [searchQuery, currentPage, roleFilter])
+      ignore = true;
+    };
+  }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  useEffect(() => {
+    let ignore = false;
+    const timer = setTimeout(() => {
+      axios
+        .get(
+          `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+          { withCredentials: true }
+        )
+        .then((res) => {
+          if (!ignore) {
+            setUsers(res.data.data);
+            setTotal(res.data.total);
+            setTotalPages(res.data.totalPages);
+          }
+        })
+        .catch((err) => console.error('Failed to fetch users', err));
+    }, 300);
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, currentPage, roleFilter]);
+
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isEdit: boolean
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     if (file.size > 3 * 1024 * 1024) {
-      toast.error("Image file size should be less than 3MB")
-      return
+      toast.error('Image file size should be less than 3MB');
+      return;
     }
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onloadend = () => {
-      const base64String = reader.result as string
+      const base64String = reader.result as string;
       if (isEdit) {
-        setEditFormData(prev => ({ ...prev, avatarUrl: base64String }))
+        setEditFormData((prev) => ({ ...prev, avatarUrl: base64String }));
       } else {
-        setFormData(prev => ({ ...prev, avatarUrl: base64String }))
+        setFormData((prev) => ({ ...prev, avatarUrl: base64String }));
       }
-    }
-    reader.readAsDataURL(file)
-  }
+    };
+    reader.readAsDataURL(file);
+  };
 
-  const handleDocUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'idCardUrl' | 'degreeUrl') => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleDocUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: 'idCardUrl' | 'degreeUrl'
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Document file size should be less than 5MB")
-      return
+      toast.error('Document file size should be less than 5MB');
+      return;
     }
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onloadend = () => {
-      const base64String = reader.result as string
-      setEditFormData(prev => ({ ...prev, [field]: base64String }))
-    }
-    reader.readAsDataURL(file)
-  }
+      const base64String = reader.result as string;
+      setEditFormData((prev) => ({ ...prev, [field]: base64String }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!formData.avatarUrl) {
-      toast.error("Profile avatar image is compulsory for creation!")
-      return
+      toast.error('Profile avatar image is compulsory for creation!');
+      return;
     }
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await axios.post("http://localhost:4000/api/admin-portal/alumni-students", formData, { withCredentials: true })
-      toast.success("User account created successfully!")
-      setFormData({ name: "", email: "", password: "", role: "USER", schoolCategory: "", avatarUrl: "" })
-      fetchUsers()
+      await axios.post(
+        'http://localhost:4000/api/admin-portal/alumni-students',
+        formData,
+        { withCredentials: true }
+      );
+      toast.success('User account created successfully!');
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        role: 'USER',
+        schoolCategory: '',
+        avatarUrl: '',
+      });
+      fetchUsers();
     } catch (err: unknown) {
-      console.error("Failed to create user", err)
+      console.error('Failed to create user', err);
       if (isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "Failed to create user")
+        toast.error(err.response?.data?.message || 'Failed to create user');
       } else {
-        toast.error("Failed to create user")
+        toast.error('Failed to create user');
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleOpenEdit = (user: UserRecord) => {
-    setEditingUser(user)
+    setEditingUser(user);
     setEditFormData({
       name: user.name,
       email: user.email,
-      password: "",
-      role: (user.role === "ALUMNI" ? "ALUMNI" : "USER"),
-      schoolCategory: user.schoolCategory || "",
-      avatarUrl: user.avatarUrl || "",
-      idCardUrl: user.idCardUrl || "",
-      degreeUrl: user.degreeUrl || "",
-      bio: user.bio || "",
-      gender: user.gender || "",
-      socialLink: user.socialLink || "",
-      isVerified: user.isVerified
-    })
-  }
+      password: '',
+      role: user.role === 'ALUMNI' ? 'ALUMNI' : 'USER',
+      schoolCategory: user.schoolCategory || '',
+      avatarUrl: user.avatarUrl || '',
+      idCardUrl: user.idCardUrl || '',
+      degreeUrl: user.degreeUrl || '',
+      bio: user.bio || '',
+      gender: user.gender || '',
+      socialLink: user.socialLink || '',
+      isVerified: user.isVerified,
+    });
+  };
 
   const handleUpdateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingUser) return
-    setIsUpdating(true)
+    e.preventDefault();
+    if (!editingUser) return;
+    setIsUpdating(true);
     try {
-      await axios.put(`http://localhost:4000/api/admin-portal/alumni-students/${editingUser.id}`, editFormData, { withCredentials: true })
-      toast.success("User updated successfully!")
-      setEditingUser(null)
-      fetchUsers()
+      await axios.put(
+        `http://localhost:4000/api/admin-portal/alumni-students/${editingUser.id}`,
+        editFormData,
+        { withCredentials: true }
+      );
+      toast.success('User updated successfully!');
+      setEditingUser(null);
+      fetchUsers();
     } catch (err: unknown) {
-      console.error("Failed to update user", err)
+      console.error('Failed to update user', err);
       if (isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "Failed to update user")
+        toast.error(err.response?.data?.message || 'Failed to update user');
       } else {
-        toast.error("Failed to update user")
+        toast.error('Failed to update user');
       }
     } finally {
-      setIsUpdating(false)
+      setIsUpdating(false);
     }
-  }
+  };
 
   const executeDelete = async (userId: number) => {
     try {
-      await axios.delete(`http://localhost:4000/api/admin-portal/alumni-students/${userId}`, { withCredentials: true })
-      toast.success("User deleted successfully!")
-      fetchUsers()
+      await axios.delete(
+        `http://localhost:4000/api/admin-portal/alumni-students/${userId}`,
+        { withCredentials: true }
+      );
+      toast.success('User deleted successfully!');
+      fetchUsers();
     } catch (err: unknown) {
-      console.error("Failed to delete user", err)
+      console.error('Failed to delete user', err);
       if (isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "Failed to delete user")
+        toast.error(err.response?.data?.message || 'Failed to delete user');
       } else {
-        toast.error("Failed to delete user")
+        toast.error('Failed to delete user');
       }
     }
-  }
+  };
 
   const handleDelete = (user: UserRecord) => {
     toast(`Delete user "${user.name}"?`, {
-      description: "This action cannot be undone.",
+      description: 'This action cannot be undone.',
       duration: 8000,
       action: {
-        label: "Confirm",
-        onClick: () => executeDelete(user.id)
+        label: 'Confirm',
+        onClick: () => executeDelete(user.id),
       },
       cancel: {
-        label: "Cancel",
-        onClick: () => {}
-      }
-    })
-  }
+        label: 'Cancel',
+        onClick: () => {},
+      },
+    });
+  };
 
   const formatSchool = (school?: string) => {
-    if (!school) return "General / Unassigned"
-    return school.replace(/_/g, " ")
-  }
+    if (!school) return 'General / Unassigned';
+    return school.replace(/_/g, ' ');
+  };
 
   return (
     <div className="w-full space-y-4">
@@ -285,7 +341,8 @@ export default function ManageAlumniStudents() {
             Manage Alumni & Students
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Register students, manage alumni accounts, and review pending approval requests.
+            Register students, manage alumni accounts, and review pending
+            approval requests.
           </p>
         </div>
 
@@ -312,7 +369,9 @@ export default function ManageAlumniStudents() {
               <UserPlus className="w-4 h-4 text-slate-800" />
               New Registration
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5 font-normal">Create a new student or alumni profile</p>
+            <p className="text-xs text-gray-500 mt-0.5 font-normal">
+              Create a new student or alumni profile
+            </p>
           </div>
 
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
@@ -321,12 +380,14 @@ export default function ManageAlumniStudents() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Full Name
                 </label>
-                <input 
-                  required 
-                  placeholder="e.g. Rahul Sharma" 
+                <input
+                  required
+                  placeholder="e.g. Rahul Sharma"
                   className="w-full h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                 />
               </div>
 
@@ -334,13 +395,15 @@ export default function ManageAlumniStudents() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Email Address
                 </label>
-                <input 
-                  required 
-                  type="email" 
-                  placeholder="student@example.com" 
+                <input
+                  required
+                  type="email"
+                  placeholder="student@example.com"
                   className="w-full h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
                   value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})} 
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
 
@@ -348,11 +411,16 @@ export default function ManageAlumniStudents() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Account Type / Role
                 </label>
-                <select 
+                <select
                   required
                   className="w-full h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
                   value={formData.role}
-                  onChange={e => setFormData({...formData, role: e.target.value as "USER" | "ALUMNI"})}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      role: e.target.value as 'USER' | 'ALUMNI',
+                    })
+                  }
                 >
                   <option value="USER">Student (Active)</option>
                   <option value="ALUMNI">Alumni (Graduate)</option>
@@ -363,42 +431,49 @@ export default function ManageAlumniStudents() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                   School Category
                 </label>
-                <select 
+                <select
                   className="w-full h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
                   value={formData.schoolCategory}
-                  onChange={e => setFormData({...formData, schoolCategory: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, schoolCategory: e.target.value })
+                  }
                 >
-                  {SCHOOL_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {SCHOOL_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
-                  Profile Avatar <span className="text-red-500">* Compulsory</span>
+                  Profile Avatar{' '}
+                  <span className="text-red-500">* Compulsory</span>
                 </label>
                 <div className="flex items-center gap-3 bg-gray-50/60 p-2.5 rounded-sm border border-gray-200">
-                  <img 
-                    src={formData.avatarUrl || DEFAULT_USER_AVATAR} 
-                    alt="Avatar Preview" 
+                  <img
+                    src={formData.avatarUrl || DEFAULT_USER_AVATAR}
+                    alt="Avatar Preview"
                     className="w-11 h-11 rounded-full object-cover border border-gray-300 shadow-xs bg-white shrink-0"
                   />
                   <div className="flex-1 flex flex-col gap-1">
                     <label className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-sm text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors w-fit shadow-xs">
                       <Upload className="w-3.5 h-3.5 text-slate-600" />
                       Upload Avatar Image
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden" 
-                        onChange={(e) => handleImageUpload(e, false)} 
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleImageUpload(e, false)}
                       />
                     </label>
                     {formData.avatarUrl && (
-                      <button 
-                        type="button" 
-                        onClick={() => setFormData({ ...formData, avatarUrl: "" })} 
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, avatarUrl: '' })
+                        }
                         className="text-[11px] text-red-500 hover:text-red-700 font-medium text-left"
                       >
                         Remove Image
@@ -412,23 +487,25 @@ export default function ManageAlumniStudents() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                   Temporary Password
                 </label>
-                <input 
-                  required 
-                  type="password" 
-                  placeholder="••••••••" 
+                <input
+                  required
+                  type="password"
+                  placeholder="••••••••"
                   className="w-full h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
                   value={formData.password}
-                  onChange={e => setFormData({...formData, password: e.target.value})} 
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                 />
               </div>
 
               <div className="pt-2">
-                <button 
-                  type="submit" 
-                  disabled={isLoading} 
+                <button
+                  type="submit"
+                  disabled={isLoading}
                   className="w-full h-10 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-sm shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  {isLoading ? "Creating..." : "Create User Profile"}
+                  {isLoading ? 'Creating...' : 'Create User Profile'}
                 </button>
               </div>
             </form>
@@ -453,20 +530,29 @@ export default function ManageAlumniStudents() {
               {/* Role Tabs */}
               <div className="inline-flex rounded-sm bg-slate-100 p-0.5 border border-slate-200 text-xs font-semibold">
                 <button
-                  onClick={() => { setRoleFilter("ALL"); setCurrentPage(1); }}
-                  className={`px-3 py-1 rounded-xs transition-colors cursor-pointer ${roleFilter === "ALL" ? "bg-white text-slate-900 shadow-xs font-bold" : "text-slate-600 hover:text-slate-900"}`}
+                  onClick={() => {
+                    setRoleFilter('ALL');
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1 rounded-xs transition-colors cursor-pointer ${roleFilter === 'ALL' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
                 >
                   All
                 </button>
                 <button
-                  onClick={() => { setRoleFilter("USER"); setCurrentPage(1); }}
-                  className={`px-3 py-1 rounded-xs transition-colors cursor-pointer ${roleFilter === "USER" ? "bg-white text-slate-900 shadow-xs font-bold" : "text-slate-600 hover:text-slate-900"}`}
+                  onClick={() => {
+                    setRoleFilter('USER');
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1 rounded-xs transition-colors cursor-pointer ${roleFilter === 'USER' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
                 >
                   Students
                 </button>
                 <button
-                  onClick={() => { setRoleFilter("ALUMNI"); setCurrentPage(1); }}
-                  className={`px-3 py-1 rounded-xs transition-colors cursor-pointer ${roleFilter === "ALUMNI" ? "bg-white text-slate-900 shadow-xs font-bold" : "text-slate-600 hover:text-slate-900"}`}
+                  onClick={() => {
+                    setRoleFilter('ALUMNI');
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1 rounded-xs transition-colors cursor-pointer ${roleFilter === 'ALUMNI' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'}`}
                 >
                   Alumni
                 </button>
@@ -475,13 +561,13 @@ export default function ManageAlumniStudents() {
               {/* Search */}
               <div className="relative w-full sm:w-60">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input 
-                  className="w-full pl-9 pr-4 h-8 border border-gray-300 rounded-sm text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors bg-white" 
-                  placeholder="Search name or email..." 
+                <input
+                  className="w-full pl-9 pr-4 h-8 border border-gray-300 rounded-sm text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors bg-white"
+                  placeholder="Search name or email..."
                   value={searchQuery}
-                  onChange={e => {
-                    setSearchQuery(e.target.value)
-                    setCurrentPage(1)
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
                   }}
                 />
               </div>
@@ -502,30 +588,41 @@ export default function ManageAlumniStudents() {
               <tbody className="text-sm text-gray-600">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-400 font-medium">
+                    <td
+                      colSpan={5}
+                      className="p-8 text-center text-gray-400 font-medium"
+                    >
                       No verified student or alumni records found.
                     </td>
                   </tr>
                 ) : (
                   users.map((user) => (
-                    <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                    <tr
+                      key={user.id}
+                      className="border-b border-gray-100 hover:bg-gray-50/80 transition-colors"
+                    >
                       <td className="py-3.5 px-6 align-middle">
-                        <div 
+                        <div
                           className="flex items-center cursor-pointer group"
                           onClick={() => setViewingUser(user)}
                           title="Click to view complete user details"
                         >
-                          <img 
-                            src={user.avatarUrl || DEFAULT_USER_AVATAR} 
-                            alt={user.name} 
+                          <img
+                            src={user.avatarUrl || DEFAULT_USER_AVATAR}
+                            alt={user.name}
                             className="w-8 h-8 rounded-full object-cover border border-gray-200 shadow-xs mr-3 flex-shrink-0 bg-slate-100 group-hover:border-blue-400 transition-colors"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = DEFAULT_USER_AVATAR
+                              (e.target as HTMLImageElement).src =
+                                DEFAULT_USER_AVATAR;
                             }}
                           />
                           <div>
-                            <span className="font-semibold text-[#344767] block leading-tight group-hover:text-blue-600 group-hover:underline transition-colors">{user.name}</span>
-                            <span className="text-xs text-gray-400 font-normal">ID: {user.id}</span>
+                            <span className="font-semibold text-[#344767] block leading-tight group-hover:text-blue-600 group-hover:underline transition-colors">
+                              {user.name}
+                            </span>
+                            <span className="text-xs text-gray-400 font-normal">
+                              ID: {user.id}
+                            </span>
                           </div>
                         </div>
                       </td>
@@ -546,34 +643,36 @@ export default function ManageAlumniStudents() {
                       </td>
                       <td className="py-3.5 px-6 align-middle text-center">
                         <div className="flex justify-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${
-                            user.role === 'ALUMNI'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-blue-50 text-blue-700 border-blue-200'
-                          }`}>
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${
+                              user.role === 'ALUMNI'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                            }`}
+                          >
                             {user.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                           </span>
                         </div>
                       </td>
                       <td className="py-3.5 px-6 align-middle text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button 
+                          <button
                             title="View User Details"
-                            onClick={() => setViewingUser(user)} 
+                            onClick={() => setViewingUser(user)}
                             className="p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button 
+                          <button
                             title="Edit User"
-                            onClick={() => handleOpenEdit(user)} 
+                            onClick={() => handleOpenEdit(user)}
                             className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                           >
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button 
+                          <button
                             title="Delete User"
-                            onClick={() => handleDelete(user)} 
+                            onClick={() => handleDelete(user)}
                             className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -590,19 +689,29 @@ export default function ManageAlumniStudents() {
           {/* Pagination Footer */}
           <div className="px-6 py-3.5 bg-gray-50 border-t border-gray-200 shrink-0 flex items-center justify-between">
             <p className="text-xs text-gray-500 font-medium">
-              Showing <span className="font-bold text-gray-700">{total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-gray-700">{Math.min(currentPage * itemsPerPage, total)}</span> of <span className="font-bold text-gray-700">{total}</span> users
+              Showing{' '}
+              <span className="font-bold text-gray-700">
+                {total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}
+              </span>{' '}
+              to{' '}
+              <span className="font-bold text-gray-700">
+                {Math.min(currentPage * itemsPerPage, total)}
+              </span>{' '}
+              of <span className="font-bold text-gray-700">{total}</span> users
             </p>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 className="h-8 px-3 text-xs font-semibold border border-gray-300 rounded-sm bg-white hover:bg-gray-100 text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
               >
                 Previous
               </button>
-              <button 
+              <button
                 disabled={currentPage === totalPages || totalPages === 0}
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 className="h-8 px-3 text-xs font-semibold border border-gray-300 rounded-sm bg-white hover:bg-gray-100 text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm cursor-pointer"
               >
                 Next
@@ -623,11 +732,15 @@ export default function ManageAlumniStudents() {
                   <Users className="w-4 h-4 text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider">User Details Profile</h3>
-                  <p className="text-[11px] text-slate-400 font-normal">ID #{viewingUser.id} • Complete system details</p>
+                  <h3 className="text-sm font-bold uppercase tracking-wider">
+                    User Details Profile
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    ID #{viewingUser.id} • Complete system details
+                  </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setViewingUser(null)}
                 className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800 transition-colors cursor-pointer"
               >
@@ -640,15 +753,26 @@ export default function ManageAlumniStudents() {
               {/* Profile Card Header */}
               <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-xs flex flex-col sm:flex-row items-center gap-5">
                 <div className="relative group shrink-0">
-                  <img 
-                    src={viewingUser.avatarUrl || DEFAULT_USER_AVATAR} 
-                    alt={viewingUser.name} 
+                  <img
+                    src={viewingUser.avatarUrl || DEFAULT_USER_AVATAR}
+                    alt={viewingUser.name}
                     className="w-20 h-20 rounded-full object-cover border-2 border-slate-200 shadow-sm bg-slate-100 cursor-pointer"
-                    onClick={() => viewingUser.avatarUrl && setPreviewImageModal({ url: viewingUser.avatarUrl, title: `${viewingUser.name}'s Avatar` })}
+                    onClick={() =>
+                      viewingUser.avatarUrl &&
+                      setPreviewImageModal({
+                        url: viewingUser.avatarUrl,
+                        title: `${viewingUser.name}'s Avatar`,
+                      })
+                    }
                   />
                   {viewingUser.avatarUrl && (
                     <button
-                      onClick={() => setPreviewImageModal({ url: viewingUser.avatarUrl!, title: `${viewingUser.name}'s Avatar` })}
+                      onClick={() =>
+                        setPreviewImageModal({
+                          url: viewingUser.avatarUrl!,
+                          title: `${viewingUser.name}'s Avatar`,
+                        })
+                      }
                       className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold cursor-pointer"
                     >
                       <Eye className="w-4 h-4" />
@@ -658,27 +782,38 @@ export default function ManageAlumniStudents() {
 
                 <div className="flex-1 text-center sm:text-left space-y-1.5">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                    <h4 className="text-lg font-bold text-slate-900">{viewingUser.name}</h4>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                      viewingUser.role === 'ALUMNI'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-blue-50 text-blue-700 border-blue-200'
-                    }`}>
+                    <h4 className="text-lg font-bold text-slate-900">
+                      {viewingUser.name}
+                    </h4>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                        viewingUser.role === 'ALUMNI'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}
+                    >
                       {viewingUser.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                     </span>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                      viewingUser.isVerified
-                        ? 'bg-green-50 text-green-700 border-green-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                        viewingUser.isVerified
+                          ? 'bg-green-50 text-green-700 border-green-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}
+                    >
                       <ShieldCheck className="w-3 h-3" />
-                      {viewingUser.isVerified ? 'Verified Account' : 'Pending Approval'}
+                      {viewingUser.isVerified
+                        ? 'Verified Account'
+                        : 'Pending Approval'}
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-500 flex items-center justify-center sm:justify-start gap-1">
                     <Mail className="w-3.5 h-3.5 text-slate-400" />
-                    <a href={`mailto:${viewingUser.email}`} className="hover:underline hover:text-slate-800">
+                    <a
+                      href={`mailto:${viewingUser.email}`}
+                      className="hover:underline hover:text-slate-800"
+                    >
                       {viewingUser.email}
                     </a>
                   </p>
@@ -702,42 +837,86 @@ export default function ManageAlumniStudents() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">Full Name</span>
-                    <span className="font-semibold text-slate-800 text-sm">{viewingUser.name}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">Email Address</span>
-                    <span className="font-semibold text-slate-800 text-sm">{viewingUser.email}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">Account Role</span>
-                    <span className="font-semibold text-slate-800">{viewingUser.role === 'ALUMNI' ? 'Alumni (Graduate)' : 'Student (Active)'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">School / Department</span>
-                    <span className="font-semibold text-slate-800">{formatSchool(viewingUser.schoolCategory)}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">Registration Date</span>
-                    <span className="font-semibold text-slate-800 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      {new Date(viewingUser.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Full Name
+                    </span>
+                    <span className="font-semibold text-slate-800 text-sm">
+                      {viewingUser.name}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">Gender</span>
-                    <span className="font-semibold text-slate-800">{viewingUser.gender || 'Not specified'}</span>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Email Address
+                    </span>
+                    <span className="font-semibold text-slate-800 text-sm">
+                      {viewingUser.email}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Account Role
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {viewingUser.role === 'ALUMNI'
+                        ? 'Alumni (Graduate)'
+                        : 'Student (Active)'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      School / Department
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {formatSchool(viewingUser.schoolCategory)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Registration Date
+                    </span>
+                    <span className="font-semibold text-slate-800 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      {new Date(viewingUser.createdAt).toLocaleDateString(
+                        'en-US',
+                        {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }
+                      )}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Gender
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {viewingUser.gender || 'Not specified'}
+                    </span>
                   </div>
                   {viewingUser.bio && (
                     <div className="sm:col-span-2">
-                      <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">Bio</span>
-                      <p className="text-slate-700 bg-gray-50 p-2.5 rounded border border-gray-100 font-normal">{viewingUser.bio}</p>
+                      <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                        Bio
+                      </span>
+                      <p className="text-slate-700 bg-gray-50 p-2.5 rounded border border-gray-100 font-normal">
+                        {viewingUser.bio}
+                      </p>
                     </div>
                   )}
                   {viewingUser.socialLink && (
                     <div className="sm:col-span-2">
-                      <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">Social Profile</span>
-                      <a href={viewingUser.socialLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1 font-medium">
+                      <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                        Social Profile
+                      </span>
+                      <a
+                        href={viewingUser.socialLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 hover:underline flex items-center gap-1 font-medium"
+                      >
                         <ExternalLink className="w-3.5 h-3.5" />
                         {viewingUser.socialLink}
                       </a>
@@ -761,19 +940,30 @@ export default function ManageAlumniStudents() {
                     </span>
                     {viewingUser.idCardUrl ? (
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={viewingUser.idCardUrl} 
-                          alt="ID Card" 
+                        <img
+                          src={viewingUser.idCardUrl}
+                          alt="ID Card"
                           className="w-12 h-12 object-cover rounded border border-gray-300 shadow-2xs bg-white shrink-0 cursor-pointer"
-                          onClick={() => setPreviewImageModal({ url: viewingUser.idCardUrl!, title: `${viewingUser.name}'s ID Card` })}
+                          onClick={() =>
+                            setPreviewImageModal({
+                              url: viewingUser.idCardUrl!,
+                              title: `${viewingUser.name}'s ID Card`,
+                            })
+                          }
                         />
                         <div className="space-y-1">
                           <span className="text-[11px] text-green-700 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Document Attached
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Document
+                            Attached
                           </span>
                           <button
                             type="button"
-                            onClick={() => setPreviewImageModal({ url: viewingUser.idCardUrl!, title: `${viewingUser.name}'s ID Card` })}
+                            onClick={() =>
+                              setPreviewImageModal({
+                                url: viewingUser.idCardUrl!,
+                                title: `${viewingUser.name}'s ID Card`,
+                              })
+                            }
                             className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors cursor-pointer"
                           >
                             <Eye className="w-3 h-3" /> View Image
@@ -781,7 +971,9 @@ export default function ManageAlumniStudents() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-gray-400 italic">No ID Card uploaded</p>
+                      <p className="text-xs text-gray-400 italic">
+                        No ID Card uploaded
+                      </p>
                     )}
                   </div>
 
@@ -792,19 +984,30 @@ export default function ManageAlumniStudents() {
                     </span>
                     {viewingUser.degreeUrl ? (
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={viewingUser.degreeUrl} 
-                          alt="Degree Certificate" 
+                        <img
+                          src={viewingUser.degreeUrl}
+                          alt="Degree Certificate"
                           className="w-12 h-12 object-cover rounded border border-gray-300 shadow-2xs bg-white shrink-0 cursor-pointer"
-                          onClick={() => setPreviewImageModal({ url: viewingUser.degreeUrl!, title: `${viewingUser.name}'s Degree Certificate` })}
+                          onClick={() =>
+                            setPreviewImageModal({
+                              url: viewingUser.degreeUrl!,
+                              title: `${viewingUser.name}'s Degree Certificate`,
+                            })
+                          }
                         />
                         <div className="space-y-1">
                           <span className="text-[11px] text-green-700 font-semibold flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Document Attached
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Document
+                            Attached
                           </span>
                           <button
                             type="button"
-                            onClick={() => setPreviewImageModal({ url: viewingUser.degreeUrl!, title: `${viewingUser.name}'s Degree Certificate` })}
+                            onClick={() =>
+                              setPreviewImageModal({
+                                url: viewingUser.degreeUrl!,
+                                title: `${viewingUser.name}'s Degree Certificate`,
+                              })
+                            }
                             className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors cursor-pointer"
                           >
                             <Eye className="w-3 h-3" /> View Image
@@ -812,7 +1015,9 @@ export default function ManageAlumniStudents() {
                         </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-gray-400 italic">No Degree uploaded</p>
+                      <p className="text-xs text-gray-400 italic">
+                        No Degree uploaded
+                      </p>
                     )}
                   </div>
                 </div>
@@ -824,9 +1029,9 @@ export default function ManageAlumniStudents() {
               <button
                 type="button"
                 onClick={() => {
-                  const target = viewingUser
-                  setViewingUser(null)
-                  handleOpenEdit(target)
+                  const target = viewingUser;
+                  setViewingUser(null);
+                  handleOpenEdit(target);
                 }}
                 className="px-3.5 py-1.5 text-xs font-bold text-slate-700 bg-white border border-gray-300 rounded hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
               >
@@ -846,11 +1051,11 @@ export default function ManageAlumniStudents() {
 
       {/* Image Zoom Modal */}
       {previewImageModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in duration-150"
           onClick={() => setPreviewImageModal(null)}
         >
-          <div 
+          <div
             className="bg-white rounded-lg max-w-xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[85vh] border border-gray-200"
             onClick={(e) => e.stopPropagation()}
           >
@@ -859,15 +1064,25 @@ export default function ManageAlumniStudents() {
                 <Eye className="w-4 h-4 text-blue-400" />
                 {previewImageModal.title}
               </h4>
-              <button onClick={() => setPreviewImageModal(null)} className="text-slate-400 hover:text-white p-1 cursor-pointer">
+              <button
+                onClick={() => setPreviewImageModal(null)}
+                className="text-slate-400 hover:text-white p-1 cursor-pointer"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <div className="p-4 flex items-center justify-center bg-slate-950 overflow-auto flex-1">
-              <img src={previewImageModal.url} alt={previewImageModal.title} className="max-h-[65vh] max-w-full object-contain rounded shadow-lg" />
+              <img
+                src={previewImageModal.url}
+                alt={previewImageModal.title}
+                className="max-h-[65vh] max-w-full object-contain rounded shadow-lg"
+              />
             </div>
             <div className="px-4 py-2.5 border-t border-gray-200 flex justify-end bg-gray-50">
-              <button onClick={() => setPreviewImageModal(null)} className="px-3 py-1 text-xs font-bold bg-slate-800 text-white rounded hover:bg-slate-900 cursor-pointer">
+              <button
+                onClick={() => setPreviewImageModal(null)}
+                className="px-3 py-1 text-xs font-bold bg-slate-800 text-white rounded hover:bg-slate-900 cursor-pointer"
+              >
                 Close
               </button>
             </div>
@@ -885,11 +1100,15 @@ export default function ManageAlumniStudents() {
                   <Pencil className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Update User Account</h3>
-                  <p className="text-[11px] text-slate-400 font-normal">ID #{editingUser.id} • {editingUser.name}</p>
+                  <h3 className="text-sm font-bold uppercase tracking-wider">
+                    Update User Account
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-normal">
+                    ID #{editingUser.id} • {editingUser.name}
+                  </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setEditingUser(null)}
                 className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800 transition-colors cursor-pointer"
               >
@@ -897,7 +1116,10 @@ export default function ManageAlumniStudents() {
               </button>
             </div>
 
-            <form onSubmit={handleUpdateSubmit} className="p-6 overflow-y-auto custom-scrollbar space-y-6 flex-1 bg-slate-50/40">
+            <form
+              onSubmit={handleUpdateSubmit}
+              className="p-6 overflow-y-auto custom-scrollbar space-y-6 flex-1 bg-slate-50/40"
+            >
               {/* Account & Status Bar */}
               <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-xs space-y-4">
                 <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider border-b border-gray-100 pb-2">
@@ -909,11 +1131,16 @@ export default function ManageAlumniStudents() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Full Name <span className="text-red-500">*</span>
                     </label>
-                    <input 
-                      required 
+                    <input
+                      required
                       className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                       value={editFormData.name}
-                      onChange={e => setEditFormData({...editFormData, name: e.target.value})} 
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          name: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -921,12 +1148,17 @@ export default function ManageAlumniStudents() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Email Address <span className="text-red-500">*</span>
                     </label>
-                    <input 
-                      required 
-                      type="email" 
+                    <input
+                      required
+                      type="email"
                       className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                       value={editFormData.email}
-                      onChange={e => setEditFormData({...editFormData, email: e.target.value})} 
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          email: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -934,11 +1166,16 @@ export default function ManageAlumniStudents() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Account Role <span className="text-red-500">*</span>
                     </label>
-                    <select 
+                    <select
                       required
                       className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                       value={editFormData.role}
-                      onChange={e => setEditFormData({...editFormData, role: e.target.value as "USER" | "ALUMNI"})}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          role: e.target.value as 'USER' | 'ALUMNI',
+                        })
+                      }
                     >
                       <option value="USER">Student (Active)</option>
                       <option value="ALUMNI">Alumni (Graduate)</option>
@@ -949,13 +1186,20 @@ export default function ManageAlumniStudents() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       School / Department
                     </label>
-                    <select 
+                    <select
                       className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                       value={editFormData.schoolCategory}
-                      onChange={e => setEditFormData({...editFormData, schoolCategory: e.target.value})}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          schoolCategory: e.target.value,
+                        })
+                      }
                     >
-                      {SCHOOL_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      {SCHOOL_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -968,7 +1212,12 @@ export default function ManageAlumniStudents() {
                       <input
                         type="checkbox"
                         checked={editFormData.isVerified}
-                        onChange={e => setEditFormData({ ...editFormData, isVerified: e.target.checked })}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            isVerified: e.target.checked,
+                          })
+                        }
                         className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
                       />
                       <div>
@@ -976,7 +1225,8 @@ export default function ManageAlumniStudents() {
                           Verified & Pre-approved Account
                         </span>
                         <span className="text-[11px] text-gray-500 block">
-                          Unchecking will place the user into pending administrator review.
+                          Unchecking will place the user into pending
+                          administrator review.
                         </span>
                       </div>
                     </label>
@@ -997,34 +1247,44 @@ export default function ManageAlumniStudents() {
                       Profile Avatar
                     </label>
                     <div className="flex items-center gap-4 bg-gray-50/80 p-3 rounded-md border border-gray-200">
-                      <img 
-                        src={editFormData.avatarUrl || DEFAULT_USER_AVATAR} 
-                        alt="Avatar Preview" 
+                      <img
+                        src={editFormData.avatarUrl || DEFAULT_USER_AVATAR}
+                        alt="Avatar Preview"
                         className="w-14 h-14 rounded-full object-cover border-2 border-gray-300 shadow-xs bg-white shrink-0"
                       />
                       <div className="flex-1 flex flex-wrap items-center gap-2">
                         <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-2xs">
                           <Upload className="w-3.5 h-3.5 text-slate-600" />
                           Upload New Image
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={(e) => handleImageUpload(e, true)} 
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(e, true)}
                           />
                         </label>
                         {editFormData.avatarUrl && (
                           <>
                             <button
                               type="button"
-                              onClick={() => setPreviewImageModal({ url: editFormData.avatarUrl, title: "Avatar Preview" })}
+                              onClick={() =>
+                                setPreviewImageModal({
+                                  url: editFormData.avatarUrl,
+                                  title: 'Avatar Preview',
+                                })
+                              }
                               className="px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors cursor-pointer inline-flex items-center gap-1"
                             >
                               <Eye className="w-3.5 h-3.5" /> View
                             </button>
-                            <button 
-                              type="button" 
-                              onClick={() => setEditFormData({ ...editFormData, avatarUrl: "" })} 
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditFormData({
+                                  ...editFormData,
+                                  avatarUrl: '',
+                                })
+                              }
                               className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-md transition-colors cursor-pointer"
                             >
                               Remove
@@ -1042,7 +1302,12 @@ export default function ManageAlumniStudents() {
                     <select
                       className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                       value={editFormData.gender}
-                      onChange={e => setEditFormData({ ...editFormData, gender: e.target.value })}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          gender: e.target.value,
+                        })
+                      }
                     >
                       <option value="">Select Gender</option>
                       <option value="Male">Male</option>
@@ -1055,12 +1320,17 @@ export default function ManageAlumniStudents() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Social Link / Profile URL
                     </label>
-                    <input 
-                      type="url" 
-                      placeholder="https://linkedin.com/in/username" 
+                    <input
+                      type="url"
+                      placeholder="https://linkedin.com/in/username"
                       className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                       value={editFormData.socialLink}
-                      onChange={e => setEditFormData({...editFormData, socialLink: e.target.value})} 
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          socialLink: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -1068,12 +1338,17 @@ export default function ManageAlumniStudents() {
                     <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Bio / Summary
                     </label>
-                    <textarea 
+                    <textarea
                       rows={2}
-                      placeholder="Enter user bio or additional notes..." 
+                      placeholder="Enter user bio or additional notes..."
                       className="w-full p-3 rounded-md border border-gray-300 bg-white text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none resize-none"
                       value={editFormData.bio}
-                      onChange={e => setEditFormData({...editFormData, bio: e.target.value})} 
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          bio: e.target.value,
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -1093,33 +1368,50 @@ export default function ManageAlumniStudents() {
                     </span>
                     {editFormData.idCardUrl ? (
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={editFormData.idCardUrl} 
-                          alt="ID Card" 
+                        <img
+                          src={editFormData.idCardUrl}
+                          alt="ID Card"
                           className="w-12 h-12 object-cover rounded border border-gray-300 shadow-2xs bg-white shrink-0 cursor-pointer"
-                          onClick={() => setPreviewImageModal({ url: editFormData.idCardUrl, title: "ID Card Preview" })}
+                          onClick={() =>
+                            setPreviewImageModal({
+                              url: editFormData.idCardUrl,
+                              title: 'ID Card Preview',
+                            })
+                          }
                         />
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => setPreviewImageModal({ url: editFormData.idCardUrl, title: "ID Card Preview" })}
+                              onClick={() =>
+                                setPreviewImageModal({
+                                  url: editFormData.idCardUrl,
+                                  title: 'ID Card Preview',
+                                })
+                              }
                               className="px-2 py-0.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors cursor-pointer flex items-center gap-1"
                             >
                               <Eye className="w-3 h-3" /> View
                             </button>
                             <label className="px-2 py-0.5 text-xs font-semibold text-gray-700 bg-gray-200/70 hover:bg-gray-200 rounded border border-gray-300 cursor-pointer transition-colors">
                               Change
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={(e) => handleDocUpload(e, 'idCardUrl')} 
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) =>
+                                  handleDocUpload(e, 'idCardUrl')
+                                }
                               />
                             </label>
-                            <button 
-                              type="button" 
-                              onClick={() => setEditFormData({ ...editFormData, idCardUrl: "" })} 
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditFormData({
+                                  ...editFormData,
+                                  idCardUrl: '',
+                                })
+                              }
                               className="p-1 text-red-600 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -1131,11 +1423,11 @@ export default function ManageAlumniStudents() {
                       <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-gray-300 rounded-md text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 transition-colors w-full justify-center">
                         <Upload className="w-3.5 h-3.5 text-slate-500" />
                         Upload ID Card
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={(e) => handleDocUpload(e, 'idCardUrl')} 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleDocUpload(e, 'idCardUrl')}
                         />
                       </label>
                     )}
@@ -1148,33 +1440,50 @@ export default function ManageAlumniStudents() {
                     </span>
                     {editFormData.degreeUrl ? (
                       <div className="flex items-center gap-3">
-                        <img 
-                          src={editFormData.degreeUrl} 
-                          alt="Degree Certificate" 
+                        <img
+                          src={editFormData.degreeUrl}
+                          alt="Degree Certificate"
                           className="w-12 h-12 object-cover rounded border border-gray-300 shadow-2xs bg-white shrink-0 cursor-pointer"
-                          onClick={() => setPreviewImageModal({ url: editFormData.degreeUrl, title: "Degree Certificate Preview" })}
+                          onClick={() =>
+                            setPreviewImageModal({
+                              url: editFormData.degreeUrl,
+                              title: 'Degree Certificate Preview',
+                            })
+                          }
                         />
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => setPreviewImageModal({ url: editFormData.degreeUrl, title: "Degree Certificate Preview" })}
+                              onClick={() =>
+                                setPreviewImageModal({
+                                  url: editFormData.degreeUrl,
+                                  title: 'Degree Certificate Preview',
+                                })
+                              }
                               className="px-2 py-0.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors cursor-pointer flex items-center gap-1"
                             >
                               <Eye className="w-3 h-3" /> View
                             </button>
                             <label className="px-2 py-0.5 text-xs font-semibold text-gray-700 bg-gray-200/70 hover:bg-gray-200 rounded border border-gray-300 cursor-pointer transition-colors">
                               Change
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={(e) => handleDocUpload(e, 'degreeUrl')} 
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) =>
+                                  handleDocUpload(e, 'degreeUrl')
+                                }
                               />
                             </label>
-                            <button 
-                              type="button" 
-                              onClick={() => setEditFormData({ ...editFormData, degreeUrl: "" })} 
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditFormData({
+                                  ...editFormData,
+                                  degreeUrl: '',
+                                })
+                              }
                               className="p-1 text-red-600 bg-red-50 hover:bg-red-100 rounded border border-red-200 transition-colors cursor-pointer"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -1186,11 +1495,11 @@ export default function ManageAlumniStudents() {
                       <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 border border-dashed border-gray-300 rounded-md text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 transition-colors w-full justify-center">
                         <Upload className="w-3.5 h-3.5 text-slate-500" />
                         Upload Degree
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={(e) => handleDocUpload(e, 'degreeUrl')} 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleDocUpload(e, 'degreeUrl')}
                         />
                       </label>
                     )}
@@ -1203,30 +1512,35 @@ export default function ManageAlumniStudents() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
                   Override Password (Optional)
                 </label>
-                <input 
-                  type="password" 
-                  placeholder="•••••••• (leave blank to keep existing password)" 
+                <input
+                  type="password"
+                  placeholder="•••••••• (leave blank to keep existing password)"
                   className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                   value={editFormData.password}
-                  onChange={e => setEditFormData({...editFormData, password: e.target.value})} 
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      password: e.target.value,
+                    })
+                  }
                 />
               </div>
 
               {/* Form Action Controls */}
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200 bg-white p-3 rounded-lg border">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setEditingUser(null)}
                   className="px-4 py-2 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={isUpdating}
                   className="px-4 h-9 bg-slate-700 hover:bg-slate-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
                 >
-                  {isUpdating ? "Saving..." : "Save Changes"}
+                  {isUpdating ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -1234,6 +1548,5 @@ export default function ManageAlumniStudents() {
         </div>
       )}
     </div>
-  )
+  );
 }
-

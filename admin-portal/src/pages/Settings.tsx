@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react"
-import { useLocation } from "react-router-dom"
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Settings as SettingsIcon,
   ChevronRight,
@@ -18,108 +18,110 @@ import {
   Trash2,
   X,
   Maximize2,
-  ZoomIn
-} from "lucide-react"
-import { toast } from "sonner"
-import axios from "axios"
-import { useAuthStore } from "@/store/useAuthStore"
+  ZoomIn,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import axios from 'axios';
+import { useAuthStore } from '@/store/useAuthStore';
 
-const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`
+const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
 
 const LinkedInIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    {...props}
-  >
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
   </svg>
-)
+);
 
 const SCHOOL_CATEGORIES = [
-  { value: "School_of_Engineering", label: "School of Engineering" },
-  { value: "School_of_Sciences", label: "School of Sciences" },
-  { value: "School_of_Agriculture", label: "School of Agriculture" },
-  { value: "School_of_Business_Studies", label: "School of Business Studies" },
-  { value: "School_of_Computer_Applications", label: "School of Computer Applications" },
-  { value: "School_of_Humanities", label: "School of Humanities" },
-  { value: "School_of_Education", label: "School of Education" },
-  { value: "School_of_Law", label: "School of Law" },
-  { value: "School_of_Pharmacy", label: "School of Pharmacy" }
-]
+  { value: 'School_of_Engineering', label: 'School of Engineering' },
+  { value: 'School_of_Sciences', label: 'School of Sciences' },
+  { value: 'School_of_Agriculture', label: 'School of Agriculture' },
+  { value: 'School_of_Business_Studies', label: 'School of Business Studies' },
+  {
+    value: 'School_of_Computer_Applications',
+    label: 'School of Computer Applications',
+  },
+  { value: 'School_of_Humanities', label: 'School of Humanities' },
+  { value: 'School_of_Education', label: 'School of Education' },
+  { value: 'School_of_Law', label: 'School of Law' },
+  { value: 'School_of_Pharmacy', label: 'School of Pharmacy' },
+];
 
 export default function Settings() {
-  const location = useLocation()
-  const login = useAuthStore((state) => state.login)
-  const user = useAuthStore((state) => state.user)
+  const location = useLocation();
+  const login = useAuthStore((state) => state.login);
+  const user = useAuthStore((state) => state.user);
 
-  const [activeTab, setActiveTab] = useState<"profile" | "password">("profile")
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSavingProfile, setIsSavingProfile] = useState(false)
-  const [isSavingPassword, setIsSavingPassword] = useState(false)
-  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const imageRef = useRef<HTMLImageElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   // Profile Form State
   const [profileData, setProfileData] = useState({
-    name: "",
-    email: "",
-    avatarUrl: "",
-    bio: "",
-    gender: "",
-    socialLink: "",
-    schoolCategory: ""
-  })
+    name: '',
+    email: '',
+    avatarUrl: '',
+    bio: '',
+    gender: '',
+    socialLink: '',
+    schoolCategory: '',
+  });
 
   // Password Form State
   const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
-  })
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   // Password Visibilities
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Image Adjustment / Crop Modal States
-  const [showAdjustModal, setShowAdjustModal] = useState(false)
-  const [tempImageSrc, setTempImageSrc] = useState("")
-  const [imgNaturalSize, setImgNaturalSize] = useState({ width: 0, height: 0 })
-  const [zoom, setZoom] = useState(1)
-  const [offset, setOffset] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState('');
+  const [imgNaturalSize, setImgNaturalSize] = useState({ width: 0, height: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    if (location.state?.tab === "password") {
-      setActiveTab("password")
+    if (location.state?.tab === 'password') {
+      setActiveTab('password');
     } else {
-      setActiveTab("profile")
+      setActiveTab('profile');
     }
-  }, [location.state])
+  }, [location.state]);
 
   const fetchProfile = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const res = await axios.get("http://localhost:4000/api/admin-portal/profile", {
-        withCredentials: true
-      })
-      const fetchedUser = res.data.user
+      const res = await axios.get(
+        'http://localhost:4000/api/admin-portal/profile',
+        {
+          withCredentials: true,
+        }
+      );
+      const fetchedUser = res.data.user;
       if (fetchedUser) {
         setProfileData({
-          name: fetchedUser.name || "",
-          email: fetchedUser.email || "",
-          avatarUrl: fetchedUser.avatarUrl || "",
-          bio: fetchedUser.bio || "",
-          gender: fetchedUser.gender || "",
-          socialLink: fetchedUser.socialLink || "",
-          schoolCategory: fetchedUser.schoolCategory || ""
-        })
-        
+          name: fetchedUser.name || '',
+          email: fetchedUser.email || '',
+          avatarUrl: fetchedUser.avatarUrl || '',
+          bio: fetchedUser.bio || '',
+          gender: fetchedUser.gender || '',
+          socialLink: fetchedUser.socialLink || '',
+          schoolCategory: fetchedUser.schoolCategory || '',
+        });
+
         // Sync local storage user state
         if (user) {
           login({
@@ -127,160 +129,168 @@ export default function Settings() {
             name: fetchedUser.name,
             email: fetchedUser.email,
             avatarUrl: fetchedUser.avatarUrl,
-            role: fetchedUser.role
-          })
+            role: fetchedUser.role,
+          });
         }
       }
     } catch (err: any) {
-      console.error("Error fetching profile:", err)
-      toast.error(err.response?.data?.message || "Failed to load profile details")
+      console.error('Error fetching profile:', err);
+      toast.error(
+        err.response?.data?.message || 'Failed to load profile details'
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchProfile()
-  }, [])
+    fetchProfile();
+  }, []);
 
   const handleProfileChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setProfileData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image file size should be less than 5MB")
-      return
+      toast.error('Image file size should be less than 5MB');
+      return;
     }
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onloadend = () => {
-      setTempImageSrc(reader.result as string)
-      setShowAdjustModal(true)
-      setZoom(1)
-      setOffset({ x: 0, y: 0 })
-    }
-    reader.readAsDataURL(file)
-  }
+      setTempImageSrc(reader.result as string);
+      setShowAdjustModal(true);
+      setZoom(1);
+      setOffset({ x: 0, y: 0 });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { naturalWidth, naturalHeight } = e.currentTarget
-    setImgNaturalSize({ width: naturalWidth, height: naturalHeight })
-  }
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    setImgNaturalSize({ width: naturalWidth, height: naturalHeight });
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y })
-  }
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+  };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return
+    if (!isDragging) return;
     setOffset({
       x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
-    })
-  }
+      y: e.clientY - dragStart.y,
+    });
+  };
 
   const handleMouseUp = () => {
-    setIsDragging(false)
-  }
+    setIsDragging(false);
+  };
 
   const handleWheel = (e: React.WheelEvent) => {
-    const zoomStep = 0.05
-    const newZoom = e.deltaY < 0 
-      ? Math.min(zoom + zoomStep, 3) 
-      : Math.max(zoom - zoomStep, 1)
-    setZoom(newZoom)
-  }
+    const zoomStep = 0.05;
+    const newZoom =
+      e.deltaY < 0
+        ? Math.min(zoom + zoomStep, 3)
+        : Math.max(zoom - zoomStep, 1);
+    setZoom(newZoom);
+  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
-      setIsDragging(true)
-      const touch = e.touches[0]
-      setDragStart({ x: touch.clientX - offset.x, y: touch.clientY - offset.y })
+      setIsDragging(true);
+      const touch = e.touches[0];
+      setDragStart({
+        x: touch.clientX - offset.x,
+        y: touch.clientY - offset.y,
+      });
     }
-  }
+  };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return
+    if (!isDragging) return;
     if (e.touches.length === 1) {
-      const touch = e.touches[0]
+      const touch = e.touches[0];
       setOffset({
         x: touch.clientX - dragStart.x,
-        y: touch.clientY - dragStart.y
-      })
+        y: touch.clientY - dragStart.y,
+      });
     }
-  }
+  };
 
   const handleCropSave = async () => {
-    if (!imageRef.current) return
+    if (!imageRef.current) return;
 
-    setIsUploadingImage(true)
+    setIsUploadingImage(true);
     try {
       // Simulate network latency for a better UX feeling
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      const canvas = document.createElement("canvas")
-      canvas.width = 300
-      canvas.height = 300
-      const ctx = canvas.getContext("2d")
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const canvas = document.createElement('canvas');
+      canvas.width = 300;
+      canvas.height = 300;
+      const ctx = canvas.getContext('2d');
+
       if (ctx) {
-        ctx.imageSmoothingEnabled = true
-        ctx.imageSmoothingQuality = "high"
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
-        const isLandscape = imgNaturalSize.width >= imgNaturalSize.height
-        const vw = 256
-        const cw = 300
-        const scale = cw / vw
+        const isLandscape = imgNaturalSize.width >= imgNaturalSize.height;
+        const vw = 256;
+        const cw = 300;
+        const scale = cw / vw;
 
-        let baseW = 0
-        let baseH = 0
+        let baseW = 0;
+        let baseH = 0;
 
         if (isLandscape) {
-          baseH = vw
-          baseW = vw * (imgNaturalSize.width / imgNaturalSize.height)
+          baseH = vw;
+          baseW = vw * (imgNaturalSize.width / imgNaturalSize.height);
         } else {
-          baseW = vw
-          baseH = vw * (imgNaturalSize.height / imgNaturalSize.width)
+          baseW = vw;
+          baseH = vw * (imgNaturalSize.height / imgNaturalSize.width);
         }
 
-        const finalW = baseW * zoom * scale
-        const finalH = baseH * zoom * scale
-        const drawX = cw / 2 + offset.x * scale - finalW / 2
-        const drawY = cw / 2 + offset.y * scale - finalH / 2
+        const finalW = baseW * zoom * scale;
+        const finalH = baseH * zoom * scale;
+        const drawX = cw / 2 + offset.x * scale - finalW / 2;
+        const drawY = cw / 2 + offset.y * scale - finalH / 2;
 
         // Draw background
-        ctx.fillStyle = "#ffffff"
-        ctx.fillRect(0, 0, cw, cw)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cw, cw);
 
         // Draw cropped and panned image
-        ctx.drawImage(imageRef.current, drawX, drawY, finalW, finalH)
+        ctx.drawImage(imageRef.current, drawX, drawY, finalW, finalH);
 
-        const base64String = canvas.toDataURL("image/jpeg", 0.9)
+        const base64String = canvas.toDataURL('image/jpeg', 0.9);
 
         // Upload to backend
         const res = await axios.post(
-          "http://localhost:4000/api/admin-portal/upload",
+          'http://localhost:4000/api/admin-portal/upload',
           { image: base64String },
           { withCredentials: true }
-        )
+        );
 
         if (res.data.url) {
-          const newAvatarUrl = res.data.url
+          const newAvatarUrl = res.data.url;
 
           // Save avatarUrl immediately to profile in database
           const updateRes = await axios.put(
-            "http://localhost:4000/api/admin-portal/profile",
+            'http://localhost:4000/api/admin-portal/profile',
             {
               name: profileData.name.trim(),
               email: profileData.email.trim(),
@@ -288,72 +298,80 @@ export default function Settings() {
               bio: profileData.bio.trim() || null,
               gender: profileData.gender || null,
               socialLink: profileData.socialLink.trim() || null,
-              schoolCategory: profileData.schoolCategory || null
+              schoolCategory: profileData.schoolCategory || null,
             },
             { withCredentials: true }
-          )
+          );
 
-          const updatedUser = updateRes.data.user || { ...user, avatarUrl: newAvatarUrl }
+          const updatedUser = updateRes.data.user || {
+            ...user,
+            avatarUrl: newAvatarUrl,
+          };
 
-          setProfileData((prev) => ({ ...prev, avatarUrl: updatedUser.avatarUrl || newAvatarUrl }))
+          setProfileData((prev) => ({
+            ...prev,
+            avatarUrl: updatedUser.avatarUrl || newAvatarUrl,
+          }));
+
           if (user) {
             login({
               ...user,
-              avatarUrl: updatedUser.avatarUrl || newAvatarUrl
-            })
+              avatarUrl: updatedUser.avatarUrl || newAvatarUrl,
+            });
           }
 
-          toast.success("Profile picture updated successfully!")
-          setShowAdjustModal(false)
-          
+          toast.success('Profile picture updated successfully!');
+          setShowAdjustModal(false);
           if (fileInputRef.current) {
-            fileInputRef.current.value = ""
+            fileInputRef.current.value = '';
           }
         }
       }
     } catch (err: any) {
-      console.error("Adjustment upload failed:", err)
-      toast.error(err.response?.data?.message || "Failed to adjust and upload image")
+      console.error('Adjustment upload failed:', err);
+      toast.error(
+        err.response?.data?.message || 'Failed to adjust and upload image'
+      );
     } finally {
-      setIsUploadingImage(false)
+      setIsUploadingImage(false);
     }
-  }
+  };
 
   const handleCloseModal = () => {
-    setShowAdjustModal(false)
+    setShowAdjustModal(false);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+      fileInputRef.current.value = '';
     }
-  }
+  };
 
   const handleRemoveImage = () => {
-    setProfileData((prev) => ({ ...prev, avatarUrl: "" }))
-    toast.success("Selected avatar cleared (will save on submit)")
-  }
+    setProfileData((prev) => ({ ...prev, avatarUrl: '' }));
+    toast.success('Selected avatar cleared (will save on submit)');
+  };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setPasswordData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!profileData.name.trim()) {
-      toast.error("Full Name is required")
-      return
+      toast.error('Full Name is required');
+      return;
     }
     if (!profileData.email.trim()) {
-      toast.error("Email address is required")
-      return
+      toast.error('Email address is required');
+      return;
     }
 
-    setIsSavingProfile(true)
+    setIsSavingProfile(true);
     try {
       // Simulate network latency for a better UX feeling
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      await new Promise((resolve) => setTimeout(resolve, 800));
       const payload = {
         name: profileData.name.trim(),
         email: profileData.email.trim(),
@@ -361,80 +379,82 @@ export default function Settings() {
         bio: profileData.bio.trim() || null,
         gender: profileData.gender || null,
         socialLink: profileData.socialLink.trim() || null,
-        schoolCategory: profileData.schoolCategory || null
-      }
+        schoolCategory: profileData.schoolCategory || null,
+      };
 
       const res = await axios.put(
-        "http://localhost:4000/api/admin-portal/profile",
+        'http://localhost:4000/api/admin-portal/profile',
         payload,
         { withCredentials: true }
-      )
+      );
 
-      const updatedUser = res.data.user
+      const updatedUser = res.data.user;
       if (updatedUser) {
-        toast.success("Profile updated successfully")
-        
+        toast.success('Profile updated successfully');
+
         // Update Zustand auth store / localStorage
         login({
           ...user,
           name: updatedUser.name,
           email: updatedUser.email,
           avatarUrl: updatedUser.avatarUrl,
-          role: updatedUser.role
-        })
+          role: updatedUser.role,
+        });
       }
     } catch (err: any) {
-      console.error("Error updating profile:", err)
-      toast.error(err.response?.data?.message || "Failed to save profile changes")
+      console.error('Error updating profile:', err);
+      toast.error(
+        err.response?.data?.message || 'Failed to save profile changes'
+      );
     } finally {
-      setIsSavingProfile(false)
+      setIsSavingProfile(false);
     }
-  }
+  };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const { currentPassword, newPassword, confirmPassword } = passwordData
+    e.preventDefault();
+    const { currentPassword, newPassword, confirmPassword } = passwordData;
 
     if (!currentPassword) {
-      toast.error("Please enter your current password")
-      return
+      toast.error('Please enter your current password');
+      return;
     }
     if (!newPassword) {
-      toast.error("Please enter your new password")
-      return
+      toast.error('Please enter your new password');
+      return;
     }
     if (newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters long")
-      return
+      toast.error('New password must be at least 6 characters long');
+      return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("New password and confirmation password do not match")
-      return
+      toast.error('New password and confirmation password do not match');
+      return;
     }
 
-    setIsSavingPassword(true)
+    setIsSavingPassword(true);
     try {
       // Simulate network latency for a better UX feeling
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      await new Promise((resolve) => setTimeout(resolve, 800));
       await axios.put(
-        "http://localhost:4000/api/admin-portal/change-password",
+        'http://localhost:4000/api/admin-portal/change-password',
         { currentPassword, newPassword },
         { withCredentials: true }
-      )
+      );
 
-      toast.success("Password changed successfully")
+      toast.success('Password changed successfully');
       setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      })
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
     } catch (err: any) {
-      console.error("Error changing password:", err)
-      toast.error(err.response?.data?.message || "Failed to change password")
+      console.error('Error changing password:', err);
+      toast.error(err.response?.data?.message || 'Failed to change password');
     } finally {
-      setIsSavingPassword(false)
+      setIsSavingPassword(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -455,7 +475,7 @@ export default function Settings() {
           </span>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -480,7 +500,8 @@ export default function Settings() {
               <span>Profile & Account Settings</span>
             </h1>
             <p className="text-xs text-gray-500 mt-1">
-              Update your administrative profile details, school category, and security password.
+              Update your administrative profile details, school category, and
+              security password.
             </p>
           </div>
         </div>
@@ -489,11 +510,11 @@ export default function Settings() {
         <div className="flex gap-2 border-b border-gray-200 pb-3">
           <button
             type="button"
-            onClick={() => setActiveTab("profile")}
+            onClick={() => setActiveTab('profile')}
             className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm transition-all cursor-pointer border ${
-              activeTab === "profile"
-                ? "bg-slate-800 text-white border-slate-800 shadow-sm"
-                : "bg-white text-slate-600 border-gray-200 hover:bg-gray-50 hover:text-slate-900"
+              activeTab === 'profile'
+                ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
+                : 'bg-white text-slate-600 border-gray-200 hover:bg-gray-50 hover:text-slate-900'
             }`}
           >
             <span className="flex items-center gap-1.5">
@@ -503,11 +524,11 @@ export default function Settings() {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab("password")}
+            onClick={() => setActiveTab('password')}
             className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-sm transition-all cursor-pointer border ${
-              activeTab === "password"
-                ? "bg-slate-800 text-white border-slate-800 shadow-sm"
-                : "bg-white text-slate-600 border-gray-200 hover:bg-gray-50 hover:text-slate-900"
+              activeTab === 'password'
+                ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
+                : 'bg-white text-slate-600 border-gray-200 hover:bg-gray-50 hover:text-slate-900'
             }`}
           >
             <span className="flex items-center gap-1.5">
@@ -518,7 +539,7 @@ export default function Settings() {
         </div>
 
         {/* Active Tab Contents */}
-        {activeTab === "profile" ? (
+        {activeTab === 'profile' ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* PROFILE PREVIEW & AVATAR CARD */}
             <div className="bg-white border border-gray-200 rounded-sm p-6 shadow-sm flex flex-col items-center justify-center h-full">
@@ -533,7 +554,7 @@ export default function Settings() {
                     alt={profileData.name}
                     className="w-32 h-32 rounded-full object-cover border-2 border-gray-200 shadow-sm transition-all duration-200"
                     onError={(e) => {
-                      ;(e.target as HTMLImageElement).src = DEFAULT_USER_AVATAR
+                      (e.target as HTMLImageElement).src = DEFAULT_USER_AVATAR;
                     }}
                   />
                   {isUploadingImage && (
@@ -542,7 +563,7 @@ export default function Settings() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Hidden File Input */}
                 <input
                   type="file"
@@ -565,29 +586,32 @@ export default function Settings() {
               </div>
 
               {/* Remove Photo Action if custom photo exists */}
-              {profileData.avatarUrl && profileData.avatarUrl !== DEFAULT_USER_AVATAR && (
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="text-xs text-red-500 hover:text-red-700 font-semibold mb-3 flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  <span>Remove photo</span>
-                </button>
-              )}
+              {profileData.avatarUrl &&
+                profileData.avatarUrl !== DEFAULT_USER_AVATAR && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="text-xs text-red-500 hover:text-red-700 font-semibold mb-3 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Remove photo</span>
+                  </button>
+                )}
 
               <h3 className="font-bold text-slate-800 text-lg leading-tight mt-2">
-                {profileData.name || "Administrator"}
+                {profileData.name || 'Administrator'}
               </h3>
-              <p className="text-xs text-gray-500 font-mono mt-0.5">{profileData.email}</p>
+              <p className="text-xs text-gray-500 font-mono mt-0.5">
+                {profileData.email}
+              </p>
 
               <div className="mt-4 flex flex-wrap gap-2 justify-center">
                 <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm border border-slate-200">
-                  Role: {user?.role || "ADMIN"}
+                  Role: {user?.role || 'ADMIN'}
                 </span>
                 {profileData.schoolCategory && (
                   <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-sm border border-blue-200">
-                    {profileData.schoolCategory.replace(/_/g, " ")}
+                    {profileData.schoolCategory.replace(/_/g, ' ')}
                   </span>
                 )}
               </div>
@@ -598,7 +622,7 @@ export default function Settings() {
                     <LinkedInIcon className="w-4 h-4 text-[#0077b5] shrink-0" />
                     <a
                       href={
-                        profileData.socialLink.startsWith("http")
+                        profileData.socialLink.startsWith('http')
                           ? profileData.socialLink
                           : `https://${profileData.socialLink}`
                       }
@@ -699,7 +723,9 @@ export default function Settings() {
                       <option value="MALE">Male</option>
                       <option value="FEMALE">Female</option>
                       <option value="OTHER">Other</option>
-                      <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
+                      <option value="PREFER_NOT_TO_SAY">
+                        Prefer not to say
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -773,8 +799,9 @@ export default function Settings() {
                     Security Recommendation
                   </p>
                   <p>
-                    Choose a strong password containing at least 6 characters, including numbers,
-                    symbols, and mixed-case letters to keep your administrator portal account secure.
+                    Choose a strong password containing at least 6 characters,
+                    including numbers, symbols, and mixed-case letters to keep
+                    your administrator portal account secure.
                   </p>
                 </div>
               </div>
@@ -786,7 +813,7 @@ export default function Settings() {
                 </label>
                 <div className="relative">
                   <input
-                    type={showCurrentPassword ? "text" : "password"}
+                    type={showCurrentPassword ? 'text' : 'password'}
                     name="currentPassword"
                     value={passwordData.currentPassword}
                     onChange={handlePasswordChange}
@@ -815,7 +842,7 @@ export default function Settings() {
                 </label>
                 <div className="relative">
                   <input
-                    type={showNewPassword ? "text" : "password"}
+                    type={showNewPassword ? 'text' : 'password'}
                     name="newPassword"
                     value={passwordData.newPassword}
                     onChange={handlePasswordChange}
@@ -844,7 +871,7 @@ export default function Settings() {
                 </label>
                 <div className="relative">
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     value={passwordData.confirmPassword}
                     onChange={handlePasswordChange}
@@ -908,7 +935,8 @@ export default function Settings() {
             {/* Modal Body */}
             <div className="p-6 flex flex-col items-center">
               <p className="text-xs text-gray-500 mb-4 text-center">
-                Drag the image to reposition inside the circle. Scroll or use the slider to zoom.
+                Drag the image to reposition inside the circle. Scroll or use
+                the slider to zoom.
               </p>
 
               {/* Viewport Circle Container */}
@@ -931,12 +959,18 @@ export default function Settings() {
                   className="absolute pointer-events-none select-none origin-center"
                   style={{
                     transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-                    maxWidth: "none",
-                    width: imgNaturalSize.width >= imgNaturalSize.height ? "auto" : "100%",
-                    height: imgNaturalSize.width >= imgNaturalSize.height ? "100%" : "auto",
+                    maxWidth: 'none',
+                    width:
+                      imgNaturalSize.width >= imgNaturalSize.height
+                        ? 'auto'
+                        : '100%',
+                    height:
+                      imgNaturalSize.width >= imgNaturalSize.height
+                        ? '100%'
+                        : 'auto',
                   }}
                 />
-                
+
                 {/* Circular boundary guide shadow overlay */}
                 <div className="absolute inset-0 rounded-full border border-slate-400/20 pointer-events-none shadow-[0_0_0_9999px_rgba(255,255,255,0.4)]"></div>
               </div>
@@ -1010,5 +1044,5 @@ export default function Settings() {
         </div>
       )}
     </div>
-  )
+  );
 }

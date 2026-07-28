@@ -16,13 +16,24 @@ import {
   getAdminProfile,
   updateAdminProfile,
   changeAdminPassword,
-  uploadAdminImage
+  uploadAdminImage,
 } from '../controller/admin.controller.js';
-import { getOverviewStats, getRoleSchoolStats, getRecentEvents, getCommunityStats, getHelpTicketStats, getUserRegistrationAnalytics } from '../controller/analytics.controller.js';
+import {
+  getOverviewStats,
+  getRoleSchoolStats,
+  getRecentEvents,
+  getCommunityStats,
+  getHelpTicketStats,
+  getUserRegistrationAnalytics,
+} from '../controller/analytics.controller.js';
 import { adminMiddleware } from '../middleware/admin.middleware.js';
+import {
+  createHelpTicket,
+  getHelpTickets,
+  updateHelpTicketStatus,
+} from '../controller/ticket.controller.js';
 
 const router: express.Router = express.Router();
-
 
 router.post('/login', loginAdmin);
 router.get('/logout', logout);
@@ -47,8 +58,16 @@ router.delete('/alumni-students/:id', adminMiddleware, deleteAlumniStudent);
 
 // Pending Registration Requests Routes
 router.get('/pending-requests', adminMiddleware, getPendingRequests);
-router.put('/pending-requests/:id/approve', adminMiddleware, approvePendingRequest);
-router.delete('/pending-requests/:id/decline', adminMiddleware, declinePendingRequest);
+router.put(
+  '/pending-requests/:id/approve',
+  adminMiddleware,
+  approvePendingRequest
+);
+router.delete(
+  '/pending-requests/:id/decline',
+  adminMiddleware,
+  declinePendingRequest
+);
 
 // Analytics Routes
 router.get('/analytics/overview', adminMiddleware, getOverviewStats);
@@ -56,6 +75,20 @@ router.get('/analytics/school/:role', adminMiddleware, getRoleSchoolStats);
 router.get('/analytics/recent-events', adminMiddleware, getRecentEvents);
 router.get('/analytics/community', adminMiddleware, getCommunityStats);
 router.get('/analytics/help-tickets', adminMiddleware, getHelpTicketStats);
-router.get('/analytics/user-registrations', adminMiddleware, getUserRegistrationAnalytics);
+router.get(
+  '/analytics/user-registrations',
+  adminMiddleware,
+  getUserRegistrationAnalytics
+);
+
+// Help Tickets management routes
+router.post('/help-tickets', createHelpTicket); // Public endpoint for submitting tickets
+router.get('/help-tickets', adminMiddleware, getHelpTickets); // Admin endpoint for listing tickets
+router.patch(
+  '/help-tickets/:id/status',
+  adminMiddleware,
+  updateHelpTicketStatus
+); // Admin endpoint for updating status
+router.put('/help-tickets/:id/status', adminMiddleware, updateHelpTicketStatus);
 
 export default router;

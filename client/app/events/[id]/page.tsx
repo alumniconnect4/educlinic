@@ -381,7 +381,8 @@ export default function EventDetailPage() {
                       disabled
                       className="w-full bg-gray-400 text-white text-center text-[14px] font-semibold py-3.5 rounded border border-transparent shadow-sm cursor-not-allowed"
                     >
-                      Registration Limit Reached ({event.registrationLimit} seats filled)
+                      Registration Limit Reached ({event.registrationLimit}{' '}
+                      seats filled)
                     </button>
                   );
                 }

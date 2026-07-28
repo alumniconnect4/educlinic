@@ -1,65 +1,71 @@
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import axios from "axios"
-import { useAuthStore } from "@/store/useAuthStore"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lock, User } from "lucide-react"
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuthStore } from '@/store/useAuthStore';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Lock, User } from 'lucide-react';
 
 const backgrounds = [
-  "https://plus.unsplash.com/premium_photo-1677567996070-68fa4181775a?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==",
-  "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=1920",
-  "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8aW5kaWFuJTIwY29sbGVnZXxlbnwwfHwwfHx8MA%3D%3D",
-]
+  'https://plus.unsplash.com/premium_photo-1677567996070-68fa4181775a?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==',
+  'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=1920',
+  'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8aW5kaWFuJTIwY29sbGVnZXxlbnwwfHwwfHx8MA%3D%3D',
+];
 
 export default function Login() {
-  const [currentBg, setCurrentBg] = useState(0)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [currentBg, setCurrentBg] = useState(0);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const login = useAuthStore((state) => state.login)
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const navigate = useNavigate()
+  const login = useAuthStore((state) => state.login);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if already authenticated
     if (isAuthenticated()) {
-      navigate("/")
+      navigate('/');
     }
 
     // Change background every 4.5 seconds
     const interval = setInterval(() => {
-      setCurrentBg((prev) => (prev + 1) % backgrounds.length)
-    }, 4500)
+      setCurrentBg((prev) => (prev + 1) % backgrounds.length);
+    }, 4500);
 
-    return () => clearInterval(interval)
-  }, [isAuthenticated, navigate])
+    return () => clearInterval(interval);
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError('');
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/api/admin-portal/login",
+        'http://localhost:4000/api/admin-portal/login',
         { email, password },
         { withCredentials: true }
-      )
+      );
 
       if (response.status === 200) {
-        login(response.data.user)
-        navigate("/")
+        login(response.data.user);
+        navigate('/');
       }
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.message) {
-        setError(err.response.data.message)
+        setError(err.response.data.message);
       } else {
-        setError("An error occurred. Please try again.")
+        setError('An error occurred. Please try again.');
       }
     }
-  }
+  };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center bg-slate-950">
@@ -67,8 +73,9 @@ export default function Login() {
       {backgrounds.map((bg, index) => (
         <div
           key={bg}
-          className={`absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${index === currentBg ? "opacity-100" : "opacity-0"
-            }`}
+          className={`absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out ${
+            index === currentBg ? 'opacity-100' : 'opacity-0'
+          }`}
           style={{ backgroundImage: `url(${bg})` }}
         />
       ))}
@@ -118,16 +125,23 @@ export default function Login() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col items-end pb-8">
-            <Button type="submit" className="bg-[#4083ff] hover:bg-blue-500 text-white shadow-none rounded-sm px-6 h-9 font-normal">
+            <Button
+              type="submit"
+              className="bg-[#4083ff] hover:bg-blue-500 text-white shadow-none rounded-sm px-6 h-9 font-normal"
+            >
               Login
             </Button>
             <div className="w-full mt-6 text-sm text-slate-400 text-left">
-              Forgot your password ?<br/>
-              no worries, click <a href="#" className="text-blue-400 hover:underline">here</a> to reset your password.
+              Forgot your password ?<br />
+              no worries, click{' '}
+              <a href="#" className="text-blue-400 hover:underline">
+                here
+              </a>{' '}
+              to reset your password.
             </div>
           </CardFooter>
         </form>
       </Card>
     </div>
-  )
+  );
 }

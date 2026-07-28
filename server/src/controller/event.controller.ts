@@ -30,16 +30,23 @@ const canManageEvent = (
 const canModifyEvent = (
   userId: number,
   userRole: UserRoleEnum,
-  event: { createdById: number; permissionMode?: string | null; permittedAdminIds?: number[] | null }
+  event: {
+    createdById: number;
+    permissionMode?: string | null;
+    permittedAdminIds?: number[] | null;
+  }
 ) => {
   if (userRole === UserRole.SUPER_ADMIN) return true;
   if (event.createdById === userId) return true;
-  if (event.permissionMode === 'HYBRID' && Array.isArray(event.permittedAdminIds) && event.permittedAdminIds.includes(userId)) {
+  if (
+    event.permissionMode === 'HYBRID' &&
+    Array.isArray(event.permittedAdminIds) &&
+    event.permittedAdminIds.includes(userId)
+  ) {
     return true;
   }
   return false;
 };
-
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -120,8 +127,16 @@ export const createEvent = async (req: Request, res: Response) => {
         visibility: eventVisibility,
         startDate: parsedStartDate,
         endDate: parsedEndDate,
-        registrationLimit: registrationLimit !== undefined && registrationLimit !== '' && registrationLimit !== null ? Number(registrationLimit) : null,
-        startRegistrationsNow: startRegistrationsNow !== undefined ? Boolean(startRegistrationsNow) : true,
+        registrationLimit:
+          registrationLimit !== undefined &&
+          registrationLimit !== '' &&
+          registrationLimit !== null
+            ? Number(registrationLimit)
+            : null,
+        startRegistrationsNow:
+          startRegistrationsNow !== undefined
+            ? Boolean(startRegistrationsNow)
+            : true,
         createdById: req.user.id,
         ...(finalImageUrl && { imageUrl: finalImageUrl }),
       },
@@ -333,7 +348,9 @@ export const updateEvent = async (req: Request, res: Response) => {
           });
           finalImageUrl = cloudinaryUpload.secure_url;
         } catch (error) {
-          return res.status(500).json({ message: 'Image upload failed', error });
+          return res
+            .status(500)
+            .json({ message: 'Image upload failed', error });
         }
       } else if (typeof imageUrl === 'string') {
         finalImageUrl = imageUrl;
@@ -351,8 +368,17 @@ export const updateEvent = async (req: Request, res: Response) => {
         ...(visibility !== undefined ? { visibility } : {}),
         ...(parsedStartDate ? { startDate: parsedStartDate } : {}),
         ...(parsedEndDate ? { endDate: parsedEndDate } : {}),
-        ...(registrationLimit !== undefined ? { registrationLimit: registrationLimit !== '' && registrationLimit !== null ? Number(registrationLimit) : null } : {}),
-        ...(startRegistrationsNow !== undefined ? { startRegistrationsNow: Boolean(startRegistrationsNow) } : {}),
+        ...(registrationLimit !== undefined
+          ? {
+              registrationLimit:
+                registrationLimit !== '' && registrationLimit !== null
+                  ? Number(registrationLimit)
+                  : null,
+            }
+          : {}),
+        ...(startRegistrationsNow !== undefined
+          ? { startRegistrationsNow: Boolean(startRegistrationsNow) }
+          : {}),
         ...(finalImageUrl !== undefined ? { imageUrl: finalImageUrl } : {}),
       },
     });
@@ -443,9 +469,9 @@ export const registerEvent = async (req: Request, res: Response) => {
         where: { eventId },
       });
       if (regCount >= event.registrationLimit) {
-        return res
-          .status(400)
-          .json({ message: 'Registration limit has been reached for this event.' });
+        return res.status(400).json({
+          message: 'Registration limit has been reached for this event.',
+        });
       }
     }
 
@@ -554,7 +580,10 @@ export const getEventRegistrations = async (req: Request, res: Response) => {
   }
 };
 
-export const unregisterEventRegistration = async (req: Request, res: Response) => {
+export const unregisterEventRegistration = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { id } = req.params;
     const regId = Number(id);
@@ -572,5 +601,3 @@ export const unregisterEventRegistration = async (req: Request, res: Response) =
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
-

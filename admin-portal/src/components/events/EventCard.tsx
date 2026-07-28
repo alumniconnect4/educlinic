@@ -1,19 +1,19 @@
-import React from "react"
-import { Calendar, MapPin, Share2, Pencil, Trash2, Users } from "lucide-react"
-import type { EventItem } from "./CreateEventForm"
-export type { EventItem }
+import React from 'react';
+import { Calendar, MapPin, Share2, Pencil, Trash2, Users } from 'lucide-react';
+import type { EventItem } from './CreateEventForm';
+export type { EventItem };
 
 interface EventCardProps {
-  event: EventItem
-  onShare: (event: EventItem) => void
-  onEdit: (event: EventItem) => void
-  onDelete: (event: EventItem) => void
-  onView: (event: EventItem) => void
-  onViewRegistrations: (event: EventItem) => void
+  event: EventItem;
+  onShare: (event: EventItem) => void;
+  onEdit: (event: EventItem) => void;
+  onDelete: (event: EventItem) => void;
+  onView: (event: EventItem) => void;
+  onViewRegistrations: (event: EventItem) => void;
 }
 
 const DEFAULT_EVENT_IMAGE =
-  "https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+  'https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D';
 
 export const EventCard: React.FC<EventCardProps> = ({
   event,
@@ -21,27 +21,27 @@ export const EventCard: React.FC<EventCardProps> = ({
   onEdit,
   onDelete,
   onView,
-  onViewRegistrations
+  onViewRegistrations,
 }) => {
   const formatEventDate = (dateString: string) => {
     try {
-      const date = new Date(dateString)
-      if (isNaN(date.getTime())) return dateString
-      const datePart = date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric"
-      })
-      const timePart = date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true
-      })
-      return `${datePart}, ${timePart}`
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const datePart = date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      const timePart = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      return `${datePart}, ${timePart}`;
     } catch {
-      return dateString
+      return dateString;
     }
-  }
+  };
 
   return (
     <div className="flex flex-col sm:flex-row bg-white border border-gray-200 rounded-sm overflow-hidden shadow-2xs hover:shadow-sm transition-all group">
@@ -56,15 +56,15 @@ export const EventCard: React.FC<EventCardProps> = ({
           alt={event.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
-            ;(e.target as HTMLImageElement).src = DEFAULT_EVENT_IMAGE
+            (e.target as HTMLImageElement).src = DEFAULT_EVENT_IMAGE;
           }}
         />
         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
           <span
             className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase shadow-xs ${
-              event.eventType === "ONLINE"
-                ? "bg-blue-600 text-white"
-                : "bg-emerald-600 text-white"
+              event.eventType === 'ONLINE'
+                ? 'bg-blue-600 text-white'
+                : 'bg-emerald-600 text-white'
             }`}
           >
             {event.eventType}
@@ -133,7 +133,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             <div className="flex items-center gap-2.5">
               <Users className="w-4 h-4 text-gray-400 shrink-0" />
               <span className="text-xs text-slate-500">
-                Organized by{" "}
+                Organized by{' '}
                 <strong className="text-slate-700">{event.organizedBy}</strong>
               </span>
             </div>
@@ -156,7 +156,7 @@ export const EventCard: React.FC<EventCardProps> = ({
           >
             <Users className="w-3.5 h-3.5" />
             <span>View Registrations</span>
-            {typeof event.verifiedRegistrationsCount === "number" && (
+            {typeof event.verifiedRegistrationsCount === 'number' && (
               <span className="bg-white/20 px-1.5 py-0.5 rounded text-[10px] font-bold">
                 {event.verifiedRegistrationsCount}
               </span>
@@ -165,5 +165,5 @@ export const EventCard: React.FC<EventCardProps> = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

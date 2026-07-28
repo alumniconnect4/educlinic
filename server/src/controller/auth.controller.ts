@@ -13,22 +13,38 @@ import { prisma } from '../config/db.js';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, schoolCategory, avatarUrl, idCardUrl, degreeUrl } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      schoolCategory,
+      avatarUrl,
+      idCardUrl,
+      degreeUrl,
+    } = req.body;
 
     if (!name || !email || !password || !role || !schoolCategory) {
       return res.status(400).json({ message: 'All text fields are required' });
     }
 
     if (!avatarUrl || avatarUrl.trim() === '') {
-      return res.status(400).json({ message: 'Profile avatar image upload is compulsory for registration.' });
+      return res.status(400).json({
+        message: 'Profile avatar image upload is compulsory for registration.',
+      });
     }
 
     if (role === 'USER' && !idCardUrl) {
-      return res.status(400).json({ message: 'ID Card upload is required for Student registration.' });
+      return res.status(400).json({
+        message: 'ID Card upload is required for Student registration.',
+      });
     }
 
     if (role === 'ALUMNI' && !idCardUrl && !degreeUrl) {
-      return res.status(400).json({ message: 'Alumni registration requires either an ID Card or Degree Certificate upload.' });
+      return res.status(400).json({
+        message:
+          'Alumni registration requires either an ID Card or Degree Certificate upload.',
+      });
     }
 
     const user = await prisma.user.findUnique({
@@ -56,7 +72,8 @@ export const register = async (req: Request, res: Response) => {
 
     if (newUser.role === 'USER' || newUser.role === 'ALUMNI') {
       return res.status(201).json({
-        message: 'Registration request submitted successfully! Your account is pending administrator review and approval before you can log in.',
+        message:
+          'Registration request submitted successfully! Your account is pending administrator review and approval before you can log in.',
         user: {
           id: newUser.id,
           name: newUser.name,
@@ -118,8 +135,9 @@ export const login = async (req: Request, res: Response) => {
     }
 
     if (!user.isVerified && (user.role === 'USER' || user.role === 'ALUMNI')) {
-      return res.status(403).json({ 
-        message: 'Your registration request is pending admin approval. Please wait for an administrator to review and approve your account.' 
+      return res.status(403).json({
+        message:
+          'Your registration request is pending admin approval. Please wait for an administrator to review and approve your account.',
       });
     }
 
