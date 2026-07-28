@@ -9,7 +9,8 @@ import followRoutes from './routes/follow.routes.js';
 import userRoutes from './routes/user.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import aiRoutes from './routes/ai.routes.js';
-import adminRoutes from './routes/admin.routes.js'
+import adminRoutes from './routes/admin.routes.js';
+import galleryRoutes from './routes/gallery.routes.js';
 
 const app: express.Application = express();
 
@@ -22,8 +23,8 @@ const appMiddleware: express.RequestHandler[] = [
     ],
     credentials: true,
   }),
-  express.json({ limit: '25mb' }),
-  express.urlencoded({ limit: '25mb', extended: true }),
+  express.json({ limit: '100mb' }),
+  express.urlencoded({ limit: '100mb', extended: true }),
   cookieParser(),
   morgan('dev'),
 ];
@@ -41,6 +42,7 @@ app.use('/api/follow', followRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/admin-portal', adminRoutes)
+app.use('/api/admin-portal', adminRoutes);
+app.use('/api/gallery', galleryRoutes);
 
 export default app;
