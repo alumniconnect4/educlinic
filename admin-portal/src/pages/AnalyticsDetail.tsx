@@ -83,7 +83,7 @@ export default function AnalyticsDetail() {
                       contentStyle={{ borderRadius: '4px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgb(0 0 0 / 0.05)' }}
                     />
                     <Bar dataKey="value" radius={[2, 2, 0, 0]} maxBarSize={50}>
-                      {data.map((entry: any, index: number) => (
+                      {data.map((_: any, index: number) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Bar>

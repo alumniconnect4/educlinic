@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Search, UserPlus, Users, GraduationCap, Pencil, Trash2, Upload, Clock, Eye, X, Mail, ShieldCheck, FileText, ExternalLink, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import axios, { isAxiosError } from "axios"
-import { Link } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 
 interface UserRecord {
   id: number
@@ -54,6 +54,17 @@ export default function ManageAlumniStudents() {
   // View User Modal State
   const [viewingUser, setViewingUser] = useState<UserRecord | null>(null)
   const [previewImageModal, setPreviewImageModal] = useState<{ url: string; title: string } | null>(null)
+
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (location.state && (location.state as any).viewingUser) {
+      setViewingUser((location.state as any).viewingUser)
+      // Clear state so modal doesn't reopen after refresh/navigation
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location, navigate])
 
   // Create Form State
   const [formData, setFormData] = useState({

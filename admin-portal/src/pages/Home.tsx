@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Home as HomeIcon, ChevronRight, Users, GraduationCap, ShieldCheck, MessageSquare, MessageCircle, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Users, GraduationCap, ShieldCheck, MessageCircle, FileText, AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 import axios from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { PlatformAnalytics } from "@/components/PlatformAnalytics";
 import { StatCard } from "@/components/StatCard";
 
@@ -22,6 +22,15 @@ export default function Home() {
     latestTickets: [],
     unresolvedCount: 0,
     resolvedCount: 0
+  });
+  const [userRegStats, setUserRegStats] = useState<{
+    totalVerifiedUsers: number;
+    roleStats: { role: string; total: number }[];
+    monthlyTrend: { month: string; count: number }[];
+  }>({
+    totalVerifiedUsers: 0,
+    roleStats: [],
+    monthlyTrend: [],
   });
 
   useEffect(() => {
@@ -69,10 +78,22 @@ export default function Home() {
       }
     };
 
+    const fetchUserRegAnalytics = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/admin-portal/analytics/user-registrations", {
+          withCredentials: true
+        });
+        setUserRegStats(response.data);
+      } catch (err) {
+        console.error("Failed to fetch user registration analytics", err);
+      }
+    };
+
     fetchStats();
     fetchEvents();
     fetchCommunity();
     fetchTickets();
+    fetchUserRegAnalytics();
   }, []);
 
   const createPostChartData = (value: number, total: number, label: string) => [
@@ -80,11 +101,116 @@ export default function Home() {
     { name: "Other", value: total - value > 0 ? total - value : 1 }
   ];
 
+  const ROLE_LABELS: Record<string, string> = {
+    USER: "Students",
+    ALUMNI: "Alumni",
+    ADMIN: "Admins",
+    SUPER_ADMIN: "Super Admins",
+  };
+  const ROLE_COLORS = ['#84749f', '#6ea2e6', '#f59e0b', '#10b981'];
+
   return (
     <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
 
       <div className="p-4 sm:p-6 flex-1 bg-transparent">
         <PlatformAnalytics stats={stats} user={user} />
+
+        {/* ── Verified Users Analytics ── */}
+        <div className="mt-8 bg-[#f8f9fa] border border-gray-200 shadow-sm rounded-sm mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#84749f]" />
+              Verified Users Analytics
+            </h3>
+            <span className="text-xs text-gray-400 bg-white border border-gray-200 px-2 py-1 rounded">
+              Excludes pending approval requests
+            </span>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {/* Stat cards per role */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {([
+                { role: 'USER',        label: 'Students',    icon: <Users className="w-4 h-4" /> },
+                { role: 'ALUMNI',      label: 'Alumni',      icon: <GraduationCap className="w-4 h-4" /> },
+                { role: 'ADMIN',       label: 'Admins',      icon: <ShieldCheck className="w-4 h-4" /> },
+                { role: 'SUPER_ADMIN', label: 'Super Admins',icon: <ShieldCheck className="w-4 h-4" /> },
+              ] as const).map(({ role, label, icon }) => {
+                const found = userRegStats.roleStats.find(r => r.role === role);
+                return (
+                  <div key={role} className="bg-white p-4 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm">
+                    <div>
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+                      <h4 className="text-2xl font-bold text-[#84749f]">{found?.total ?? 0}</h4>
+                    </div>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[#84749f]/10 text-[#84749f]">{icon}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Charts row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Role distribution pie */}
+              <div className="bg-white p-5 border border-gray-200 rounded-sm shadow-sm">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Distribution by Role</h4>
+                {userRegStats.totalVerifiedUsers > 0 ? (
+                  <div className="flex items-center gap-6">
+                    <ResponsiveContainer width={150} height={150}>
+                      <PieChart>
+                        <Pie
+                          data={userRegStats.roleStats.filter(r => r.total > 0).map(r => ({
+                            name: ROLE_LABELS[r.role] ?? r.role,
+                            value: r.total,
+                          }))}
+                          cx="50%" cy="50%"
+                          innerRadius={40} outerRadius={65}
+                          paddingAngle={3}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {userRegStats.roleStats.filter(r => r.total > 0).map((_, idx) => (
+                            <Cell key={idx} fill={ROLE_COLORS[idx % ROLE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(v: any, n: any) => [v, n]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex flex-col gap-2">
+                      {userRegStats.roleStats.filter(r => r.total > 0).map((r, idx) => (
+                        <div key={r.role} className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: ROLE_COLORS[idx % ROLE_COLORS.length] }} />
+                          <span className="text-xs text-gray-600">{ROLE_LABELS[r.role] ?? r.role} — <strong>{r.total}</strong></span>
+                        </div>
+                      ))}
+                      <p className="text-xs text-gray-400 mt-1">Total: <strong className="text-gray-600">{userRegStats.totalVerifiedUsers}</strong></p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 text-center py-8">No verified users yet</p>
+                )}
+              </div>
+
+              {/* Monthly trend bar chart */}
+              <div className="bg-white p-5 border border-gray-200 rounded-sm shadow-sm">
+                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">New Verified Users (Last 6 Months)</h4>
+                <ResponsiveContainer width="100%" height={155}>
+                  <BarChart data={userRegStats.monthlyTrend} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="month" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip
+                      cursor={{ fill: '#f8fafc' }}
+                      contentStyle={{ borderRadius: '4px', border: '1px solid #e2e8f0', fontSize: 12 }}
+                      formatter={(v: any) => [v, 'Verified Users']}
+                    />
+                    <Bar dataKey="count" fill="#84749f" radius={[2, 2, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Events Analytics Rectangular Card */}
         <div className="mt-8 bg-white shadow-sm border border-gray-200 rounded-sm">
@@ -167,16 +293,16 @@ export default function Home() {
 
             {/* Bottom 2 Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <StatCard 
-                title="Posts by Students" 
-                value={communityStats.studentPosts} 
+              <StatCard
+                title="Posts by Students"
+                value={communityStats.studentPosts}
                 total={communityStats.totalPosts}
                 data={createPostChartData(communityStats.studentPosts, communityStats.totalPosts, "Student Posts")}
                 linkTo="/posts"
               />
-              <StatCard 
-                title="Posts by Alumni" 
-                value={communityStats.alumniPosts} 
+              <StatCard
+                title="Posts by Alumni"
+                value={communityStats.alumniPosts}
                 total={communityStats.totalPosts}
                 data={createPostChartData(communityStats.alumniPosts, communityStats.totalPosts, "Alumni Posts")}
                 linkTo="/posts"
@@ -266,7 +392,7 @@ export default function Home() {
                           <Cell fill="#84749f" />
                           <Cell fill="#6ea2e6" />
                         </Pie>
-                        <Tooltip formatter={(value: number, name: string) => [value, name]} />
+                        <Tooltip formatter={(value: any, name: any) => [value, name]} />
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (

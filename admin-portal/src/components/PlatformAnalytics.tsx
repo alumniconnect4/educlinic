@@ -11,7 +11,7 @@ interface PlatformAnalyticsProps {
 }
 
 export function PlatformAnalytics({ stats, user }: PlatformAnalyticsProps) {
-  const createChartData = (value: number, color: string, label: string) => [
+  const createChartData = (value: number, _: string, label: string) => [
     { name: label, value: value },
     { name: "Other", value: stats.total - value > 0 ? stats.total - value : 1 }
   ];

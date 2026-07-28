@@ -14,6 +14,7 @@ import PendingRequestsPage from "./pages/users/PendingRequestsPage"
 
 // Other Pages
 import Events from "./pages/Events"
+import EventRegistrations from "./pages/EventRegistrations"
 import Gallery from "./pages/Gallery"
 import HelpTickets from "./pages/HelpTickets"
 import Settings from "./pages/Settings"
@@ -58,6 +59,7 @@ const App = () => {
 
           {/* Other Navigation Tabs */}
           <Route path="events" element={<Events />} />
+          <Route path="events/:id/registrations" element={<EventRegistrations />} />
           <Route path="gallery" element={<Gallery />} />
           <Route path="help-tickets" element={<HelpTickets />} />
           <Route path="settings" element={<Settings />} />

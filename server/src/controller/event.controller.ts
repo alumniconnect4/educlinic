@@ -58,14 +58,17 @@ export const createEvent = async (req: Request, res: Response) => {
       visibility,
       startDate,
       endDate,
+      registrationLimit,
+      startRegistrationsNow,
     } = req.body;
+
+    const eventVisibility = visibility || 'GLOBAL';
 
     if (
       !name ||
       !organizedBy ||
       !place ||
       !eventType ||
-      !visibility ||
       !startDate ||
       !endDate
     ) {
@@ -78,7 +81,7 @@ export const createEvent = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid event type' });
     }
 
-    if (!validEventVisibilities.has(visibility)) {
+    if (!validEventVisibilities.has(eventVisibility)) {
       return res.status(400).json({ message: 'Invalid event visibility' });
     }
 
@@ -114,9 +117,11 @@ export const createEvent = async (req: Request, res: Response) => {
         organizedBy,
         place,
         eventType,
-        visibility,
+        visibility: eventVisibility,
         startDate: parsedStartDate,
         endDate: parsedEndDate,
+        registrationLimit: registrationLimit !== undefined && registrationLimit !== '' && registrationLimit !== null ? Number(registrationLimit) : null,
+        startRegistrationsNow: startRegistrationsNow !== undefined ? Boolean(startRegistrationsNow) : true,
         createdById: req.user.id,
         ...(finalImageUrl && { imageUrl: finalImageUrl }),
       },
@@ -142,13 +147,24 @@ export const getEventById = async (req: Request, res: Response) => {
 
     const event = await prisma.event.findUnique({
       where: { id },
+      include: {
+        _count: {
+          select: {
+            registrations: true,
+          },
+        },
+      },
     });
 
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
 
-    return res.json({ event });
+    const verifiedRegistrationsCount = await prisma.registration.count({
+      where: { eventId: id, user: { isVerified: true } },
+    });
+
+    return res.json({ event: { ...event, verifiedRegistrationsCount } });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
@@ -159,17 +175,33 @@ export const getAllEvents = async (_req: Request, res: Response) => {
   try {
     const { limit, offset } = _req.params;
     const { filter } = _req.query;
+    const searchString = (
+      typeof _req.query.search === 'string'
+        ? _req.query.search
+        : typeof _req.query.q === 'string'
+          ? _req.query.q
+          : ''
+    ).trim();
 
     const take = limit ? parseInt(limit as string, 10) : 8;
     const skip = offset ? parseInt(offset as string, 10) : 0;
 
     const now = new Date();
-    const where =
+    const where: any =
       filter === 'upcoming'
         ? { startDate: { gte: now } }
         : filter === 'past'
           ? { startDate: { lt: now } }
           : {};
+
+    if (searchString) {
+      where.OR = [
+        { name: { contains: searchString, mode: 'insensitive' } },
+        { place: { contains: searchString, mode: 'insensitive' } },
+        { organizedBy: { contains: searchString, mode: 'insensitive' } },
+        { description: { contains: searchString, mode: 'insensitive' } },
+      ];
+    }
 
     const [events, total] = await Promise.all([
       prisma.event.findMany({
@@ -177,13 +209,39 @@ export const getAllEvents = async (_req: Request, res: Response) => {
         take,
         skip,
         orderBy: {
-          startDate: filter === 'past' ? 'desc' : 'asc',
+          createdAt: 'desc',
+        },
+        include: {
+          _count: {
+            select: {
+              registrations: true,
+            },
+          },
         },
       }),
       prisma.event.count({ where }),
     ]);
 
-    return res.json({ events, total });
+    // Get verified-user registration counts for each event
+    const eventIds = events.map((e) => e.id);
+    const verifiedCounts = await prisma.registration.findMany({
+      where: {
+        eventId: { in: eventIds },
+        user: { isVerified: true },
+      },
+      select: { eventId: true },
+    });
+    const verifiedCountMap: Record<number, number> = {};
+    for (const r of verifiedCounts) {
+      verifiedCountMap[r.eventId] = (verifiedCountMap[r.eventId] || 0) + 1;
+    }
+
+    const eventsWithVerified = events.map((e) => ({
+      ...e,
+      verifiedRegistrationsCount: verifiedCountMap[e.id] ?? 0,
+    }));
+
+    return res.json({ events: eventsWithVerified, total });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
@@ -231,6 +289,9 @@ export const updateEvent = async (req: Request, res: Response) => {
       visibility,
       startDate,
       endDate,
+      imageUrl,
+      registrationLimit,
+      startRegistrationsNow,
     } = req.body;
 
     const parsedStartDate =
@@ -263,6 +324,22 @@ export const updateEvent = async (req: Request, res: Response) => {
         .json({ message: 'endDate must be after startDate' });
     }
 
+    let finalImageUrl = undefined;
+    if (imageUrl !== undefined) {
+      if (typeof imageUrl === 'string' && imageUrl.startsWith('data:image')) {
+        try {
+          const cloudinaryUpload = await cloudinary.uploader.upload(imageUrl, {
+            folder: 'events',
+          });
+          finalImageUrl = cloudinaryUpload.secure_url;
+        } catch (error) {
+          return res.status(500).json({ message: 'Image upload failed', error });
+        }
+      } else if (typeof imageUrl === 'string') {
+        finalImageUrl = imageUrl;
+      }
+    }
+
     const updatedEvent = await prisma.event.update({
       where: { id },
       data: {
@@ -274,6 +351,9 @@ export const updateEvent = async (req: Request, res: Response) => {
         ...(visibility !== undefined ? { visibility } : {}),
         ...(parsedStartDate ? { startDate: parsedStartDate } : {}),
         ...(parsedEndDate ? { endDate: parsedEndDate } : {}),
+        ...(registrationLimit !== undefined ? { registrationLimit: registrationLimit !== '' && registrationLimit !== null ? Number(registrationLimit) : null } : {}),
+        ...(startRegistrationsNow !== undefined ? { startRegistrationsNow: Boolean(startRegistrationsNow) } : {}),
+        ...(finalImageUrl !== undefined ? { imageUrl: finalImageUrl } : {}),
       },
     });
 
@@ -358,6 +438,17 @@ export const registerEvent = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Event not found' });
     }
 
+    if (event.registrationLimit && event.registrationLimit > 0) {
+      const regCount = await prisma.registration.count({
+        where: { eventId },
+      });
+      if (regCount >= event.registrationLimit) {
+        return res
+          .status(400)
+          .json({ message: 'Registration limit has been reached for this event.' });
+      }
+    }
+
     const existingRegistration = await prisma.registration.findUnique({
       where: {
         eventId_userId: {
@@ -396,3 +487,90 @@ export const registerEvent = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
+export const getEventRegistrations = async (req: Request, res: Response) => {
+  try {
+    const { id, limit, offset } = req.params;
+    const eventId = Number(id);
+    const take = limit ? parseInt(limit as string, 10) : 10;
+    const skip = offset ? parseInt(offset as string, 10) : 0;
+    const searchString = (
+      typeof req.query.search === 'string'
+        ? req.query.search
+        : typeof req.query.q === 'string'
+          ? req.query.q
+          : ''
+    ).trim();
+
+    if (Number.isNaN(eventId)) {
+      return res.status(400).json({ message: 'Invalid event id' });
+    }
+
+    const where: any = {
+      eventId,
+      user: {
+        isVerified: true,
+      },
+    };
+    if (searchString) {
+      where.OR = [
+        { name: { contains: searchString, mode: 'insensitive' } },
+        { email: { contains: searchString, mode: 'insensitive' } },
+        { companyOrCollege: { contains: searchString, mode: 'insensitive' } },
+        { contactNo: { contains: searchString, mode: 'insensitive' } },
+      ];
+    }
+
+    const [registrations, total, event] = await Promise.all([
+      prisma.registration.findMany({
+        where,
+        take,
+        skip,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          user: true,
+        },
+      }),
+      prisma.registration.count({ where }),
+      prisma.event.findUnique({
+        where: { id: eventId },
+        select: {
+          id: true,
+          name: true,
+          registrationLimit: true,
+          startRegistrationsNow: true,
+          eventType: true,
+          visibility: true,
+        },
+      }),
+    ]);
+
+    return res.json({ registrations, total, event });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const unregisterEventRegistration = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const regId = Number(id);
+    if (Number.isNaN(regId)) {
+      return res.status(400).json({ message: 'Invalid registration id' });
+    }
+
+    await prisma.registration.delete({
+      where: { id: regId },
+    });
+
+    return res.json({ message: 'User unregistered successfully' });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Search, UserPlus, Users, ShieldCheck, GraduationCap, Pencil, Trash2, X, Upload, Eye, Mail, Clock, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 import axios, { isAxiosError } from "axios"
+import { useAuthStore } from "@/store/useAuthStore"
 
 interface AdminUser {
   id: number
@@ -34,6 +35,8 @@ const SCHOOL_OPTIONS = [
 ]
 
 export default function ManageAdmins() {
+  const currentUser = useAuthStore((state) => state.user)
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN'
   const [admins, setAdmins] = useState<AdminUser[]>([])
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
@@ -68,7 +71,8 @@ export default function ManageAdmins() {
     avatarUrl: "",
     bio: "",
     gender: "",
-    socialLink: ""
+    socialLink: "",
+    isVerified: true,
   })
 
   const fetchAdmins = async () => {
@@ -148,7 +152,8 @@ export default function ManageAdmins() {
       avatarUrl: admin.avatarUrl || "",
       bio: admin.bio || "",
       gender: admin.gender || "",
-      socialLink: admin.socialLink || ""
+      socialLink: admin.socialLink || "",
+      isVerified: admin.isVerified !== false, // default true for admins
     })
   }
 
@@ -844,14 +849,53 @@ export default function ManageAdmins() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
                   New Password (Optional)
                 </label>
-                <input 
-                  type="password" 
-                  placeholder="•••••••• (leave blank to keep current)" 
+                <input
+                  type="password"
+                  placeholder="•••••••• (leave blank to keep current)"
                   className="w-full h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                   value={editFormData.password}
-                  onChange={e => setEditFormData({...editFormData, password: e.target.value})} 
+                  onChange={e => setEditFormData({...editFormData, password: e.target.value})}
                 />
               </div>
+
+              {/* isVerified toggle — SUPER_ADMIN only */}
+              {isSuperAdmin && (
+                <div className="space-y-2 pt-1">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider block">
+                    Verification Status
+                  </label>
+                  <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-sm px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {editFormData.isVerified ? 'Verified Account' : 'Unverified Account'}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        {editFormData.isVerified
+                          ? 'Admin appears in analytics & has full access'
+                          : 'Admin is hidden from analytics & reports'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEditFormData({ ...editFormData, isVerified: !editFormData.isVerified })}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        editFormData.isVerified ? 'bg-green-500' : 'bg-red-400'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                          editFormData.isVerified ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {!editFormData.isVerified && (
+                    <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-sm">
+                      ⚠ Marking an admin as unverified will exclude them from all dashboard analytics.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                 <button 

@@ -1,10 +1,10 @@
 import express from 'express';
-import { 
-  loginAdmin, 
-  logout, 
-  getAdmins, 
-  createAdmin, 
-  updateAdmin, 
+import {
+  loginAdmin,
+  logout,
+  getAdmins,
+  createAdmin,
+  updateAdmin,
   deleteAdmin,
   getAlumniStudents,
   createAlumniStudent,
@@ -14,7 +14,7 @@ import {
   approvePendingRequest,
   declinePendingRequest
 } from '../controller/admin.controller.js';
-import { getOverviewStats, getRoleSchoolStats, getRecentEvents, getCommunityStats, getHelpTicketStats } from '../controller/analytics.controller.js';
+import { getOverviewStats, getRoleSchoolStats, getRecentEvents, getCommunityStats, getHelpTicketStats, getUserRegistrationAnalytics } from '../controller/analytics.controller.js';
 import { adminMiddleware } from '../middleware/admin.middleware.js';
 
 const router: express.Router = express.Router();
@@ -46,5 +46,6 @@ router.get('/analytics/school/:role', adminMiddleware, getRoleSchoolStats);
 router.get('/analytics/recent-events', adminMiddleware, getRecentEvents);
 router.get('/analytics/community', adminMiddleware, getCommunityStats);
 router.get('/analytics/help-tickets', adminMiddleware, getHelpTicketStats);
+router.get('/analytics/user-registrations', adminMiddleware, getUserRegistrationAnalytics);
 
 export default router;

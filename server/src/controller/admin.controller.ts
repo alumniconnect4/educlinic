@@ -38,7 +38,7 @@ export const loginAdmin = async (req: Request, res: Response) => {
             maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
         })
 
-        return res.status(200).json({ 
+        return res.status(200).json({
             message: "Login successful",
             user: {
                 id: user.id,
@@ -149,8 +149,8 @@ export const createAdmin = async (req: Request, res: Response) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const finalAvatarUrl = avatarUrl && avatarUrl.trim() !== "" 
-            ? avatarUrl.trim() 
+        const finalAvatarUrl = avatarUrl && avatarUrl.trim() !== ""
+            ? avatarUrl.trim()
             : DEFAULT_USER_AVATAR;
 
         const newAdmin = await prisma.user.create({
@@ -200,7 +200,7 @@ export const updateAdmin = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Invalid Admin ID" });
         }
 
-        const { name, email, password, role, schoolCategory, avatarUrl, bio, gender, socialLink } = req.body;
+        const { name, email, password, role, schoolCategory, avatarUrl, bio, gender, socialLink, isVerified } = req.body;
 
         const updateData: any = {};
         if (name !== undefined) updateData.name = name;
@@ -208,13 +208,16 @@ export const updateAdmin = async (req: Request, res: Response) => {
         if (role && (role === "ADMIN" || role === "SUPER_ADMIN")) updateData.role = role;
         if (schoolCategory !== undefined) updateData.schoolCategory = schoolCategory || null;
         if (avatarUrl !== undefined) {
-            updateData.avatarUrl = avatarUrl.trim() !== "" 
-                ? avatarUrl.trim() 
+            updateData.avatarUrl = avatarUrl.trim() !== ""
+                ? avatarUrl.trim()
                 : DEFAULT_USER_AVATAR;
         }
         if (bio !== undefined) updateData.bio = bio || null;
         if (gender !== undefined) updateData.gender = gender || null;
         if (socialLink !== undefined) updateData.socialLink = socialLink || null;
+        // Only SUPER_ADMIN reaches here; allow explicit isVerified override.
+        // If not passed, admins remain verified by default.
+        if (isVerified !== undefined) updateData.isVerified = Boolean(isVerified);
         if (password && password.trim() !== "") {
             updateData.password = await bcrypt.hash(password.trim(), 10);
         }
@@ -282,10 +285,10 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
 
         const skip = (page - 1) * limit;
 
-        const roleCondition = roleFilter === "USER" 
-            ? ["USER"] 
-            : roleFilter === "ALUMNI" 
-                ? ["ALUMNI"] 
+        const roleCondition = roleFilter === "USER"
+            ? ["USER"]
+            : roleFilter === "ALUMNI"
+                ? ["ALUMNI"]
                 : ["USER", "ALUMNI"];
 
         const whereClause: any = {
@@ -395,19 +398,19 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Invalid User ID" });
         }
 
-        const { 
-            name, 
-            email, 
-            password, 
-            role, 
-            schoolCategory, 
-            avatarUrl, 
-            idCardUrl, 
-            degreeUrl, 
-            bio, 
-            gender, 
-            socialLink, 
-            isVerified 
+        const {
+            name,
+            email,
+            password,
+            role,
+            schoolCategory,
+            avatarUrl,
+            idCardUrl,
+            degreeUrl,
+            bio,
+            gender,
+            socialLink,
+            isVerified
         } = req.body;
 
         const updateData: any = {};
@@ -486,10 +489,10 @@ export const getPendingRequests = async (req: Request, res: Response) => {
 
         const skip = (page - 1) * limit;
 
-        const roleCondition = roleFilter === "USER" 
-            ? ["USER"] 
-            : roleFilter === "ALUMNI" 
-                ? ["ALUMNI"] 
+        const roleCondition = roleFilter === "USER"
+            ? ["USER"]
+            : roleFilter === "ALUMNI"
+                ? ["ALUMNI"]
                 : ["USER", "ALUMNI"];
 
         const whereClause: any = {

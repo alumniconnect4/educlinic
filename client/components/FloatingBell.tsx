@@ -5,10 +5,14 @@ import Link from 'next/link';
 import { Bell, X } from 'lucide-react';
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'react-toastify';
+import { usePathname } from 'next/navigation';
 
 export default function FloatingBell() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
   const { isAuthenticated } = useUserStore();
+
+  if (pathname === '/auth') return null;
 
   const handleIsLoggined = () => {
     if (isAuthenticated) {

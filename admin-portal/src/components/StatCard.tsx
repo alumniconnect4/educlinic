@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 interface StatCardProps {
@@ -48,7 +48,7 @@ export function StatCard({ title, value, total, data, linkTo }: StatCardProps) {
               <Cell fill="#84749f" />
               <Cell fill="#f1f5f9" />
             </Pie>
-            <Tooltip formatter={(val: number) => val === (total - value > 0 ? total - value : 1) ? ["Others", "Category"] : [val, title]} />
+            <Tooltip formatter={(val: any) => val === (total - value > 0 ? total - value : 1) ? ["Others", "Category"] : [val, title]} />
           </PieChart>
         </ResponsiveContainer>
       </div>

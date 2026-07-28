@@ -5,6 +5,7 @@ import { X, Send, RotateCcw } from 'lucide-react';
 import axios from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   id: number;
@@ -13,6 +14,7 @@ interface Message {
 }
 
 export default function FloatingChatbot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(true);
   const [messages, setMessages] = useState<Message[]>([
@@ -62,6 +64,8 @@ export default function FloatingChatbot() {
       setShowTooltip(false);
     }
   }, [messages, isOpen]);
+
+  if (pathname === '/auth') return null;
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
