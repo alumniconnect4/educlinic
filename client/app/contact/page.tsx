@@ -23,6 +23,8 @@ const ContactPage = () => {
     message: '',
   });
 
+  const [submittedSuccessfully, setSubmittedSuccessfully] = useState(false);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -45,11 +47,7 @@ const ContactPage = () => {
 
       if (response.status === 201) {
         setFormData({ name: '', email: '', phone: '', message: '' });
-        setIsSubmittingSuccess(true);
-        const ticketId = response.data.ticket.id;
-        setTimeout(() => {
-          router.push(`/contact/success?ticketId=${ticketId}`);
-        }, 600);
+        setSubmittedSuccessfully(true);
       } else {
         setStatus({
           type: 'error',
@@ -149,84 +147,105 @@ const ContactPage = () => {
             </div>
           </div>
 
-          <div className="bg-[#002147] text-white p-8 md:p-10 lg:p-12 flex flex-col justify-center h-full shadow-md">
-            <h2 className="text-3xl font-semibold mb-2">Get in Touch</h2>
-            <p className="text-gray-300 text-sm mb-8">
-              Please fill out the form and we will contact you asap.
-            </p>
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              <div>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Full Name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none"
-                  required
-                />
-              </div>
-              <div>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none"
-                  required
-                />
-              </div>
-              <div>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="Your Mobile No."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none"
-                  required
-                />
-              </div>
-              <div>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder="Message"
-                  maxLength={500}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-transparent text-white placeholder-gray-400 focus:outline-none resize-none"
-                  required
-                ></textarea>
-                <div className="text-right text-[11px] text-gray-400 mt-1 select-none">
-                  {formData.message.length}/500 characters
+          <div className="bg-white border border-gray-200 text-slate-800 p-8 md:p-10 lg:p-12 flex flex-col justify-center h-full shadow-sm">
+            {submittedSuccessfully ? (
+              <div className="flex flex-col items-center justify-center text-center py-8 my-auto">
+                <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-emerald-600 text-2xl font-bold">✓</span>
                 </div>
-              </div>
-
-              {status.type && (
-                <div
-                  className={`text-sm px-4 py-2 rounded-sm ${
-                    status.type === 'success'
-                      ? 'bg-green-600/35 text-green-200'
-                      : 'bg-red-600/35 text-red-200'
-                  }`}
-                >
-                  {status.message}
-                </div>
-              )}
-
-              <div className="mt-2">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">Thank You!</h3>
+                <p className="text-gray-600 text-sm mb-6 max-w-xs leading-relaxed">
+                  Your message has been sent successfully. We will get back to you soon.
+                </p>
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="bg-[#f0a500] hover:bg-[#d99500] text-white font-bold py-3 px-8 rounded shadow-md transition-colors w-max disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  onClick={() => setSubmittedSuccessfully(false)}
+                  className="bg-slate-900 hover:bg-black text-white font-bold py-2.5 px-6 rounded-sm text-xs uppercase tracking-wider shadow-xs transition-colors cursor-pointer"
                 >
-                  {loading ? 'Sending...' : 'Send'}
+                  Send Another Message
                 </button>
               </div>
-            </form>
+            ) : (
+              <>
+                <h2 className="text-3xl font-bold text-slate-900 mb-2">Get in Touch</h2>
+                <p className="text-gray-500 text-sm mb-8">
+                  Please fill out the form and we will contact you asap.
+                </p>
+
+                <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                  <div>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Full Name"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-white text-slate-800 placeholder-gray-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Email"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-white text-slate-800 placeholder-gray-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="Your Mobile No."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-white text-slate-800 placeholder-gray-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <textarea
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      placeholder="Message"
+                      maxLength={500}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-sm bg-white text-slate-800 placeholder-gray-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors resize-none"
+                      required
+                    ></textarea>
+                    <div className="text-right text-[11px] text-gray-400 mt-1 select-none">
+                      {formData.message.length}/500 characters
+                    </div>
+                  </div>
+
+                  {status.type && (
+                    <div
+                      className={`text-sm px-4 py-2 rounded-sm ${
+                        status.type === 'success'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-red-50 text-red-800 border border-red-200'
+                      }`}
+                    >
+                      {status.message}
+                    </div>
+                  )}
+
+                  <div className="mt-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold py-3 px-8 rounded-sm shadow-xs transition-colors w-max disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm"
+                    >
+                      {loading ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </div>

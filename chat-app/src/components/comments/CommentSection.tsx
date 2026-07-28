@@ -112,7 +112,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       <div className="flex gap-3 sm:gap-4">
         <Avatar className="h-9 w-9 shrink-0 border border-border/60">
           <AvatarImage
-            src={getAvatarUrl(currentUser?.name, currentUser?.avatar)}
+            src={getAvatarUrl(currentUser?.name, currentUser?.avatarUrl || currentUser?.avatar)}
           />
           <AvatarFallback>
             {currentUser?.name?.substring(0, 2) || 'ME'}

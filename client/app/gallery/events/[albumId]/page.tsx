@@ -2,7 +2,6 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Images as ImageIcon } from 'lucide-react';
-import { albums as fallbackAlbums } from '../data';
 import LightboxGallery from '@/components/Gallery/LightboxGallery';
 import { notFound } from 'next/navigation';
 
@@ -42,19 +41,9 @@ export default async function AlbumPage({
     }
   }
 
-  // Fallback to static sample album if backend album not found
+  // If backend album not found, render 404
   if (images.length === 0 && !title) {
-    const fallback = fallbackAlbums.find((a) => a.id === albumId);
-    if (fallback) {
-      title = fallback.title;
-      coverImageUrl = fallback.cover || '';
-      images = Array.from(
-        { length: fallback.count },
-        (_, i) => `/gallery/events/${fallback.id}/${i + 1}.jpg`
-      );
-    } else {
-      notFound();
-    }
+    notFound();
   }
 
   return (
@@ -62,12 +51,11 @@ export default async function AlbumPage({
       {/* Top Banner Image with Gradient */}
       <div className="relative w-full h-[220px] md:h-[320px] bg-slate-950 overflow-hidden select-none">
         <Image
-          src={coverImageUrl || '/gallery-images/17.jpg'}
+          src="/gallery/campus-life/17.jpg"
           alt={title || 'Album Banner'}
           fill
           className="object-cover opacity-85"
           priority
-          unoptimized={coverImageUrl?.startsWith('data:image')}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
       </div>

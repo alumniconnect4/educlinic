@@ -107,7 +107,7 @@ export const PostDetailPage: React.FC = () => {
                 onClick={() => navigate('/profile')}
               >
                 <AvatarImage
-                  src={getAvatarUrl(authorUser?.name, authorUser?.avatar)}
+                  src={getAvatarUrl(authorUser?.name, authorUser?.avatarUrl || authorUser?.avatar)}
                 />
                 <AvatarFallback>
                   {authorUser?.name?.substring(0, 2) || 'DEV'}

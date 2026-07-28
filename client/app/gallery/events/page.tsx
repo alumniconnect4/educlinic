@@ -47,7 +47,7 @@ export default function EventsGallery() {
       {/* Banner Image Without Text Overlay */}
       <div className="relative w-full h-[220px] md:h-[320px] bg-gray-900 overflow-hidden select-none">
         <Image
-          src="/gallery-images/17.jpg"
+          src="/gallery/campus-life/17.jpg"
           alt="Events Banner"
           fill
           className="object-cover opacity-90"

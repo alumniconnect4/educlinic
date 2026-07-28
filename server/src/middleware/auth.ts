@@ -20,7 +20,9 @@ type AuthenticatedUser = Pick<
   | 'gender'
   | 'socialLink'
   | 'createdAt'
->;
+> & {
+  avatarUrl?: string | null;
+};
 
 const roleRank: Record<UserRoleEnum, number> = {
   [UserRole.USER]: 0,
@@ -85,6 +87,7 @@ export const authMiddleware =
           email: true,
           role: true,
           schoolCategory: true,
+          avatarUrl: true,
           bio: true,
           gender: true,
           socialLink: true,

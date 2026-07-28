@@ -156,28 +156,20 @@ export const getCommunityStats = async (req: Request, res: Response) => {
 export const getHelpTicketStats = async (req: Request, res: Response) => {
   try {
     const latestTickets = await prisma.helpTicket.findMany({
-      where: { status: 'OPEN' },
       take: 2,
       orderBy: { createdAt: 'desc' },
       include: {
         createdBy: {
-          select: { name: true, role: true },
+          select: { name: true, role: true, email: true },
         },
       },
     });
 
-    const unresolvedCount = await prisma.helpTicket.count({
-      where: { status: 'OPEN' },
-    });
-
-    const resolvedCount = await prisma.helpTicket.count({
-      where: { status: 'RESOLVED' },
-    });
+    const totalCount = await prisma.helpTicket.count();
 
     return res.status(200).json({
       latestTickets,
-      unresolvedCount,
-      resolvedCount,
+      totalCount,
     });
   } catch (err) {
     console.error('Error in getHelpTicketStats:', err);

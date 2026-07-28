@@ -299,7 +299,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 <AvatarImage
                   src={getAvatarUrl(
                     activeChat.participant.name,
-                    activeChat.participant.avatar
+                    activeChat.participant.avatarUrl || activeChat.participant.avatar
                   )}
                 />
                 <AvatarFallback className="font-semibold bg-muted">

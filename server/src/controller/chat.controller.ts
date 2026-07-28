@@ -15,10 +15,24 @@ export const getConversations = async (
       orderBy: { createdAt: 'desc' },
       include: {
         sender: {
-          select: { id: true, name: true, email: true, schoolCategory: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            schoolCategory: true,
+            avatarUrl: true,
+          },
         },
         receiver: {
-          select: { id: true, name: true, email: true, schoolCategory: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            schoolCategory: true,
+            avatarUrl: true,
+          },
         },
       },
     });
@@ -31,7 +45,9 @@ export const getConversations = async (
           id: number;
           name: string;
           email: string;
+          role: string;
           schoolCategory: string | null;
+          avatarUrl?: string | null;
         };
         lastMessage: {
           id: number;
@@ -151,8 +167,8 @@ export const getMessagesWithUser = async (
       take: limit + 1,
       ...(cursor && !isNaN(cursor) ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: {
-        sender: { select: { id: true, name: true } },
-        receiver: { select: { id: true, name: true } },
+        sender: { select: { id: true, name: true, avatarUrl: true } },
+        receiver: { select: { id: true, name: true, avatarUrl: true } },
       },
     });
 

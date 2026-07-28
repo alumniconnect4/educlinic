@@ -129,7 +129,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       <AvatarImage
                         src={getAvatarUrl(
                           chat.participant.name,
-                          chat.participant.avatar
+                          chat.participant.avatarUrl || chat.participant.avatar
                         )}
                       />
                       <AvatarFallback className="bg-muted text-foreground font-semibold">

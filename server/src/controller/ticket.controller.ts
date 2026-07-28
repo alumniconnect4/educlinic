@@ -42,22 +42,50 @@ export const getHelpTickets = async (
   res: Response
 ): Promise<void> => {
   try {
-    const tickets = await prisma.helpTicket.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        createdBy: {
-          select: {
-            name: true,
-            email: true,
-            role: true,
+    const page = parseInt((req.query.page as string) || '1', 10) || 1;
+    const limit = parseInt((req.query.limit as string) || '5', 10) || 5;
+    const search = ((req.query.search as string) || '').trim();
+    const skip = (page - 1) * limit;
+
+    const where = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { email: { contains: search, mode: 'insensitive' as const } },
+            { title: { contains: search, mode: 'insensitive' as const } },
+            { description: { contains: search, mode: 'insensitive' as const } },
+          ],
+        }
+      : {};
+
+    const [tickets, total] = await Promise.all([
+      prisma.helpTicket.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          createdBy: {
+            select: {
+              name: true,
+              email: true,
+              role: true,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.helpTicket.count({ where }),
+    ]);
 
-    res.status(200).json(tickets);
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    res.status(200).json({
+      data: tickets,
+      total,
+      page,
+      limit,
+      totalPages,
+    });
   } catch (error) {
     console.error('Error fetching help tickets:', error);
     res.status(500).json({ message: 'Internal server error' });

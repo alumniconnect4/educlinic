@@ -206,7 +206,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           <div className="flex items-center gap-2.5">
             <Avatar className="h-8 w-8 shrink-0 border border-border/50">
               <AvatarImage
-                src={getAvatarUrl(comment.author.name, comment.author.avatar)}
+                src={getAvatarUrl(comment.author.name, comment.author.avatarUrl || comment.author.avatar)}
               />
               <AvatarFallback className="text-xs">
                 {comment.author.name.substring(0, 2).toUpperCase()}
@@ -298,7 +298,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         <div className="flex gap-2.5 pl-10 pt-1 animate-in slide-in-from-top-2 duration-150">
           <Avatar className="h-7 w-7 shrink-0 border border-border/50 mt-1">
             <AvatarImage
-              src={getAvatarUrl(currentUser?.name, currentUser?.avatar)}
+              src={getAvatarUrl(currentUser?.name, currentUser?.avatarUrl || currentUser?.avatar)}
             />
             <AvatarFallback className="text-xs">
               {currentUser?.name?.substring(0, 2).toUpperCase() || 'ME'}

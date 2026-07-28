@@ -45,8 +45,7 @@ export default function Home() {
   });
   const [ticketStats, setTicketStats] = useState({
     latestTickets: [],
-    unresolvedCount: 0,
-    resolvedCount: 0,
+    totalCount: 0,
   });
   const [userRegStats, setUserRegStats] = useState<{
     totalVerifiedUsers: number;
@@ -481,27 +480,31 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Help Tickets Analytics Component */}
+        {/* Contact Submissions Analytics Component */}
         <div className="mt-8 bg-[#f8f9fa] border border-gray-200 shadow-sm rounded-sm mb-8">
           <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider">
-              Help Tickets Analytics
+            <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-slate-700" />
+              Contact Submissions Analytics
             </h3>
             <Link
               to="/help-tickets"
-              className="text-[#6ea2e6] text-sm hover:underline"
+              className="text-[#6ea2e6] text-sm hover:underline font-medium"
             >
               View All
             </Link>
           </div>
 
           <div className="p-6 space-y-6">
-            {/* Latest 2 Unresolved Tickets */}
+            {/* Latest Contact Submissions */}
             <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
-              <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+              <div className="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                 <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                  Latest Unresolved Tickets
+                  Recent Submissions
                 </h4>
+                <span className="text-xs text-gray-400 font-mono">
+                  Total Received: {ticketStats.totalCount || 0}
+                </span>
               </div>
               <div className="divide-y divide-gray-100">
                 {ticketStats.latestTickets &&
@@ -509,122 +512,36 @@ export default function Home() {
                   ticketStats.latestTickets.map((ticket: any) => (
                     <div
                       key={ticket.id}
-                      className="p-5 flex justify-between items-center hover:bg-gray-50 transition-colors"
+                      className="p-4 sm:p-5 flex justify-between items-center hover:bg-gray-50 transition-colors gap-4"
                     >
-                      <div>
-                        <h5 className="text-sm font-semibold text-gray-800">
+                      <div className="min-w-0 flex-1">
+                        <h5 className="text-sm font-bold text-slate-900 truncate">
                           {ticket.title}
                         </h5>
                         <p className="text-xs text-gray-500 mt-1 line-clamp-1">
                           {ticket.description}
                         </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-[10px] text-gray-400">
-                            by{' '}
-                            {ticket.createdBy?.name || ticket.name || 'Guest'}
+                        <div className="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
+                          <span className="font-semibold text-slate-700">
+                            {ticket.createdBy?.name || ticket.name || 'Guest User'}
                           </span>
+                          {(ticket.createdBy?.email || ticket.email) && (
+                            <span className="font-mono text-gray-400">
+                              {ticket.createdBy?.email || ticket.email}
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className="flex-shrink-0">
-                        <span className="text-[10px] font-bold px-2 py-1 rounded bg-yellow-50 text-yellow-600 border border-yellow-100 uppercase">
-                          {ticket.status}
+                      <div className="flex-shrink-0 text-right">
+                        <span className="text-[11px] text-gray-400 font-medium">
+                          {new Date(ticket.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className="p-8 text-center text-gray-400 text-sm">
-                    No ticket pending
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Ticket Stats and Chart */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="flex flex-col gap-6">
-                <div className="bg-white p-5 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm h-full">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Unresolved Tickets
-                    </p>
-                    <h4 className="text-2xl font-bold text-[#84749f]">
-                      {ticketStats.unresolvedCount}
-                    </h4>
-                  </div>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#84749f]/10 text-[#84749f]">
-                    <AlertCircle className="w-4 h-4" />
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 flex items-center justify-between border border-gray-200 rounded-sm shadow-sm h-full">
-                  <div>
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Solved Tickets
-                    </p>
-                    <h4 className="text-2xl font-bold text-[#6ea2e6]">
-                      {ticketStats.resolvedCount}
-                    </h4>
-                  </div>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#6ea2e6]/10 text-[#6ea2e6]">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-5 border border-gray-200 rounded-sm shadow-sm lg:col-span-2 flex flex-col">
-                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">
-                  Ticket Resolution Ratio
-                </h4>
-                <div className="flex-1 w-full min-h-[160px] h-full flex items-center justify-center">
-                  {ticketStats.unresolvedCount > 0 ||
-                  ticketStats.resolvedCount > 0 ? (
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={[
-                            {
-                              name: 'Unresolved',
-                              value: ticketStats.unresolvedCount,
-                            },
-                            {
-                              name: 'Resolved',
-                              value: ticketStats.resolvedCount,
-                            },
-                          ]}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={75}
-                          paddingAngle={3}
-                          dataKey="value"
-                          stroke="none"
-                        >
-                          <Cell fill="#84749f" />
-                          <Cell fill="#6ea2e6" />
-                        </Pie>
-                        <Tooltip
-                          formatter={(value: any, name: any) => [value, name]}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <span className="text-sm text-gray-400">
-                      No ticket data available
-                    </span>
-                  )}
-                </div>
-                {(ticketStats.unresolvedCount > 0 ||
-                  ticketStats.resolvedCount > 0) && (
-                  <div className="flex justify-center gap-6 mt-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#84749f]"></div>
-                      <span className="text-xs text-gray-500">Unresolved</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-[#6ea2e6]"></div>
-                      <span className="text-xs text-gray-500">Resolved</span>
-                    </div>
+                    No contact submissions yet
                   </div>
                 )}
               </div>

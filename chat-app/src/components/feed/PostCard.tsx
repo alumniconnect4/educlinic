@@ -77,7 +77,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                 }}
               >
                 <AvatarImage
-                  src={getAvatarUrl(authorUser?.name, authorUser?.avatar)}
+                  src={getAvatarUrl(authorUser?.name, authorUser?.avatarUrl || authorUser?.avatar)}
                 />
                 <AvatarFallback>
                   {authorUser?.name?.substring(0, 2) || 'DE'}
@@ -176,7 +176,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <div className="flex gap-2">
                   <Avatar className="h-8 w-8 shrink-0 border border-border/50">
                     <AvatarImage
-                      src={getAvatarUrl(currentUser?.name, currentUser?.avatar)}
+                      src={getAvatarUrl(currentUser?.name, currentUser?.avatarUrl || currentUser?.avatar)}
                     />
                     <AvatarFallback className="text-xs">
                       {currentUser?.name?.substring(0, 2).toUpperCase() || 'ME'}
@@ -211,7 +211,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                         <AvatarImage
                           src={getAvatarUrl(
                             comment.author.name,
-                            comment.author.avatar
+                            comment.author.avatarUrl || comment.author.avatar
                           )}
                         />
                         <AvatarFallback className="text-[10px]">
