@@ -12,7 +12,11 @@ import {
   deleteAlumniStudent,
   getPendingRequests,
   approvePendingRequest,
-  declinePendingRequest
+  declinePendingRequest,
+  getAdminProfile,
+  updateAdminProfile,
+  changeAdminPassword,
+  uploadAdminImage
 } from '../controller/admin.controller.js';
 import { getOverviewStats, getRoleSchoolStats, getRecentEvents, getCommunityStats, getHelpTicketStats, getUserRegistrationAnalytics } from '../controller/analytics.controller.js';
 import { adminMiddleware } from '../middleware/admin.middleware.js';
@@ -22,6 +26,12 @@ const router: express.Router = express.Router();
 
 router.post('/login', loginAdmin);
 router.get('/logout', logout);
+
+// Self Profile & Password Routes
+router.get('/profile', adminMiddleware, getAdminProfile);
+router.put('/profile', adminMiddleware, updateAdminProfile);
+router.put('/change-password', adminMiddleware, changeAdminPassword);
+router.post('/upload', adminMiddleware, uploadAdminImage);
 
 // Admin Management Routes
 router.get('/admins', adminMiddleware, getAdmins);

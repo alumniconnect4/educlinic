@@ -3,6 +3,7 @@ import { prisma } from "../config/db.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../utils/token.js";
 import { config } from "../config/index.js";
+import cloudinary from '../config/cloudinary.js';
 
 
 export const loginAdmin = async (req: Request, res: Response) => {
@@ -583,5 +584,162 @@ export const declinePendingRequest = async (req: Request, res: Response) => {
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const getAdminProfile = async (req: Request, res: Response) => {
+    try {
+        const id = req.user?.id;
+        if (!id) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                schoolCategory: true,
+                avatarUrl: true,
+                bio: true,
+                gender: true,
+                socialLink: true,
+                isVerified: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+
+        return res.status(200).json({ user });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const updateAdminProfile = async (req: Request, res: Response) => {
+    try {
+        const id = req.user?.id;
+        if (!id) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { name, email, avatarUrl, bio, gender, socialLink } = req.body;
+
+        if (email) {
+            const existingUser = await prisma.user.findFirst({
+                where: {
+                    email,
+                    NOT: { id }
+                }
+            });
+            if (existingUser) {
+                return res.status(400).json({ message: "Email is already taken" });
+            }
+        }
+
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+        if (bio !== undefined) updateData.bio = bio;
+        if (gender !== undefined) updateData.gender = gender;
+        if (socialLink !== undefined) updateData.socialLink = socialLink;
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: updateData,
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                schoolCategory: true,
+                avatarUrl: true,
+                bio: true,
+                gender: true,
+                socialLink: true,
+                isVerified: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        });
+
+        return res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const changeAdminPassword = async (req: Request, res: Response) => {
+    try {
+        const id = req.user?.id;
+        if (!id) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Current and new passwords are required" });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+
+        const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: "Incorrect current password" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await prisma.user.update({
+            where: { id },
+            data: { password: hashedPassword }
+        });
+
+        return res.status(200).json({ message: "Password updated successfully" });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const uploadAdminImage = async (req: Request, res: Response) => {
+    try {
+        const id = req.user?.id;
+        if (!id) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const { image } = req.body;
+        if (!image) {
+            return res.status(400).json({ message: "Image data is required" });
+        }
+
+        try {
+            const cloudinaryUpload = await cloudinary.uploader.upload(image, {
+                folder: 'admin_avatars',
+            });
+            return res.status(200).json({ url: cloudinaryUpload.secure_url });
+        } catch (cloudinaryErr) {
+            console.warn("Cloudinary upload failed, falling back to base64 URL storage:", cloudinaryErr);
+            // Return base64 directly so that the frontend works even with dummy Cloudinary credentials
+            return res.status(200).json({ url: image, warning: "Cloudinary upload failed, fell back to base64 storage" });
+        }
+    } catch (err) {
+        console.error("General admin upload error:", err);
+        return res.status(500).json({ message: "Image upload failed" });
     }
 };

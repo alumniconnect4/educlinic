@@ -117,7 +117,13 @@ export default function AdminLayout() {
                 <div className="px-4 py-2 border-b border-gray-100 text-xs text-gray-500 uppercase tracking-wider font-semibold bg-gray-50">
                   Role: {user?.role}
                 </div>
-                <div className="px-4 py-2.5 border-b border-gray-100 flex items-center text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors">
+                <div 
+                  className="px-4 py-2.5 border-b border-gray-100 flex items-center text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    navigate("/settings", { state: { tab: "password" } });
+                  }}
+                >
                   <Key className="w-4 h-4 mr-3 text-gray-400" />
                   Change Password
                 </div>

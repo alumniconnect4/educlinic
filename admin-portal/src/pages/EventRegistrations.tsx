@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft,
@@ -52,11 +52,6 @@ interface UserRecord {
 }
 
 const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`
-
-function formatSchool(cat?: string | null) {
-  if (!cat) return "N/A"
-  return cat.replace(/_/g, " ")
-}
 
 interface EventInfo {
   id: number
