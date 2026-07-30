@@ -1,7 +1,9 @@
 export interface User {
   id: number;
   name: string;
+  role?: string;
   avatar?: string;
+  avatarUrl?: string;
   isFollowed?: boolean;
   bio?: string;
   coverImage?: string;

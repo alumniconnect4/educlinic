@@ -19,6 +19,11 @@ interface Event {
   visibility: string;
   startDate: string;
   endDate: string;
+  registrationLimit?: number | null;
+  startRegistrationsNow?: boolean;
+  _count?: {
+    registrations: number;
+  };
 }
 
 const formatDate = (dateString: string) => {
@@ -38,6 +43,151 @@ const formatDate = (dateString: string) => {
     fullDate: date.toLocaleDateString('en-US', options),
     time,
   };
+};
+
+const renderMarkdownDescription = (text?: string | null) => {
+  if (!text)
+    return (
+      <p className="text-gray-500 italic">
+        No description provided for this event.
+      </p>
+    );
+
+  const lines = text.split(/\r?\n/);
+  const elements: React.ReactNode[] = [];
+  let listItems: string[] = [];
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      elements.push(
+        <ul
+          key={`ul-${elements.length}`}
+          className="list-disc list-inside space-y-1.5 my-3 text-gray-700 pl-2"
+        >
+          {listItems.map((li, idx) => (
+            <li key={idx} className="leading-relaxed">
+              {formatInlineMarkdown(li)}
+            </li>
+          ))}
+        </ul>
+      );
+      listItems = [];
+    }
+  };
+
+  const formatInlineMarkdown = (line: string): React.ReactNode => {
+    // Check for markdown image ![alt](url)
+    const imgRegex = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+    const imgMatch = imgRegex.exec(line);
+    if (imgMatch) {
+      return (
+        <span className="block my-4">
+          <img
+            src={imgMatch[2]}
+            alt={imgMatch[1] || 'Event image'}
+            className="max-h-80 w-auto rounded-lg border border-gray-200 shadow-sm object-contain"
+          />
+          {imgMatch[1] && (
+            <span className="block text-[12px] text-gray-500 mt-1 italic">
+              {imgMatch[1]}
+            </span>
+          )}
+        </span>
+      );
+    }
+
+    // Format links [title](url) and **bold**
+    const parts: React.ReactNode[] = [];
+    let remaining = line;
+    let idx = 0;
+    const tokenRegex =
+      /(\[([^\]]+)\]\((https?:\/\/[^\s)]+)\))|(\*\*([^*]+)\*\*)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = tokenRegex.exec(remaining)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(remaining.substring(lastIndex, match.index));
+      }
+      if (match[1]) {
+        parts.push(
+          <a
+            key={idx++}
+            href={match[3]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline font-semibold cursor-pointer"
+          >
+            {match[2]}
+          </a>
+        );
+      } else if (match[4]) {
+        parts.push(
+          <strong key={idx++} className="font-bold text-gray-900">
+            {match[5]}
+          </strong>
+        );
+      }
+      lastIndex = tokenRegex.lastIndex;
+    }
+
+    if (lastIndex < remaining.length) {
+      parts.push(remaining.substring(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : line;
+  };
+
+  lines.forEach((rawLine, idx) => {
+    const line = rawLine.trim();
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      listItems.push(line.substring(2));
+    } else {
+      flushList();
+      if (!line) {
+        elements.push(<div key={`space-${idx}`} className="h-3" />);
+      } else if (line.startsWith('### ')) {
+        elements.push(
+          <h4
+            key={`h4-${idx}`}
+            className="text-base font-bold text-gray-900 mt-5 mb-2"
+          >
+            {formatInlineMarkdown(line.substring(4))}
+          </h4>
+        );
+      } else if (line.startsWith('## ')) {
+        elements.push(
+          <h3
+            key={`h3-${idx}`}
+            className="text-lg font-bold text-gray-900 mt-6 mb-2 border-b border-gray-100 pb-1"
+          >
+            {formatInlineMarkdown(line.substring(3))}
+          </h3>
+        );
+      } else if (line.startsWith('# ')) {
+        elements.push(
+          <h2
+            key={`h2-${idx}`}
+            className="text-xl font-bold text-gray-900 mt-6 mb-2 border-b border-gray-200 pb-1"
+          >
+            {formatInlineMarkdown(line.substring(2))}
+          </h2>
+        );
+      } else {
+        elements.push(
+          <p
+            key={`p-${idx}`}
+            className="text-[15px] text-gray-700 leading-relaxed"
+          >
+            {formatInlineMarkdown(line)}
+          </p>
+        );
+      }
+    }
+  });
+  flushList();
+
+  return <div className="space-y-2">{elements}</div>;
 };
 
 export default function EventDetailPage() {
@@ -171,8 +321,8 @@ export default function EventDetailPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-5">
                 About
               </h3>
-              <div className="text-[14px] md:text-[15px] text-gray-700 leading-relaxed whitespace-pre-line font-medium">
-                {event.description || 'No description provided for this event.'}
+              <div className="font-medium">
+                {renderMarkdownDescription(event.description)}
               </div>
             </div>
           </div>
@@ -218,20 +368,42 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    toast.error(
-                      'Please make sure you are logged in to register.'
-                    );
-                  } else {
-                    setIsModalOpen(true);
-                  }
-                }}
-                className="w-full bg-[#a62025] hover:bg-[#85161a] text-white text-center text-[14px] font-semibold py-3.5 rounded border border-transparent shadow-sm cursor-pointer transition-colors"
-              >
-                Register Now
-              </button>
+              {(() => {
+                const isLimitReached =
+                  event.registrationLimit &&
+                  event.registrationLimit > 0 &&
+                  typeof event._count?.registrations === 'number' &&
+                  event._count.registrations >= event.registrationLimit;
+
+                if (isLimitReached) {
+                  return (
+                    <button
+                      disabled
+                      className="w-full bg-gray-400 text-white text-center text-[14px] font-semibold py-3.5 rounded border border-transparent shadow-sm cursor-not-allowed"
+                    >
+                      Registration Limit Reached ({event.registrationLimit}{' '}
+                      seats filled)
+                    </button>
+                  );
+                }
+
+                return (
+                  <button
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast.error(
+                          'Please make sure you are logged in to register.'
+                        );
+                      } else {
+                        setIsModalOpen(true);
+                      }
+                    }}
+                    className="w-full bg-[#a62025] hover:bg-[#85161a] text-white text-center text-[14px] font-semibold py-3.5 rounded border border-transparent shadow-sm cursor-pointer transition-colors"
+                  >
+                    Register Now
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>

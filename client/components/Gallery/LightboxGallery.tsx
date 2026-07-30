@@ -19,17 +19,21 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const validImages = (images || [])
+    .map((img) => (typeof img === 'string' ? img : (img as any)?.url || (img as any)?.imageUrl || ''))
+    .filter(Boolean);
+
   const handleNext = useCallback(() => {
     setSelectedIndex((prev) =>
-      prev === null ? null : prev === images.length - 1 ? 0 : prev + 1
+      prev === null ? null : prev === validImages.length - 1 ? 0 : prev + 1
     );
-  }, [images.length]);
+  }, [validImages.length]);
 
   const handlePrev = useCallback(() => {
     setSelectedIndex((prev) =>
-      prev === null ? null : prev === 0 ? images.length - 1 : prev - 1
+      prev === null ? null : prev === 0 ? validImages.length - 1 : prev - 1
     );
-  }, [images.length]);
+  }, [validImages.length]);
 
   const openModal = (index: number) => {
     setSelectedIndex(index);
@@ -63,7 +67,7 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
     return () => clearInterval(timer);
   }, [isPlaying, selectedIndex, handleNext]);
 
-  if (!images || images.length === 0) {
+  if (!validImages || validImages.length === 0) {
     return (
       <div className="text-gray-500 text-center py-8">
         No images available in this gallery.
@@ -74,23 +78,24 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
   return (
     <>
       <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-        {images.map((src, index) => (
+        {validImages.map((src, index) => (
           <div
             key={index}
             onClick={() => openModal(index)}
-            className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-0.67rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)] relative aspect-[4/3] group cursor-pointer overflow-hidden rounded-md border-[3px] border-[#b91c1c] shadow-lg hover:shadow-2xl transition-all duration-300"
+            className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.75rem)] lg:w-[calc(25%-1.125rem)] relative aspect-[4/3] group cursor-pointer overflow-hidden rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-gray-100"
           >
             <Image
               src={src}
               alt={`Gallery Image ${index + 1}`}
               fill
-              className="object-cover transition-transform duration-500 hover:scale-105"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              unoptimized={typeof src === 'string' && src.startsWith('data:image')}
             />
           </div>
         ))}
       </div>
 
-      {selectedIndex !== null && (
+      {selectedIndex !== null && validImages[selectedIndex] && (
         <div
           className={`fixed inset-0 z-[9999] bg-black/80 flex flex-col justify-center items-center backdrop-blur-sm p-4 md:p-12 transition-opacity duration-300 ${isModalOpen ? 'opacity-100' : 'opacity-0'}`}
           onClick={closeModal}
@@ -112,11 +117,12 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
 
             <div className="relative w-full h-[60vh] md:h-[75vh] p-2 bg-white flex items-center justify-center">
               <Image
-                src={images[selectedIndex]}
+                src={validImages[selectedIndex]}
                 alt={`Gallery Image ${selectedIndex + 1}`}
                 fill
                 className="object-contain p-2"
                 priority
+                unoptimized={typeof validImages[selectedIndex] === 'string' && validImages[selectedIndex].startsWith('data:image')}
               />
             </div>
 
@@ -137,7 +143,7 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
                   )}
                 </button>
                 <div className="text-sm font-semibold tracking-wide text-gray-500">
-                  {selectedIndex + 1} / {images.length}
+                  {selectedIndex + 1} / {validImages.length}
                 </div>
               </div>
 

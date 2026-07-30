@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
           <Link to="/profile">
             <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary transition-all">
               <AvatarImage
-                src={getAvatarUrl(currentUser?.name, currentUser?.avatar)}
+                src={getAvatarUrl(currentUser?.name, currentUser?.avatarUrl || currentUser?.avatar)}
                 alt={currentUser?.name}
               />
               <AvatarFallback>

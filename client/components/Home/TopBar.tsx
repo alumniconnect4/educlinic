@@ -41,7 +41,9 @@ const TopBar = () => {
         <span className="hidden text-gray-500 md:inline">|</span>
         <div className="flex items-center space-x-2 text-gray-300">
           <Clock size={16} className="text-[#e31e24]" />
-          <span>Mon - Fri <span className='ml-2'>9:00 - 16:00</span></span>
+          <span>
+            Mon - Fri <span className="ml-2">9:00 - 16:00</span>
+          </span>
         </div>
       </div>
     </div>

@@ -350,7 +350,7 @@ const FollowUserItem: React.FC<{ user: any }> = ({ user }) => {
       onClick={() => navigate(`/profile?id=${user.id}`)}
     >
       <Avatar className="h-14 w-14 shrink-0">
-        <AvatarImage src={getAvatarUrl(user.name, user.avatar)} />
+        <AvatarImage src={getAvatarUrl(user.name, user.avatarUrl || user.avatar)} />
         <AvatarFallback className="bg-muted font-bold">
           {user.name.substring(0, 2).toUpperCase()}
         </AvatarFallback>

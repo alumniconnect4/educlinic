@@ -21,9 +21,14 @@ enum UserRole {
 
 enum SchoolCategory {
   School_of_Engineering
-  School_of_law
-  School_of_agriculture
-  School_of_Medicine
+  School_of_Sciences
+  School_of_Agriculture
+  School_of_Business_Studies
+  School_of_Computer_Applications
+  School_of_Humanities
+  School_of_Education
+  School_of_Law
+  School_of_Pharmacy
 }
 
 enum EventType {
@@ -36,32 +41,47 @@ enum EventVisibility {
   DEPARTMENTAL
 }
 
+enum TicketStatus {
+  OPEN
+  RESOLVED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
-  id             Int             @id @default(autoincrement())
-  name           String
-  email          String          @unique
-  password       String
-  role           UserRole        @default(USER)
-  schoolCategory SchoolCategory?
-  bio            String?
-  gender         String?
-  socialLink     String?
-  isVerified     Boolean         @default(false)
-  createdEvents  Event[]
-  registrations  Registration[]
-  posts          Post[]
-  comments       Comment[]
-  postLikes      PostLike[]
-  commentLikes   CommentLike[]
-  followers      Follow[]        @relation("UserFollowers")
-  following      Follow[]        @relation("UserFollowing")
+  id               Int             @id @default(autoincrement())
+  name             String
+  email            String          @unique
+  password         String
+  role             UserRole        @default(USER)
+  schoolCategory   SchoolCategory?
+  avatarUrl        String?
+  bio              String?
+  gender           String?
+  socialLink       String?
+  idCardUrl        String?
+  degreeUrl        String?
+  isVerified       Boolean         @default(false)
+  createdEvents    Event[]
+  registrations    Registration[]
+  posts            Post[]
+  comments         Comment[]
+  postLikes        PostLike[]
+  commentLikes     CommentLike[]
+  followers        Follow[]        @relation("UserFollowers")
+  following        Follow[]        @relation("UserFollowing")
   sentMessages     Message[]       @relation("SentMessages")
   receivedMessages Message[]       @relation("ReceivedMessages")
   blocksInitiated  Block[]         @relation("BlocksInitiated")
   blocksReceived   Block[]         @relation("BlocksReceived")
   clearedChats     ClearedChat[]   @relation("UserClearedChats")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  helpTickets      HelpTicket[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }
 
 model Event {
@@ -71,15 +91,17 @@ model Event {
   organizedBy   String
   place         String
   imageUrl      String?         @default("https://images.unsplash.com/photo-1740065592671-9cb593ee9b78?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
-  eventType     EventType
-  visibility    EventVisibility
-  startDate     DateTime
-  endDate       DateTime
-  createdById   Int
-  createdBy     User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  registrations Registration[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  eventType             EventType
+  visibility            EventVisibility @default(GLOBAL)
+  startDate             DateTime
+  endDate               DateTime
+  registrationLimit     Int?
+  startRegistrationsNow Boolean         @default(true)
+  createdById           Int
+  createdBy             User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  registrations         Registration[]
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
 }
 
 model Registration {
@@ -101,6 +123,23 @@ model Registration {
   updatedAt DateTime @updatedAt
 
   @@unique([eventId, userId])
+}
+
+model HelpTicket {
+  id          Int            @id @default(autoincrement())
+  name        String?
+  email       String?
+  phone       String?
+  title       String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+
+  createdBy   User?          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdById Int?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 model Post {
@@ -196,7 +235,37 @@ model ClearedChat {
   partnerId Int
   clearedAt DateTime @default(now())
 
-  user      User     @relation("UserClearedChats", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserClearedChats", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, partnerId])
+}
+
+model Album {
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String?
+  category      String
+  coverImageUrl String?
+  images        GalleryImage[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model GalleryImage {
+  id        Int      @id @default(autoincrement())
+  albumId   Int
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  publicId  String?
+  createdAt DateTime @default(now())
+}
+
+model GalleryItem {
+  id          Int      @id @default(autoincrement())
+  url         String
+  publicId    String?
+  category    String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

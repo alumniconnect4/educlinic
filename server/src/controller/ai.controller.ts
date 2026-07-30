@@ -1,7 +1,10 @@
 import { type Request, type Response } from 'express';
 import { openai } from '../config/ai.js';
 
-export const askAssistant = async (req: Request, res: Response): Promise<void> => {
+export const askAssistant = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { message }: { message: string } = req.body;
 
@@ -37,13 +40,15 @@ CRITICAL RULES:
       model: 'z-ai/glm-4.6v-flash-free',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
+        { role: 'user', content: message },
       ],
     });
 
     console.log(completion);
 
-    const reply = completion?.choices[0]?.message?.content || "I can't provide info for this...";
+    const reply =
+      completion?.choices[0]?.message?.content ||
+      "I can't provide info for this...";
 
     res.status(200).json({ reply });
   } catch (error) {

@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../config/db.js';
 import { env } from '../config/env.js';
 import { getSession } from '../config/cache.js';
@@ -19,7 +20,9 @@ type AuthenticatedUser = Pick<
   | 'gender'
   | 'socialLink'
   | 'createdAt'
->;
+> & {
+  avatarUrl?: string | null;
+};
 
 const roleRank: Record<UserRoleEnum, number> = {
   [UserRole.USER]: 0,
@@ -40,43 +43,57 @@ export const authMiddleware =
   (requiredRole?: UserRoleEnum) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      console.log(req.cookies);
       const cookieSessionId = req.cookies?.sessionId;
       const authHeader = req.headers.authorization;
       const bearerSessionId = authHeader?.startsWith('Bearer ')
         ? authHeader.slice(7)
         : undefined;
       const sessionId = cookieSessionId ?? bearerSessionId;
+      const token = req.cookies?.token;
 
-      if (!sessionId) {
-        res.status(401).json({ message: 'Unauthorized' });
-        return;
+      let userId: number | undefined;
+
+      if (sessionId) {
+        const session = await getSession(sessionId);
+        if (session) {
+          userId = session.id;
+        }
       }
 
-      const session = await getSession(sessionId);
-      console.log(session);
+      if (!userId && token) {
+        try {
+          const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as {
+            id: number;
+            role: string;
+          };
+          if (decoded && decoded.id) {
+            userId = decoded.id;
+          }
+        } catch (jwtErr) {
+          console.error('JWT verify failed in authMiddleware:', jwtErr);
+        }
+      }
 
-      if (!session) {
+      if (!userId) {
         res.status(401).json({ message: 'Unauthorized' });
         return;
       }
 
       const user = await prisma.user.findUnique({
-        where: { id: session.id },
+        where: { id: userId },
         select: {
           id: true,
           name: true,
           email: true,
           role: true,
           schoolCategory: true,
+          avatarUrl: true,
           bio: true,
           gender: true,
           socialLink: true,
           createdAt: true,
         },
       });
-
-      console.log(user);
 
       if (!user) {
         res.status(401).json({ message: 'Unauthorized' });

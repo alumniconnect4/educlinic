@@ -25,7 +25,7 @@ const Footer = () => {
                   <FaFacebookF className="text-white text-xs" />
                 </div>
                 <span className="font-semibold text-gray-800 text-sm">
-                  BFCET on Facebook
+                  BFGI on Facebook
                 </span>
               </div>
               <div className="flex-1 w-full bg-white relative overflow-hidden">
@@ -48,7 +48,7 @@ const Footer = () => {
                   <FaInstagram className="text-white text-xs" />
                 </div>
                 <span className="font-semibold text-gray-800 text-sm">
-                  BFCET on Instagram
+                  BFGI on Instagram
                 </span>
               </div>
               <div className="flex-1 w-full bg-white relative overflow-hidden flex flex-col">
@@ -65,22 +65,23 @@ const Footer = () => {
 
             <div className="bg-white rounded shadow-[0_2px_10px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col h-[450px]">
               <div className="p-3 border-b border-gray-100 flex items-center gap-2 bg-white">
-                <div className="bg-[#0077b5] rounded-full p-1 w-6 h-6 flex items-center justify-center">
-                  <FaLinkedinIn className="text-white text-xs" />
+                <div className="bg-[#FF0000] rounded-full p-1 w-6 h-6 flex items-center justify-center">
+                  <FaYoutube className="text-white text-xs" />
                 </div>
                 <span className="font-semibold text-gray-800 text-sm">
-                  BFCET on LinkedIn
+                  BFGI on YouTube
                 </span>
               </div>
-              <div className="flex-1 w-full bg-white overflow-hidden p-4">
-                <a
-                  className="text-[#0077b5] hover:underline text-sm font-semibold"
-                  href="https://in.linkedin.com/company/baba-farid-group-of-institutions/embed#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Visit our LinkedIn Page
-                </a>
+              <div className="flex-1 w-full bg-white relative overflow-hidden">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/1dN9pQbnWZY"
+                  title="BFGI on YouTube"
+                  style={{ border: 'none' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                ></iframe>
               </div>
             </div>
           </div>

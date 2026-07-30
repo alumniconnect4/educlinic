@@ -3,36 +3,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface GalleryItem {
-  id: string;
-  src: string;
+interface GalleryAlbum {
+  id: string | number;
   title: string;
-  itemsCount: number;
+  cover: string;
+  count?: number;
 }
-
-const galleryItems: GalleryItem[] = [
-  {
-    id: '1',
-    src: '/gallery/gallery-5.jpg',
-    title: 'IITDAA 1st Executive Meeting held on 23rd May, 2026',
-    itemsCount: 61,
-  },
-  {
-    id: '2',
-    src: '/gallery/gallery-6.jpg',
-    title: 'Farewell to IIT Delhi Alumni Graduating Batch 2026',
-    itemsCount: 429,
-  },
-  {
-    id: '3',
-    src: '/gallery/gallery-7.jpg',
-    title: 'Annual General Meeting 2026',
-    itemsCount: 341,
-  },
-];
 
 const Gallery = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [albumsList, setAlbumsList] = useState<GalleryAlbum[]>([]);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,55 +31,86 @@ const Gallery = () => {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    const fetchLatestAlbums = async () => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      try {
+        const res = await fetch(`${apiUrl}/gallery/all/3/0`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.albums && data.albums.length > 0) {
+            const mapped = data.albums.slice(0, 3).map((alb: any) => ({
+              id: alb.id,
+              title: alb.name,
+              cover: alb.coverImageUrl || '/gallery-images/17.jpg',
+              count: alb._count?.images || 0,
+            }));
+            setAlbumsList(mapped);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch gallery for home:', err);
+      }
+    };
+
+    fetchLatestAlbums();
+  }, []);
+
   return (
     <section
       ref={sectionRef}
       className="bg-white py-12 md:py-20 w-full overflow-hidden"
     >
       <div className="w-full px-4 md:px-8 lg:px-16 xl:px-32">
+        {/* Section Header */}
         <div
-          className={`flex justify-between items-center mb-8 transition-all duration-700 ease-out transform ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-          }`}
+          className={`flex justify-between items-center mb-8 transition-all duration-700 ease-out transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+            }`}
         >
-          <h2 className="text-3xl font-semibold text-gray-900">Gallery</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#1e293b]">Gallery</h2>
           <Link
-            href="/gallery"
-            className="px-6 py-2 border border-[#a62025] text-[#a62025] hover:bg-[#a62025] hover:text-white rounded font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            href="/gallery/events"
+            className="px-5 py-1.5 border border-[#b91c1c] text-[#b91c1c] hover:bg-[#b91c1c] hover:text-white rounded text-sm font-semibold transition-all duration-300 shadow-2xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             View All
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {galleryItems.map((item, index) => (
-            <div
+        {/* Gallery 3-Column Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          {albumsList.map((item, index) => (
+            <Link
               key={item.id}
-              className={`flex flex-col gap-3 group cursor-pointer transition-all duration-700 ease-out transform ${
-                isVisible
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-10'
-              }`}
+              href={`/gallery/events/${item.id}`}
+              className={`fgroup lex flex-col gap-3 group cursor-pointer transition-all duration-700 ease-out transform ${isVisible
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-10'
+                }`}
               style={{ transitionDelay: `${index * 150}ms` }}
             >
-              <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border border-gray-100 shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:border-[#a62025]/20">
+              {/* Image Container with rounded-xl */}
+              <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 shadow-sm transition-all duration-300 group-hover:shadow-md">
                 <Image
-                  src={item.src}
+                  src={item.cover}
                   alt={item.title}
                   fill
-                  className="object-cover z-10 transition-transform duration-700"
+                  className="object-cover transition-transform duration-500 "
+                  unoptimized={item.cover?.startsWith('data:image')}
                 />
               </div>
 
-              <div className="flex justify-between items-start gap-4 px-1">
-                <h3 className="font-semibold text-gray-900 text-sm md:text-base leading-tight flex-1 group-hover:text-[#a62025] group-hover:translate-x-1 transition-all duration-300">
+              {/* Title & Items Badge */}
+              <div className="flex justify-between items-start gap-3 px-0.5">
+                <h3 className="font-bold text-slate-900 text-sm leading-snug flex-1 transition-colors line-clamp-2 group-hover:text-slate-900/60">
                   {item.title}
                 </h3>
-                <span className="text-gray-500 text-xs font-medium bg-gray-100 px-2.5 py-1 rounded-full group-hover:bg-[#a62025]/10 group-hover:text-[#a62025] transition-all duration-300 whitespace-nowrap mt-0.5">
-                  {item.itemsCount} Items
-                </span>
+                {typeof item.count === 'number' && (
+                  <span className="text-gray-500 text-[11px] font-medium bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 mt-0.5">
+                    {item.count} Items
+                  </span>
+                )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

@@ -13,10 +13,38 @@ import { prisma } from '../config/db.js';
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role, schoolCategory } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      schoolCategory,
+      avatarUrl,
+      idCardUrl,
+      degreeUrl,
+    } = req.body;
 
     if (!name || !email || !password || !role || !schoolCategory) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'All text fields are required' });
+    }
+
+    if (!avatarUrl || avatarUrl.trim() === '') {
+      return res.status(400).json({
+        message: 'Profile avatar image upload is compulsory for registration.',
+      });
+    }
+
+    if (role === 'USER' && !idCardUrl) {
+      return res.status(400).json({
+        message: 'ID Card upload is required for Student registration.',
+      });
+    }
+
+    if (role === 'ALUMNI' && !idCardUrl && !degreeUrl) {
+      return res.status(400).json({
+        message:
+          'Alumni registration requires either an ID Card or Degree Certificate upload.',
+      });
     }
 
     const user = await prisma.user.findUnique({
@@ -36,8 +64,27 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         role,
         schoolCategory,
+        avatarUrl,
+        idCardUrl: idCardUrl || null,
+        degreeUrl: degreeUrl || null,
       },
     });
+
+    if (newUser.role === 'USER' || newUser.role === 'ALUMNI') {
+      return res.status(201).json({
+        message:
+          'Registration request submitted successfully! Your account is pending administrator review and approval before you can log in.',
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          schoolCategory: newUser.schoolCategory,
+          avatarUrl: newUser.avatarUrl,
+          isVerified: false,
+        },
+      });
+    }
 
     const sessionId = crypto.randomUUID();
     await storeSession(sessionId, { id: newUser.id, role: newUser.role });
@@ -51,6 +98,7 @@ export const register = async (req: Request, res: Response) => {
         email: newUser.email,
         role: newUser.role,
         schoolCategory: newUser.schoolCategory,
+        isVerified: true,
       },
     });
   } catch (err) {
@@ -84,6 +132,13 @@ export const login = async (req: Request, res: Response) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Credentials mismatch' });
+    }
+
+    if (!user.isVerified && (user.role === 'USER' || user.role === 'ALUMNI')) {
+      return res.status(403).json({
+        message:
+          'Your registration request is pending admin approval. Please wait for an administrator to review and approve your account.',
+      });
     }
 
     const sessionId = crypto.randomUUID();
