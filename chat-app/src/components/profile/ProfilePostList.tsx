@@ -18,6 +18,7 @@ import { stripHtml } from '../../utils/text';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { getAvatarUrl } from '../../lib/utils';
 import { Button } from '../ui/button';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export type ProfileTab = 'posts' | 'followers' | 'following';
 
@@ -75,7 +76,7 @@ export const ProfilePostList: React.FC<ProfilePostListProps> = ({
       try {
         setLoading(true);
         const res = await fetch(
-          `http://localhost:4000/api/posts?authorId=${profileUserId}&page=${pageNum}&limit=5`,
+          `${API_BASE}/posts?authorId=${profileUserId}&page=${pageNum}&limit=5`,
           {
             credentials: 'include',
           }

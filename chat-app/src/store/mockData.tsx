@@ -88,7 +88,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
           credentials: 'include',
         });
         if (!userRes.ok) {
-          window.location.href = 'http://localhost:3000';
+          window.location.href = import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
           return;
         }
         const userData = await userRes.json();
@@ -103,7 +103,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         }
       } catch (err) {
         console.error('Failed to init store', err);
-        window.location.href = 'http://localhost:3000';
+        window.location.href = import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
       } finally {
         setIsLoading(false);
       }
