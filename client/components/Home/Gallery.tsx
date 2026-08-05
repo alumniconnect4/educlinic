@@ -33,7 +33,7 @@ const Gallery = () => {
 
   useEffect(() => {
     const fetchLatestAlbums = async () => {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       try {
         const res = await fetch(`${apiUrl}/gallery/all/3/0`, { cache: 'no-store' });
         if (res.ok) {

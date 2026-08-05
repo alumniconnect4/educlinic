@@ -16,7 +16,7 @@ export default function FloatingBell() {
 
   const handleIsLoggined = () => {
     if (isAuthenticated) {
-      window.location.href = 'http://localhost:5173/';
+      window.location.href = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
     } else {
       toast.error('Login is required..');
     }

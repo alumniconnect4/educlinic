@@ -11,7 +11,7 @@ const AlumniPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = 'http://localhost:5173';
+      window.location.href = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
     } else {
       toast.error('Login first to connect with Alumni', {
         toastId: 'alumni-login-error',

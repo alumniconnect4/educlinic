@@ -65,8 +65,9 @@ export default function EventsClient() {
       setLoading(true);
       try {
         const offset = (page - 1) * ITEMS_PER_PAGE;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const res = await axios.get(
-          `http://localhost:4000/api/events/all-events/${ITEMS_PER_PAGE}/${offset}?filter=${filter}`
+          `${apiUrl}/events/all-events/${ITEMS_PER_PAGE}/${offset}?filter=${filter}`
         );
         setEvents(res.data.events || []);
         setTotalPages(

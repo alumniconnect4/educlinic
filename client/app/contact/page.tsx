@@ -38,8 +38,7 @@ const ContactPage = () => {
     setStatus({ type: null, message: '' });
 
     try {
-      const apiUrl =
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const response = await axios.post(
         `${apiUrl}/admin-portal/help-tickets`,
         formData
