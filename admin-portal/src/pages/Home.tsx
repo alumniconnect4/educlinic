@@ -6,8 +6,6 @@ import {
   ShieldCheck,
   MessageCircle,
   FileText,
-  AlertCircle,
-  CheckCircle2,
   TrendingUp,
 } from 'lucide-react';
 import axios from 'axios';

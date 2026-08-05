@@ -14,8 +14,6 @@ import {
   LogOut,
   ShieldCheck,
   Clock,
-  MapPin,
-  Phone,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import axios from 'axios';

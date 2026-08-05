@@ -71,7 +71,7 @@ export default function Gallery() {
         `${apiUrl}/gallery/create`,
         {
           name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
+          description: formData.description?.trim() || undefined,
           category: formData.category.trim(),
           coverImageUrl: formData.coverImageUrl || undefined
         },
@@ -98,7 +98,7 @@ export default function Gallery() {
         `${apiUrl}/gallery/update/${albumId}`,
         {
           name: updatedData.name.trim(),
-          description: updatedData.description.trim() || undefined,
+          description: updatedData.description?.trim() || undefined,
           category: updatedData.category.trim(),
           coverImageUrl: updatedData.coverImageUrl || undefined
         },
