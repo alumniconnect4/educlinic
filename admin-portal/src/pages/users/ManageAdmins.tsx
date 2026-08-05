@@ -100,8 +100,9 @@ export default function ManageAdmins() {
   const fetchAdmins = async () => {
     setIsTableLoading(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/admin-portal/admins?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
+        `${apiUrl}/admin-portal/admins?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
         { withCredentials: true }
       );
       setAdmins(response.data.data);
@@ -153,8 +154,9 @@ export default function ManageAdmins() {
     }
     setIsLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        'http://localhost:4000/api/admin-portal/admins',
+        `${apiUrl}/admin-portal/admins`,
         formData,
         { withCredentials: true }
       );
@@ -201,8 +203,9 @@ export default function ManageAdmins() {
     if (!editingAdmin) return;
     setIsUpdating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
-        `http://localhost:4000/api/admin-portal/admins/${editingAdmin.id}`,
+        `${apiUrl}/admin-portal/admins/${editingAdmin.id}`,
         editFormData,
         { withCredentials: true }
       );
@@ -223,8 +226,9 @@ export default function ManageAdmins() {
 
   const executeDelete = async (adminId: number) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/admin-portal/admins/${adminId}`,
+        `${apiUrl}/admin-portal/admins/${adminId}`,
         { withCredentials: true }
       );
       toast.success('Admin deleted successfully!');

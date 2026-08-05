@@ -33,8 +33,9 @@ export default function AnalyticsDetail() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:4000/api/admin-portal/analytics/school/${role}`,
+          const apiUrl = import.meta.env.VITE_API_URL;
+          const response = await axios.get(
+            `${apiUrl}/admin-portal/analytics/school/${role}`,
           {
             withCredentials: true,
           }

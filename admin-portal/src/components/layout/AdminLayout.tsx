@@ -44,7 +44,8 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     try {
-      await axios.get('http://localhost:4000/api/admin-portal/logout', {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      await axios.get(`${apiUrl}/admin-portal/logout`, {
         withCredentials: true,
       });
     } catch (err) {

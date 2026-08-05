@@ -38,8 +38,9 @@ export default function Gallery() {
       if (searchQuery.trim()) params.append("search", searchQuery.trim())
 
       const queryString = params.toString() ? `?${params.toString()}` : ""
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/gallery/all/${itemsPerPage}/${offset}${queryString}`,
+        `${apiUrl}/gallery/all/${itemsPerPage}/${offset}${queryString}`,
         { withCredentials: true }
       )
       setAlbums(response.data.albums || [])
@@ -65,8 +66,9 @@ export default function Gallery() {
   const handleCreateAlbum = async (formData: CreateAlbumFormData) => {
     setIsCreating(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        "http://localhost:4000/api/gallery/create",
+        `${apiUrl}/gallery/create`,
         {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
@@ -91,8 +93,9 @@ export default function Gallery() {
   const handleUpdateAlbum = async (albumId: number, updatedData: any) => {
     setIsUpdating(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.patch(
-        `http://localhost:4000/api/gallery/update/${albumId}`,
+        `${apiUrl}/gallery/update/${albumId}`,
         {
           name: updatedData.name.trim(),
           description: updatedData.description.trim() || undefined,
@@ -123,8 +126,9 @@ export default function Gallery() {
     try {
       const totalCount = images.length
       for (let i = 0; i < totalCount; i++) {
+        const apiUrl = import.meta.env.VITE_API_URL;
         await axios.post(
-          `http://localhost:4000/api/gallery/${albumId}/image`,
+          `${apiUrl}/gallery/${albumId}/image`,
           { image: images[i] },
           { withCredentials: true }
         )
@@ -150,8 +154,9 @@ export default function Gallery() {
   // Delete album handler
   const executeDeleteAlbum = async (albumId: number) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/gallery/delete/${albumId}`,
+        `${apiUrl}/gallery/delete/${albumId}`,
         { withCredentials: true }
       )
       toast.success("Album deleted successfully!")

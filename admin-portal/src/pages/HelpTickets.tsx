@@ -45,8 +45,9 @@ export default function HelpTickets() {
   const fetchTickets = async () => {
     try {
       setIsLoading(true);
+      const apiUrl = import.meta.env.VITE_API_URL;
       const res = await axios.get(
-        `http://localhost:4000/api/admin-portal/help-tickets?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(
+        `${apiUrl}/admin-portal/help-tickets?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(
           searchQuery
         )}`,
         { withCredentials: true }

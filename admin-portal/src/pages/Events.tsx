@@ -47,8 +47,9 @@ export default function Events() {
       if (searchQuery.trim()) params.append('search', searchQuery.trim());
 
       const queryString = params.toString() ? `?${params.toString()}` : '';
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/events/all-events/${itemsPerPage}/${offset}${queryString}`,
+        `${apiUrl}/events/all-events/${itemsPerPage}/${offset}${queryString}`,
         { withCredentials: true }
       );
       setEvents(response.data.events || []);
@@ -87,8 +88,9 @@ export default function Events() {
 
     setIsCreating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        'http://localhost:4000/api/events/create',
+        `${apiUrl}/events/create`,
         {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
@@ -127,8 +129,9 @@ export default function Events() {
 
     setIsUpdating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.patch(
-        `http://localhost:4000/api/events/update/${eventId}`,
+        `${apiUrl}/events/update/${eventId}`,
         {
           name: updatedData.name.trim(),
           description: updatedData.description.trim() || undefined,
@@ -161,7 +164,8 @@ export default function Events() {
   // Delete Event Handler
   const executeDeleteEvent = async (eventId: number) => {
     try {
-      await axios.delete(`http://localhost:4000/api/events/delete/${eventId}`, {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      await axios.delete(`${apiUrl}/events/delete/${eventId}`, {
         withCredentials: true,
       });
       toast.success('Event deleted successfully!');
@@ -190,7 +194,8 @@ export default function Events() {
 
   // Share / Copy Event URL Handler
   const handleShareEvent = (ev: EventItem) => {
-    const eventUrl = `http://localhost:3000/events/${ev.id}`;
+    const clientUrl = import.meta.env.VITE_CLIENT_URL;
+    const eventUrl = `${clientUrl}/events/${ev.id}`;
     navigator.clipboard.writeText(eventUrl);
     toast.success(`Copied Event URL: ${eventUrl}`);
   };

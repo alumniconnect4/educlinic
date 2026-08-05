@@ -60,8 +60,9 @@ export default function Home() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        const apiUrl = import.meta.env.VITE_API_URL;
         const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/overview',
+          `${apiUrl}/admin-portal/analytics/overview`,
           {
             withCredentials: true,
           }
@@ -74,8 +75,9 @@ export default function Home() {
 
     const fetchEvents = async () => {
       try {
+        const apiUrl = import.meta.env.VITE_API_URL;
         const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/recent-events',
+          `${apiUrl}/admin-portal/analytics/recent-events`,
           {
             withCredentials: true,
           }
@@ -88,8 +90,9 @@ export default function Home() {
 
     const fetchCommunity = async () => {
       try {
+        const apiUrl = import.meta.env.VITE_API_URL;
         const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/community',
+          `${apiUrl}/admin-portal/analytics/community`,
           {
             withCredentials: true,
           }
@@ -102,8 +105,9 @@ export default function Home() {
 
     const fetchTickets = async () => {
       try {
+        const apiUrl = import.meta.env.VITE_API_URL;
         const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/help-tickets',
+          `${apiUrl}/admin-portal/analytics/help-tickets`,
           {
             withCredentials: true,
           }
@@ -116,8 +120,9 @@ export default function Home() {
 
     const fetchUserRegAnalytics = async () => {
       try {
+        const apiUrl = import.meta.env.VITE_API_URL;
         const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/user-registrations',
+          `${apiUrl}/admin-portal/analytics/user-registrations`,
           {
             withCredentials: true,
           }

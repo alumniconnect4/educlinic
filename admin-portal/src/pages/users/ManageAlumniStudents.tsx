@@ -119,8 +119,9 @@ export default function ManageAlumniStudents() {
 
   const fetchUsers = async () => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+        `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
         { withCredentials: true }
       );
       setUsers(response.data.data);
@@ -133,8 +134,9 @@ export default function ManageAlumniStudents() {
 
   useEffect(() => {
     let ignore = false;
+    const apiUrl = import.meta.env.VITE_API_URL;
     axios
-      .get('http://localhost:4000/api/admin-portal/pending-requests', {
+      .get(`${apiUrl}/admin-portal/pending-requests`, {
         withCredentials: true,
       })
       .then((res) => {
@@ -151,9 +153,10 @@ export default function ManageAlumniStudents() {
   useEffect(() => {
     let ignore = false;
     const timer = setTimeout(() => {
+      const apiUrl = import.meta.env.VITE_API_URL;
       axios
         .get(
-          `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+          `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
           { withCredentials: true }
         )
         .then((res) => {
@@ -223,8 +226,9 @@ export default function ManageAlumniStudents() {
     }
     setIsLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        'http://localhost:4000/api/admin-portal/alumni-students',
+        `${apiUrl}/admin-portal/alumni-students`,
         formData,
         { withCredentials: true }
       );
@@ -273,8 +277,9 @@ export default function ManageAlumniStudents() {
     if (!editingUser) return;
     setIsUpdating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
-        `http://localhost:4000/api/admin-portal/alumni-students/${editingUser.id}`,
+        `${apiUrl}/admin-portal/alumni-students/${editingUser.id}`,
         editFormData,
         { withCredentials: true }
       );
@@ -295,8 +300,9 @@ export default function ManageAlumniStudents() {
 
   const executeDelete = async (userId: number) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/admin-portal/alumni-students/${userId}`,
+        `${apiUrl}/admin-portal/alumni-students/${userId}`,
         { withCredentials: true }
       );
       toast.success('User deleted successfully!');
@@ -321,7 +327,7 @@ export default function ManageAlumniStudents() {
       },
       cancel: {
         label: 'Cancel',
-        onClick: () => {},
+        onClick: () => { },
       },
     });
   };
@@ -644,11 +650,10 @@ export default function ManageAlumniStudents() {
                       <td className="py-3.5 px-6 align-middle text-center">
                         <div className="flex justify-center">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${
-                              user.role === 'ALUMNI'
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${user.role === 'ALUMNI'
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : 'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}
+                              }`}
                           >
                             {user.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                           </span>
@@ -786,20 +791,18 @@ export default function ManageAlumniStudents() {
                       {viewingUser.name}
                     </h4>
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                        viewingUser.role === 'ALUMNI'
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${viewingUser.role === 'ALUMNI'
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}
+                        }`}
                     >
                       {viewingUser.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                        viewingUser.isVerified
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${viewingUser.isVerified
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}
+                        }`}
                     >
                       <ShieldCheck className="w-3 h-3" />
                       {viewingUser.isVerified

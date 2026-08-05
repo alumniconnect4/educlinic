@@ -46,8 +46,9 @@ export default function PendingRequestsPage() {
 
   const fetchPendingRequests = async () => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const res = await axios.get(
-        `http://localhost:4000/api/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+        `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
         { withCredentials: true }
       );
       setPendingRequests(res.data.data);
@@ -61,9 +62,10 @@ export default function PendingRequestsPage() {
   useEffect(() => {
     let ignore = false;
     const timer = setTimeout(() => {
+      const apiUrl = import.meta.env.VITE_API_URL;
       axios
         .get(
-          `http://localhost:4000/api/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+          `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
           { withCredentials: true }
         )
         .then((res) => {
@@ -87,8 +89,9 @@ export default function PendingRequestsPage() {
 
   const handleApprove = async (id: number, name: string) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
-        `http://localhost:4000/api/admin-portal/pending-requests/${id}/approve`,
+        `${apiUrl}/admin-portal/pending-requests/${id}/approve`,
         {},
         { withCredentials: true }
       );
@@ -109,8 +112,9 @@ export default function PendingRequestsPage() {
 
   const handleDecline = async (id: number, name: string) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/admin-portal/pending-requests/${id}/decline`,
+        `${apiUrl}/admin-portal/pending-requests/${id}/decline`,
         { withCredentials: true }
       );
       toast.success(`Request for "${name}" declined.`);

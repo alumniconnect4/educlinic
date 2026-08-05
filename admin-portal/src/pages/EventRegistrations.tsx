@@ -88,8 +88,9 @@ export default function EventRegistrations() {
 
   const executeUnregister = async (regId: number, regName: string) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/events/registrations/${regId}`,
+        `${apiUrl}/events/registrations/${regId}`,
         { withCredentials: true }
       );
       toast.success(`Successfully unregistered ${regName}`);
@@ -122,8 +123,9 @@ export default function EventRegistrations() {
     setIsLoading(true);
     try {
       const offset = (currentPage - 1) * itemsPerPage;
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/events/registrations/${id}/${itemsPerPage}/${offset}?search=${encodeURIComponent(searchQuery)}`,
+        `${apiUrl}/events/registrations/${id}/${itemsPerPage}/${offset}?search=${encodeURIComponent(searchQuery)}`,
         { withCredentials: true }
       );
       setRegistrations(response.data.registrations || []);

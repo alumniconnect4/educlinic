@@ -48,8 +48,9 @@ export default function Login() {
     setError('');
 
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.post(
-        'http://localhost:4000/api/admin-portal/login',
+        `${apiUrl}/admin-portal/login`,
         { email, password },
         { withCredentials: true }
       );
