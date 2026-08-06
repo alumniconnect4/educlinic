@@ -104,11 +104,6 @@ const Gallery = () => {
                 <h3 className="font-bold text-slate-900 text-sm leading-snug flex-1 transition-colors line-clamp-2 group-hover:text-slate-900/60">
                   {item.title}
                 </h3>
-                {typeof item.count === 'number' && (
-                  <span className="text-gray-500 text-[11px] font-medium bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 mt-0.5">
-                    {item.count} Items
-                  </span>
-                )}
               </div>
             </Link>
           ))}
