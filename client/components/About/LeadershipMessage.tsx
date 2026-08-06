@@ -38,7 +38,7 @@ export const LeadershipMessageBlock: React.FC<LeadershipMessageBlockProps> = ({
                 alt={message.imageAlt || message.name}
                 fill
                 sizes="(max-width: 640px) 100vw, 360px"
-                className="object-cover object-top"
+                className="object-contain"
                 priority={index === 0}
               />
             </div>

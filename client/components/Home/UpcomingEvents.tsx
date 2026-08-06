@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Share2,
+  Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -50,6 +51,7 @@ export function UpcomingEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [navigatingId, setNavigatingId] = useState<number | null>(null);
   const ITEMS_PER_PAGE = 4;
 
   const [latestUpcoming, setLatestUpcoming] = useState<Event[]>([]);
@@ -279,11 +281,29 @@ export function UpcomingEvents() {
                           </div>
                         </div>
 
-                        <Link href={`/events/${event.id}`}>
+                        <Link
+                          href={`/events/${event.id}`}
+                          onClick={() => setNavigatingId(event.id)}
+                        >
                           <div className="mt-8">
-                            <span className="inline-block cursor-pointer bg-[#a62025] hover:bg-[#85161a] text-white text-[13px] font-semibold px-5 py-2.5 rounded transition-colors shadow-sm">
-                              View Event
-                            </span>
+                            <button
+                              type="button"
+                              disabled={navigatingId === event.id}
+                              className={`inline-flex items-center gap-2 bg-[#a62025] hover:bg-[#85161a] text-white text-[13px] font-semibold px-5 py-2.5 rounded transition-all shadow-sm ${
+                                navigatingId === event.id
+                                  ? 'opacity-80 cursor-wait'
+                                  : 'cursor-pointer'
+                              }`}
+                            >
+                              {navigatingId === event.id ? (
+                                <>
+                                  <Loader2 size={16} className="animate-spin" />
+                                  <span>Loading...</span>
+                                </>
+                              ) : (
+                                <span>View Event</span>
+                              )}
+                            </button>
                           </div>
                         </Link>
                       </div>

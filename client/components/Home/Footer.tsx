@@ -92,31 +92,41 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center">
           <div className="flex gap-3 mb-6">
             <Link
-              href="#"
+              href="https://www.facebook.com/BabaFaridGroup"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-8 h-8 rounded-full bg-[#dddddd] text-[#222222] flex items-center justify-center hover:bg-white transition-colors"
             >
               <FaFacebookF size={15} />
             </Link>
             <Link
-              href="#"
+              href="https://twitter.com/babafaridgroup"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-8 h-8 rounded-full bg-[#dddddd] text-[#222222] flex items-center justify-center hover:bg-white transition-colors"
             >
               <FaXTwitter size={15} />
             </Link>
             <Link
-              href="#"
+              href="https://www.linkedin.com/school/baba-farid-group-of-institutions/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-8 h-8 rounded-full bg-[#dddddd] text-[#222222] flex items-center justify-center hover:bg-white transition-colors"
             >
               <FaLinkedinIn size={15} />
             </Link>
             <Link
-              href="#"
+              href="https://www.youtube.com/@babafaridgroup"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-8 h-8 rounded-full bg-[#dddddd] text-[#222222] flex items-center justify-center hover:bg-white transition-colors"
             >
               <FaYoutube size={15} />
             </Link>
             <Link
-              href="#"
+              href="https://www.instagram.com/babafaridgroup"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-8 h-8 rounded-full bg-[#dddddd] text-[#222222] flex items-center justify-center hover:bg-white transition-colors"
             >
               <FaInstagram size={15} />
@@ -124,28 +134,20 @@ const Footer = () => {
           </div>
 
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[13px] tracking-wide">
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/" className="hover:text-white transition-colors">
               HOME
             </Link>
             <span className="text-gray-500">|</span>
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/about" className="hover:text-white transition-colors">
               ABOUT
             </Link>
             <span className="text-gray-500">|</span>
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/contact" className="hover:text-white transition-colors">
               CONTACT
             </Link>
             <span className="text-gray-500">|</span>
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/sitemap" className="hover:text-white transition-colors">
               SITEMAP
-            </Link>
-            <span className="text-gray-500">|</span>
-            <Link href="#" className="hover:text-white transition-colors">
-              TERMS
-            </Link>
-            <span className="text-gray-500">|</span>
-            <Link href="#" className="hover:text-white transition-colors">
-              PRIVACY
             </Link>
           </div>
         </div>

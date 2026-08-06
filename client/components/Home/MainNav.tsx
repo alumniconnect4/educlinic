@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ArrowRight, Menu, X, ChevronDown } from 'lucide-react';
+import { ArrowRight, Menu, X, ChevronDown, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUserStore } from '@/store/useUserStore';
@@ -73,14 +73,36 @@ const navigation: RouteItem[] = [
 const MainNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!isMenuOpen) {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
       setExpandedMenu(null);
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isMenuOpen]);
 
-  const pathname = usePathname();
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (isMenuOpen && pathname) {
+      const activeParent = navigation.find((item) =>
+        item.subRoutes?.some((sub) => sub.path === pathname)
+      );
+      if (activeParent) {
+        setExpandedMenu(activeParent.name);
+      }
+    }
+  }, [isMenuOpen, pathname]);
+
   const isAuthenticated = useUserStore(
     (state: UserStore) => state.isAuthenticated
   );
@@ -88,15 +110,19 @@ const MainNav = () => {
 
   const handleLogout = async () => {
     try {
+      setIsLoggingOut(true);
       await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
         withCredentials: true,
       });
       useUserStore.getState().clearUser();
       useUserStore.setState({ isAuthenticated: false });
-      toast.success('Logged out successfully! ');
+      toast.success('Logged out successfully!');
       router.push('/');
     } catch (err) {
       console.log(err);
+      toast.error('Logout failed.');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -123,7 +149,7 @@ const MainNav = () => {
             <div className="flex justify-end gap-2.5">
               <button
                 onClick={() => hotToast.dismiss(t.id)}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer rounded-none"
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer rounded-md"
               >
                 Cancel
               </button>
@@ -132,7 +158,7 @@ const MainNav = () => {
                   hotToast.dismiss(t.id);
                   window.open(url, '_blank');
                 }}
-                className="px-4 py-2 text-sm font-medium bg-[#d60000] text-white hover:bg-[#b30000] transition-colors cursor-pointer rounded-none"
+                className="px-4 py-2 text-sm font-medium bg-[#d60000] text-white hover:bg-[#b30000] transition-colors cursor-pointer rounded-md"
               >
                 Continue
               </button>
@@ -141,8 +167,8 @@ const MainNav = () => {
         ),
         {
           duration: 6000,
-          position: 'bottom-right',
-          style: { borderRadius: '0px' },
+          position: isMobile ? 'bottom-center' : 'bottom-right',
+          style: { borderRadius: '8px' },
         }
       );
     } else {
@@ -240,10 +266,22 @@ const MainNav = () => {
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
-                className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition"
+                disabled={isLoggingOut}
+                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition ${
+                  isLoggingOut ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
+                }`}
               >
-                <span>Logout</span>
-                <ArrowRight size={18} />
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Logout</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
               </button>
             ) : (
               <Link href="/auth">
@@ -265,12 +303,12 @@ const MainNav = () => {
       </div>
 
       {/* Overlay Backdrop */}
-      {isMenuOpen && (
-        <div
-          className="xl:hidden fixed inset-0 bg-black/50 z-[60]"
-          onClick={() => setIsMenuOpen(false)}
-        />
-      )}
+      <div
+        className={`xl:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] transition-opacity duration-300 ease-in-out ${
+          isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMenuOpen(false)}
+      />
 
       {/* Sidebar */}
       <div
@@ -288,7 +326,7 @@ const MainNav = () => {
           />
           <button
             onClick={() => setIsMenuOpen(false)}
-            className="text-gray-500 hover:text-[#d60000] focus:outline-none p-1"
+            className="text-gray-500 hover:text-[#d60000] focus:outline-none p-1 cursor-pointer"
           >
             <X size={24} />
           </button>
@@ -297,6 +335,7 @@ const MainNav = () => {
         <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col space-y-1">
           {navigation.map((item) => {
             const isExpanded = expandedMenu === item.name;
+            const isChildActive = item.subRoutes?.some((sub) => sub.path === pathname);
             return (
               <div key={item.name} className="flex flex-col">
                 {item.path ? (
@@ -304,7 +343,7 @@ const MainNav = () => {
                     href={item.path}
                     className={`block text-base font-medium py-3 px-4 rounded-lg transition-colors duration-200 ${
                       pathname === item.path
-                        ? 'bg-red-50 text-[#d60000]'
+                        ? 'bg-red-50 text-[#d60000] font-semibold'
                         : 'text-gray-700 hover:bg-red-50 hover:text-[#d60000]'
                     }`}
                     onClick={(e) =>
@@ -320,12 +359,18 @@ const MainNav = () => {
                     onClick={() =>
                       setExpandedMenu(isExpanded ? null : item.name)
                     }
-                    className={`text-base font-medium py-3 px-4 rounded-lg flex items-center justify-between w-full transition-colors duration-200 ${isExpanded ? 'bg-red-50 text-[#d60000]' : 'text-gray-800 hover:bg-red-50 hover:text-[#d60000]'}`}
+                    className={`text-base font-medium py-3 px-4 rounded-lg flex items-center justify-between w-full transition-colors duration-200 cursor-pointer ${
+                      isExpanded || isChildActive
+                        ? 'bg-red-50 text-[#d60000] font-semibold'
+                        : 'text-gray-800 hover:bg-red-50 hover:text-[#d60000]'
+                    }`}
                   >
                     {item.name}
                     <ChevronDown
                       size={18}
-                      className={`transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#d60000]' : 'text-gray-400'}`}
+                      className={`transition-transform duration-300 ${
+                        isExpanded ? 'rotate-180 text-[#d60000]' : isChildActive ? 'text-[#d60000]' : 'text-gray-400'
+                      }`}
                     />
                   </button>
                 )}
@@ -364,14 +409,26 @@ const MainNav = () => {
           <div className="pt-4 border-t border-gray-100 mt-2 pb-6">
             {isAuthenticated ? (
               <button
-                onClick={() => {
-                  handleLogout();
+                onClick={async () => {
+                  await handleLogout();
                   setIsMenuOpen(false);
                 }}
-                className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-4 py-3 rounded flex items-center justify-center space-x-2 font-medium w-full transition"
+                disabled={isLoggingOut}
+                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded flex items-center justify-center space-x-2 font-medium w-full transition ${
+                  isLoggingOut ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
+                }`}
               >
-                <span>Logout</span>
-                <ArrowRight size={18} />
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Logout</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
               </button>
             ) : (
               <Link href="/auth" onClick={() => setIsMenuOpen(false)}>

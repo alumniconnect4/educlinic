@@ -1,8 +1,10 @@
 'use client';
+
 import React, { useState } from 'react';
 import Image from 'next/image';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 const ContactPage = () => {
   const router = useRouter();
@@ -237,9 +239,18 @@ const ContactPage = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold py-3 px-8 rounded-sm shadow-xs transition-colors w-max disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm"
+                      className={`bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold py-3 px-8 rounded-sm shadow-xs transition-all flex items-center justify-center gap-2 text-sm ${
+                        loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
                     >
-                      {loading ? 'Sending...' : 'Send'}
+                      {loading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <span>Send Message</span>
+                      )}
                     </button>
                   </div>
                 </form>

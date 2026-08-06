@@ -23,7 +23,7 @@ export default function FloatingBell() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-start gap-4">
+    <div className="hidden md:flex fixed bottom-6 left-6 z-50 flex-col items-start gap-4">
       <div
         className={`flex flex-col gap-2 mb-2 w-64 transition-all duration-500 origin-bottom-left ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
           isOpen

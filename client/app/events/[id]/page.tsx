@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, MapPin, ArrowLeft, Eye, Share2 } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Eye, Share2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import axios from 'axios';
 import { useUserStore } from '@/store/useUserStore';
@@ -195,6 +195,7 @@ export default function EventDetailPage() {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { isAuthenticated, user } = useUserStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -229,6 +230,7 @@ export default function EventDetailPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData.entries());
+    setIsSubmitting(true);
 
     try {
       await axios.post(
@@ -240,6 +242,8 @@ export default function EventDetailPage() {
       setIsModalOpen(false);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to register');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -529,9 +533,19 @@ export default function EventDetailPage() {
               <div className="mt-16 flex justify-end">
                 <button
                   type="submit"
-                  className="px-8 py-2.5 text-[15px] text-white bg-[#85161a] hover:bg-[#6c1215] transition-colors cursor-pointer tracking-wider"
+                  disabled={isSubmitting}
+                  className={`px-8 py-2.5 text-[15px] text-white bg-[#85161a] hover:bg-[#6c1215] transition-colors tracking-wider flex items-center justify-center gap-2 ${
+                    isSubmitting ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
+                  }`}
                 >
-                  COMPLETE REGISTRATION
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>SUBMITTING...</span>
+                    </>
+                  ) : (
+                    <span>COMPLETE REGISTRATION</span>
+                  )}
                 </button>
               </div>
             </form>

@@ -14,6 +14,7 @@ import {
   LogOut,
   ShieldCheck,
   Clock,
+  Loader2,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import axios from 'axios';
@@ -25,6 +26,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function AdminLayout() {
 
   const handleLogout = async () => {
     try {
+      setIsLoggingOut(true);
       const apiUrl = import.meta.env.VITE_API_URL;
       await axios.get(`${apiUrl}/admin-portal/logout`, {
         withCredentials: true,
@@ -49,6 +52,7 @@ export default function AdminLayout() {
     } catch (err) {
       console.error('Logout failed', err);
     } finally {
+      setIsLoggingOut(false);
       logout();
       navigate('/login');
     }
@@ -148,13 +152,23 @@ export default function AdminLayout() {
                   <Key className="w-4 h-4 mr-3 text-gray-400" />
                   Change Password
                 </div>
-                <div
-                  className="px-4 py-2.5 flex items-center text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors"
+                <button
+                  type="button"
+                  disabled={isLoggingOut}
+                  className={`w-full px-4 py-2.5 flex items-center text-sm text-gray-600 transition-colors ${
+                    isLoggingOut
+                      ? 'opacity-70 cursor-not-allowed'
+                      : 'cursor-pointer hover:bg-gray-50'
+                  }`}
                   onClick={handleLogout}
                 >
-                  <LogOut className="w-4 h-4 mr-3 text-gray-400" />
-                  Log Out
-                </div>
+                  {isLoggingOut ? (
+                    <Loader2 className="w-4 h-4 mr-3 text-gray-400 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4 mr-3 text-gray-400" />
+                  )}
+                  <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
+                </button>
               </div>
             )}
           </div>
