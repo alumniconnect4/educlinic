@@ -23,6 +23,7 @@ const DEFAULT_COVER = '/gallery-images/17.jpg';
 export default function EventsGallery() {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAlbumId, setLoadingAlbumId] = useState<number | null>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -102,9 +103,19 @@ export default function EventsGallery() {
                     <div>
                       <Link
                         href={`/gallery/events/${album.id}`}
-                        className="bg-[#b91c1c] hover:bg-[#991b1b] cursor-pointer text-white px-7 py-2.5 rounded font-semibold text-sm transition-colors shadow-xs inline-block"
+                        onClick={() => setLoadingAlbumId(album.id)}
+                        className={`bg-[#b91c1c] hover:bg-[#991b1b] cursor-pointer text-white px-7 py-2.5 rounded font-semibold text-sm transition-colors shadow-xs inline-flex items-center gap-2 ${
+                          loadingAlbumId === album.id ? 'opacity-80 pointer-events-none' : ''
+                        }`}
                       >
-                        View Album
+                        {loadingAlbumId === album.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          'View Album'
+                        )}
                       </Link>
                     </div>
                   </div>
