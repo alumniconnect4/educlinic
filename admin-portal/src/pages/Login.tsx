@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Lock, User } from 'lucide-react';
+import { Lock, User, Loader2 } from 'lucide-react';
 
 const backgrounds = [
   'https://plus.unsplash.com/premium_photo-1677567996070-68fa4181775a?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA==',
@@ -24,6 +24,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const login = useAuthStore((state) => state.login);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -46,6 +47,7 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
@@ -65,6 +67,8 @@ export default function Login() {
       } else {
         setError('An error occurred. Please try again.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -128,9 +132,11 @@ export default function Login() {
           <CardFooter className="flex flex-col items-end pb-8">
             <Button
               type="submit"
-              className="bg-[#4083ff] hover:bg-blue-500 text-white shadow-none rounded-sm px-6 h-9 font-normal"
+              disabled={isLoading}
+              className="bg-[#4083ff] hover:bg-blue-500 text-white shadow-none rounded-sm px-6 h-9 font-normal flex items-center gap-2"
             >
-              Login
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isLoading ? 'Logging in...' : 'Login'}
             </Button>
             <div className="w-full mt-6 text-sm text-slate-400 text-left">
               Forgot your password ?<br />

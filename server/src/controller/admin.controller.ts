@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/token.js';
 import { config } from '../config/index.js';
 import cloudinary from '../config/cloudinary.js';
+import { deleteUserCache } from '../config/cache.js';
 
 export const loginAdmin = async (req: Request, res: Response) => {
   try {
@@ -85,11 +86,11 @@ export const getAdmins = async (req: Request, res: Response) => {
       },
       ...(search
         ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
-            ],
-          }
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        }
         : {}),
     };
 
@@ -278,6 +279,8 @@ export const updateAdmin = async (req: Request, res: Response) => {
       },
     });
 
+    await deleteUserCache(updatedAdmin.email);
+
     return res
       .status(200)
       .json({ message: 'Admin updated successfully', user: updatedAdmin });
@@ -340,11 +343,11 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
       isVerified: true,
       ...(search
         ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
-            ],
-          }
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        }
         : {}),
     };
 
@@ -512,6 +515,8 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
       },
     });
 
+    await deleteUserCache(updatedUser.email);
+
     return res
       .status(200)
       .json({ message: 'User updated successfully', user: updatedUser });
@@ -562,11 +567,11 @@ export const getPendingRequests = async (req: Request, res: Response) => {
       role: { in: roleCondition },
       ...(search
         ? {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { email: { contains: search, mode: 'insensitive' } },
-            ],
-          }
+          OR: [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        }
         : {}),
     };
 
@@ -736,6 +741,8 @@ export const updateAdminProfile = async (req: Request, res: Response) => {
       },
     });
 
+    await deleteUserCache(updatedUser.email);
+
     return res
       .status(200)
       .json({ message: 'Profile updated successfully', user: updatedUser });
@@ -780,6 +787,8 @@ export const changeAdminPassword = async (req: Request, res: Response) => {
       where: { id },
       data: { password: hashedPassword },
     });
+
+    await deleteUserCache(user.email);
 
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (err) {

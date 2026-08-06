@@ -13,6 +13,7 @@ import {
   Mail,
   Clock,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios, { isAxiosError } from 'axios';
@@ -403,9 +404,16 @@ export default function ManageAdmins() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-sm shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full h-10 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-sm shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Creating...' : 'Create Administrator'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  'Create Administrator'
+                )}
               </button>
             </div>
           </form>
@@ -1148,9 +1156,16 @@ export default function ManageAdmins() {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="px-4 h-9 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
+                  className="px-4 h-9 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </form>

@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Clock,
   Loader2,
+  BookOpen,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import axios from 'axios';
@@ -81,6 +82,7 @@ export default function AdminLayout() {
     { name: 'Events', path: '/events', icon: CalendarDays },
     { name: 'Gallery', path: '/gallery', icon: ImageIcon },
     { name: 'Help Tickets', path: '/help-tickets', icon: HelpCircle },
+    { name: 'Guide', path: '/guide', icon: BookOpen },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface HelpTicket {
   id: number;
@@ -139,13 +140,20 @@ export default function HelpTickets() {
           {/* List items */}
           <div className="flex-1 overflow-y-auto divide-y divide-gray-100 min-h-0">
             {isLoading ? (
-              <div className="py-20 text-center text-gray-400 font-medium">
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="w-6 h-6 border-2 border-slate-200 border-t-slate-700 rounded-full animate-spin"></div>
-                  <span className="text-xs font-semibold text-slate-700">
-                    Loading messages...
-                  </span>
-                </div>
+              <div className="space-y-3 p-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={`skeleton-${i}`} className="p-4 space-y-3 bg-white border border-gray-100 rounded-sm">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-3 w-3/4" />
+                    <div className="flex gap-4 pt-1">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : tickets.length > 0 ? (
               tickets.map((ticket) => {
@@ -220,7 +228,7 @@ export default function HelpTickets() {
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                   onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                   className="px-3 py-1.5 rounded border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer font-medium"
                 >
@@ -232,8 +240,9 @@ export default function HelpTickets() {
                     <button
                       key={num}
                       type="button"
+                      disabled={isLoading}
                       onClick={() => setCurrentPage(num)}
-                      className={`px-3 py-1.5 rounded border text-xs font-semibold transition-colors cursor-pointer ${
+                      className={`px-3 py-1.5 rounded border text-xs font-semibold transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none ${
                         currentPage === num
                           ? 'border-slate-800 bg-slate-800 text-white'
                           : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
@@ -246,7 +255,7 @@ export default function HelpTickets() {
 
                 <button
                   type="button"
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }

@@ -15,6 +15,7 @@ import {
   FileText,
   ExternalLink,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios, { isAxiosError } from 'axios';
@@ -64,6 +65,7 @@ export default function ManageAlumniStudents() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>(
     'ALL'
@@ -118,6 +120,7 @@ export default function ManageAlumniStudents() {
   });
 
   const fetchUsers = async () => {
+    setIsFetching(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
@@ -129,6 +132,8 @@ export default function ManageAlumniStudents() {
       setTotalPages(response.data.totalPages);
     } catch (err) {
       console.error('Failed to fetch users', err);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -152,6 +157,7 @@ export default function ManageAlumniStudents() {
 
   useEffect(() => {
     let ignore = false;
+    setIsFetching(true);
     const timer = setTimeout(() => {
       const apiUrl = import.meta.env.VITE_API_URL;
       axios
@@ -164,9 +170,13 @@ export default function ManageAlumniStudents() {
             setUsers(res.data.data);
             setTotal(res.data.total);
             setTotalPages(res.data.totalPages);
+            setIsFetching(false);
           }
         })
-        .catch((err) => console.error('Failed to fetch users', err));
+        .catch((err) => {
+          console.error('Failed to fetch users', err);
+          if (!ignore) setIsFetching(false);
+        });
     }, 300);
     return () => {
       ignore = true;
@@ -592,7 +602,41 @@ export default function ManageAlumniStudents() {
                 </tr>
               </thead>
               <tbody className="text-sm text-gray-600">
-                {users.length === 0 ? (
+                {isFetching ? (
+                  Array.from({ length: Math.min(itemsPerPage, 4) }).map((_, i) => (
+                    <tr key={`skeleton-${i}`} className="border-b border-gray-100 animate-pulse">
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-3 shrink-0"></div>
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            <div className="h-2 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6">
+                        <div className="h-3 bg-gray-200 rounded w-32"></div>
+                      </td>
+                      <td className="py-3.5 px-6 text-center">
+                        <div className="flex justify-center">
+                          <div className="h-6 bg-gray-200 rounded w-24"></div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6 text-center">
+                        <div className="flex justify-center">
+                          <div className="h-5 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : users.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
@@ -1541,9 +1585,16 @@ export default function ManageAlumniStudents() {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="px-4 h-9 bg-slate-700 hover:bg-slate-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
+                  className="px-4 h-9 bg-slate-700 hover:bg-slate-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </form>

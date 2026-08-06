@@ -460,7 +460,7 @@ export const CreateEventForm: React.FC<CreateEventFormProps> = ({
             <button
               type="submit"
               disabled={isCreating}
-              className="w-full h-11 bg-[#334155] hover:bg-[#1e293b] disabled:bg-gray-400 text-white text-xs font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full h-11 bg-[#334155] hover:bg-[#1e293b] disabled:bg-slate-400 disabled:opacity-70 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               {isCreating ? (
                 <>

@@ -9,7 +9,6 @@ import {
   Building2,
   Calendar,
   ExternalLink,
-  Loader2,
   Download,
   AlertCircle,
   FileText,
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface RegistrationItem {
   id: number;
@@ -343,19 +343,31 @@ export default function EventRegistrations() {
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-600">
               {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="py-16 text-center text-gray-400 font-medium"
-                  >
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Loader2 className="w-6 h-6 animate-spin text-slate-700" />
-                      <span className="text-xs font-semibold text-slate-700">
-                        Loading registration records...
-                      </span>
-                    </div>
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="border-b border-gray-100">
+                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-4 w-6 mx-auto" /></td>
+                    <td className="py-3.5 px-6">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-6">
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-32" /></td>
+                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-4 w-12 mx-auto" /></td>
+                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
+                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-24" /></td>
+                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-6 w-16 mx-auto" /></td>
+                  </tr>
+                ))
               ) : verifiedRegistrations.length === 0 ? (
                 <tr>
                   <td
@@ -522,7 +534,7 @@ export default function EventRegistrations() {
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                disabled={currentPage === 1}
+                disabled={currentPage === 1 || isLoading}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 className="px-3 py-1.5 rounded-sm border border-gray-200 bg-white text-xs font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
               >
@@ -533,8 +545,9 @@ export default function EventRegistrations() {
                   <button
                     key={num}
                     type="button"
+                    disabled={isLoading}
                     onClick={() => setCurrentPage(num)}
-                    className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-sm border text-xs font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none ${
                       currentPage === num
                         ? 'border-slate-800 bg-slate-800 text-white'
                         : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
@@ -546,7 +559,7 @@ export default function EventRegistrations() {
               )}
               <button
                 type="button"
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || isLoading}
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }

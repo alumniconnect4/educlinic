@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Search, Loader2, Calendar } from 'lucide-react';
+import { CalendarDays, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -12,6 +12,7 @@ import {
 import { EventCard } from '@/components/events/EventCard';
 import { ViewEventModal } from '@/components/events/ViewEventModal';
 import { EditEventModal } from '@/components/events/EditEventModal';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function Events() {
   const navigate = useNavigate();
@@ -289,9 +290,36 @@ export default function Events() {
           {/* Cards List Body */}
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
             {isLoading ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400">
-                <Loader2 className="w-7 h-7 animate-spin text-slate-800" />
-                <span className="text-xs font-medium">Loading events...</span>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={`skeleton-event-${i}`}
+                    className="flex flex-col sm:flex-row bg-white border border-gray-200 rounded-sm overflow-hidden shadow-2xs"
+                  >
+                    <Skeleton className="sm:w-56 md:w-64 h-48 sm:h-auto flex-shrink-0" />
+                    <div className="flex-1 p-5 md:p-6 flex flex-col justify-between space-y-4">
+                      <div>
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <Skeleton className="h-6 w-2/3" />
+                          <div className="flex gap-2">
+                            <Skeleton className="w-6 h-6 rounded" />
+                            <Skeleton className="w-6 h-6 rounded" />
+                            <Skeleton className="w-6 h-6 rounded" />
+                          </div>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          <Skeleton className="h-4 w-1/2" />
+                          <Skeleton className="h-4 w-1/3" />
+                          <Skeleton className="h-4 w-1/4" />
+                        </div>
+                      </div>
+                      <div className="pt-2 flex gap-2">
+                        <Skeleton className="w-24 h-8 rounded-sm" />
+                        <Skeleton className="w-36 h-8 rounded-sm" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredEvents.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400 border border-dashed border-gray-200 rounded-sm">
@@ -341,7 +369,7 @@ export default function Events() {
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
@@ -354,8 +382,9 @@ export default function Events() {
                     <button
                       key={num}
                       type="button"
+                      disabled={isLoading}
                       onClick={() => setCurrentPage(num)}
-                      className={`px-3 py-1.5 rounded border text-xs font-bold transition-colors ${
+                      className={`px-3 py-1.5 rounded border text-xs font-bold transition-colors disabled:opacity-40 disabled:pointer-events-none ${
                         currentPage === num
                           ? 'border-slate-800 bg-slate-800 text-white'
                           : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
@@ -367,7 +396,7 @@ export default function Events() {
                 )}
                 <button
                   type="button"
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
