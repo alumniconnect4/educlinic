@@ -3,7 +3,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useStore } from '../store/mockData';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { CoverImageUpload } from '../components/create-post/CoverImageUpload';
 import { PostEditor } from '../components/create-post/PostEditor';
 
@@ -15,6 +15,7 @@ export const CreatePostPage: React.FC = () => {
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const predefinedTags = [
     'campus',
@@ -59,8 +60,13 @@ export const CreatePostPage: React.FC = () => {
 
   const handlePublish = () => {
     if (title.trim() && content.trim()) {
-      addPost(title, content, coverImage, selectedTags);
-      navigate('/');
+      setIsPublishing(true);
+      // Simulate network request
+      setTimeout(() => {
+        addPost(title, content, coverImage, selectedTags);
+        setIsPublishing(false);
+        navigate('/');
+      }, 600);
     }
   };
 
@@ -125,10 +131,17 @@ export const CreatePostPage: React.FC = () => {
           <div className="flex gap-3">
             <Button
               onClick={handlePublish}
-              disabled={!title.trim() || !content.trim()}
+              disabled={!title.trim() || !content.trim() || isPublishing}
               className="bg-[#3b49df] hover:bg-[#2f3ab2] text-white font-medium px-6 rounded-md shadow-xs"
             >
-              Publish
+              {isPublishing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                'Publish'
+              )}
             </Button>
           </div>
           <Button

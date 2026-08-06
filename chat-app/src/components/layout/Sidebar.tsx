@@ -133,7 +133,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <nav className="flex flex-col space-y-0.5">
           {mainNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            let isActive = location.pathname === item.path;
+            
+            // If it's the profile tab, it should only be active if we are viewing our OWN profile
+            if (item.path === '/profile' && isActive) {
+              const searchParams = new URLSearchParams(location.search);
+              const profileId = searchParams.get('id');
+              if (profileId && profileId !== String(currentUser?.id)) {
+                isActive = false;
+              }
+            }
+
             return (
               <Button
                 key={item.name}

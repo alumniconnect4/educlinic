@@ -338,9 +338,6 @@ export default function EventDetailPage() {
                   <span className="text-[13px] font-semibold text-emerald-600">
                     Upcoming Event
                   </span>
-                  <span className="flex items-center gap-1.5 text-[13px] text-gray-500 font-medium">
-                    <Eye size={15} /> 13
-                  </span>
                 </div>
                 <button className="flex items-center gap-1 text-[13px] text-gray-600 font-medium hover:text-gray-900 transition-colors cursor-pointer">
                   Share <Share2 size={15} />
@@ -534,9 +531,8 @@ export default function EventDetailPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`px-8 py-2.5 text-[15px] text-white bg-[#85161a] hover:bg-[#6c1215] transition-colors tracking-wider flex items-center justify-center gap-2 ${
-                    isSubmitting ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
-                  }`}
+                  className={`px-8 py-2.5 text-[15px] text-white bg-[#85161a] hover:bg-[#6c1215] transition-colors tracking-wider flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
+                    }`}
                 >
                   {isSubmitting ? (
                     <>

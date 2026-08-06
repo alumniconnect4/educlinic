@@ -33,6 +33,7 @@ interface ChatAreaProps {
   isLoading?: boolean;
   className?: string;
   onBack?: () => void;
+  hasChats?: boolean;
 }
 
 export const formatDividerDate = (dateStr: string) => {
@@ -68,6 +69,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   isLoading,
   className,
   onBack,
+  hasChats,
 }) => {
   const {
     fetchMessagesWithUser,
@@ -504,8 +506,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-6">
           <MessageSquare className="h-12 w-12 mb-4 text-muted-foreground/30" />
-          <p className="text-base font-medium">
-            Select a chat to start messaging
+          <p className="text-base font-medium text-center">
+            {hasChats
+              ? 'Select a chat to start messaging'
+              : 'You have no messages yet. Start a conversation!'}
           </p>
         </div>
       )}

@@ -3,6 +3,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from 'react';
 import type { User, Post, Chat, Message, Comment } from '../types';
@@ -389,6 +390,34 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
   const sendMessage = async (receiverId: number, content: string) => {
     if (!content.trim()) return;
 
+    const tempMsgId = Date.now();
+    const optimisticMsg: Message = {
+      id: tempMsgId,
+      senderId: currentUser?.id || 0,
+      receiverId,
+      content: content.trim(),
+      createdAt: new Date().toISOString(),
+      isRead: false,
+      isEdited: false,
+    };
+
+    setChats((prev) => {
+      const existingIndex = prev.findIndex((c) => c.id === receiverId);
+      if (existingIndex !== -1) {
+        const updated = [...prev];
+        const [chat] = updated.splice(existingIndex, 1);
+        return [
+          {
+            ...chat,
+            messages: [optimisticMsg, ...chat.messages],
+            lastMessage: optimisticMsg,
+          },
+          ...updated,
+        ];
+      }
+      return prev;
+    });
+
     const socket = getSocket();
     if (socket.connected) {
       socket.emit('send_message', { receiverId, content: content.trim() });
@@ -409,11 +438,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
               if (existingIndex !== -1) {
                 const updated = [...prev];
                 const [chat] = updated.splice(existingIndex, 1);
-                const exists = chat.messages.some((m) => m.id === msg.id);
+                const filteredMessages = chat.messages.filter((m) => m.id !== tempMsgId);
+                const exists = filteredMessages.some((m) => m.id === msg.id);
                 return [
                   {
                     ...chat,
-                    messages: exists ? chat.messages : [msg, ...chat.messages],
+                    messages: exists ? filteredMessages : [msg, ...filteredMessages],
                     lastMessage: msg,
                   },
                   ...updated,
@@ -643,7 +673,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const fetchFollowCounts = async (userId: number) => {
+  const fetchFollowCounts = useCallback(async (userId: number) => {
     const res = await fetch(`${API_BASE}/follow/${userId}/counts`, {
       credentials: 'include',
     });
@@ -664,7 +694,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       blockedByMe: boolean;
       hasBlockedMe: boolean;
     }>;
-  };
+  }, []);
 
   const blockUser = async (userId: number) => {
     try {
