@@ -151,7 +151,7 @@ export default function PendingRequestsPage() {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-112px)] flex flex-col gap-4 overflow-hidden">
+    <div className="w-full lg:h-[calc(100vh-112px)] flex flex-col gap-4 overflow-y-auto lg:overflow-hidden">
       {/* Top Banner Bar */}
       <div className="bg-white border border-gray-200 shadow-2xs rounded-sm p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-3">

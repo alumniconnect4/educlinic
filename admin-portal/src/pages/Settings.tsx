@@ -483,7 +483,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
+    <div className="w-full flex flex-col">
       {/* Breadcrumb Header */}
       <div className="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 shadow-sm flex-shrink-0">
         <div className="flex items-center text-sm text-gray-500">

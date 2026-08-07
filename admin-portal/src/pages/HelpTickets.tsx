@@ -87,7 +87,7 @@ export default function HelpTickets() {
   const endItem = Math.min(currentPage * itemsPerPage, total);
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] lg:h-[calc(100vh-64px)] p-6 lg:p-8 flex flex-col bg-[#f8fafc] text-slate-800 font-sans lg:overflow-hidden">
+    <div className="w-full flex flex-col font-sans">
       {/* Header block */}
       <div className="bg-white border border-gray-200 shadow-xs rounded-sm p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shrink-0">
         <div>

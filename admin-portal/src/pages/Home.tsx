@@ -88,8 +88,8 @@ export default function Home() {
   const ROLE_COLORS = ['#84749f', '#6ea2e6', '#f59e0b', '#10b981'];
 
   return (
-    <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
-      <div className="p-4 sm:p-6 flex-1 bg-transparent">
+    <div className="w-full flex flex-col">
+      <div className="flex-1 bg-transparent">
         <PlatformAnalytics stats={stats} user={user} isLoading={isLoading} />
 
         {/* ── Verified Users Analytics ── */}

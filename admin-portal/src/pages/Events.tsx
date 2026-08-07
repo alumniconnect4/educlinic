@@ -202,14 +202,14 @@ export default function Events() {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-64px)] min-h-[640px] p-6 lg:p-8 flex flex-col">
+    <div className="w-full lg:h-[calc(100vh-112px)] lg:min-h-[580px] flex flex-col">
       {/* Main Grid: Create Form + Events Directory List */}
       <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[360px_1fr] xl:grid-cols-[380px_1fr] gap-6 lg:gap-8 relative">
         {/* Left Modular Component: Create Event Form */}
         <CreateEventForm onSubmit={handleCreateEvent} isCreating={isCreating} />
 
         {/* Right Panel: Events Directory */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col lg:h-full overflow-hidden">
           {/* Header Bar inside Right Panel */}
           <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-3">

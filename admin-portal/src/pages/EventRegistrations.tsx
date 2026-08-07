@@ -200,7 +200,7 @@ export default function EventRegistrations() {
     total >= eventInfo.registrationLimit;
 
   return (
-    <div className="w-full min-h-[calc(100vh-64px)] p-6 lg:p-8 flex flex-col bg-[#f8fafc] text-slate-800 font-sans">
+    <div className="w-full flex flex-col text-slate-800 font-sans">
       {/* Admin Portal Style Header */}
       <div className="bg-white border border-gray-200 shadow-sm rounded-sm p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>

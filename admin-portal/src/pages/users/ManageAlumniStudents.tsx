@@ -377,9 +377,9 @@ export default function ManageAlumniStudents() {
       </div>
 
       {/* Main Grid: Create Form + Directory Table */}
-      <div className="w-full h-[calc(100vh-180px)] min-h-[560px] grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 relative">
+      <div className="w-full xl:h-[calc(100vh-180px)] min-h-0 xl:min-h-[560px] grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 relative">
         {/* Create User Form */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col xl:h-full overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 shrink-0">
             <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-slate-800" />
