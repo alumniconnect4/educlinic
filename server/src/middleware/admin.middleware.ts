@@ -23,7 +23,12 @@ export const adminMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token = req.cookies?.token;
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice(7)
+      : undefined;
+
+    const token = req.cookies?.token || bearerToken;
     if (token) {
       try {
         const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as {
@@ -43,7 +48,7 @@ export const adminMiddleware = async (
       }
     }
 
-    const sessionId = req.cookies?.sessionId;
+    const sessionId = req.cookies?.sessionId || bearerToken;
     if (sessionId) {
       const session = await getSession(sessionId);
       if (
