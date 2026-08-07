@@ -14,15 +14,35 @@ import galleryRoutes from './routes/gallery.routes.js';
 
 const app: express.Application = express();
 
-const appMiddleware: express.RequestHandler[] = [
+app.set("trust proxy", 1);
+
+const allowedOrigins = [
+  "https://educlinic-henna.vercel.app",
+  "https://educlinic-admin-portal.vercel.app",
+  "https://educlinic-chat-app.vercel.app",
+  "https://alumni-connect.ikeshav.in",
+  "https://alumni-chat.ikeshav.in"
+];
+
+app.use(
   cors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:5174',
-    ],
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
-  }),
+  })
+);
+
+const appMiddleware: express.RequestHandler[] = [
   express.json({ limit: '100mb' }),
   express.urlencoded({ limit: '100mb', extended: true }),
   cookieParser(),

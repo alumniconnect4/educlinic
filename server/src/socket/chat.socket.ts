@@ -4,6 +4,7 @@ import { getSession } from '../config/cache.js';
 import { prisma } from '../config/db.js';
 import { logger } from '../config/logger.js';
 
+
 export interface SocketUser {
   id: number;
   name: string;
@@ -70,9 +71,9 @@ export const setupChatSocket = (io: SocketIOServer) => {
 
     socket.on(
       'send_message',
-      async (data: { receiverId: number; content: string }) => {
+      async (data: { receiverId: number; content: string; tempId?: number }) => {
         try {
-          const { receiverId, content } = data;
+          const { receiverId, content, tempId } = data;
           if (!receiverId || !content?.trim()) return;
 
           const receiverExists = await prisma.user.findUnique({
@@ -121,6 +122,7 @@ export const setupChatSocket = (io: SocketIOServer) => {
             createdAt: message.createdAt.toISOString(),
             sender: message.sender,
             receiver: message.receiver,
+            tempId,
           };
 
           io.to(`user:${receiverId}`).emit('receive_message', formattedMessage);

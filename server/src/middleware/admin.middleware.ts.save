@@ -49,7 +49,7 @@ export const adminMiddleware = async (
       }
     }
 
-    const sessionId = req.cookies?.sessionId || bearerToken;
+    const sessionId = req.cookies?.sessionId;
     if (sessionId) {
       const session = await getSession(sessionId);
       if (

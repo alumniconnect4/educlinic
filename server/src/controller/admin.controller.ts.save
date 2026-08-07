@@ -44,13 +44,11 @@ export const loginAdmin = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       message: 'Login successful',
-      token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
-        avatarUrl: user.avatarUrl,
       },
     });
   } catch (err) {
@@ -281,8 +279,6 @@ export const updateAdmin = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    
-    await deleteUserCache(updatedAdmin.email);
 
     return res
       .status(200)
@@ -517,7 +513,6 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    await deleteUserCache(updatedUser.email);
 
     return res
       .status(200)
@@ -742,7 +737,6 @@ export const updateAdminProfile = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    await deleteUserCache(updatedUser.email);
 
     return res
       .status(200)
@@ -788,7 +782,6 @@ export const changeAdminPassword = async (req: Request, res: Response) => {
       where: { id },
       data: { password: hashedPassword },
     });
-    await deleteUserCache(user.email);
 
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (err) {

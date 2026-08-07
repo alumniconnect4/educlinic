@@ -1,0 +1,12 @@
+import Cookies from "cookies";
+
+const cookies = new Cookies(req, res);
+
+cookies.set("session", sessionId, {
+    domain: "",
+    path: "/",
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+});
