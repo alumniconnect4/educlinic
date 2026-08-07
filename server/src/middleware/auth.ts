@@ -45,11 +45,12 @@ export const authMiddleware =
     try {
       const cookieSessionId = req.cookies?.sessionId;
       const authHeader = req.headers.authorization;
-      const bearerSessionId = authHeader?.startsWith('Bearer ')
+      const bearerToken = authHeader?.startsWith('Bearer ')
         ? authHeader.slice(7)
         : undefined;
-      const sessionId = cookieSessionId ?? bearerSessionId;
-      const token = req.cookies?.token;
+
+      const sessionId = cookieSessionId || bearerToken;
+      const token = req.cookies?.token || bearerToken;
 
       let userId: number | undefined;
 

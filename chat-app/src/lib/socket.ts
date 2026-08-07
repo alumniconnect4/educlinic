@@ -22,9 +22,13 @@ let socket: Socket | null = null;
 
 export const getSocket = (): Socket => {
   if (!socket) {
+    const session = typeof window !== 'undefined' ? localStorage.getItem('chatSessionId') : null;
     socket = io(SOCKET_URL, {
       withCredentials: true,
       autoConnect: false,
+      auth: {
+        sessionId: session || undefined,
+      },
     });
   }
   return socket;

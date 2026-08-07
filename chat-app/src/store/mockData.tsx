@@ -68,6 +68,11 @@ export const StoreContext = createContext<StoreState | undefined>(undefined);
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
+const getAuthHeaders = (): Record<string, string> => {
+  const session = localStorage.getItem('chatSessionId');
+  return session ? { Authorization: `Bearer ${session}` } : {};
+};
+
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -85,18 +90,43 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const initStore = async () => {
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionFromUrl = urlParams.get('session');
+        if (sessionFromUrl) {
+          localStorage.setItem('chatSessionId', sessionFromUrl);
+          urlParams.delete('session');
+          const newSearch = urlParams.toString();
+          const newUrl =
+            window.location.pathname +
+            (newSearch ? `?${newSearch}` : '') +
+            window.location.hash;
+          window.history.replaceState(null, '', newUrl);
+        }
+
+        const storedSession = localStorage.getItem('chatSessionId');
+        const headers: Record<string, string> = storedSession
+          ? { Authorization: `Bearer ${storedSession}` }
+          : {};
+
         const userRes = await fetch(`${API_BASE}/auth/me`, {
           credentials: 'include',
+          headers,
         });
         if (!userRes.ok) {
-          window.location.href = import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
+          localStorage.removeItem('chatSessionId');
+          window.location.href =
+            import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
           return;
         }
         const userData = await userRes.json();
+        if (userData.sessionId) {
+          localStorage.setItem('chatSessionId', userData.sessionId);
+        }
         setCurrentUser(userData.user);
 
         const postsRes = await fetch(`${API_BASE}/posts`, {
           credentials: 'include',
+          headers: getAuthHeaders(),
         });
         if (postsRes.ok) {
           const postsData = await postsRes.json();
@@ -104,7 +134,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         }
       } catch (err) {
         console.error('Failed to init store', err);
-        window.location.href = import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
+        window.location.href =
+          import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
       } finally {
         setIsLoading(false);
       }
@@ -116,6 +147,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const res = await fetch(`${API_BASE}/chat/conversations`, {
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const data = await res.json();
@@ -350,7 +382,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       const url = new URL(`${API_BASE}/chat/messages/${partnerId}`);
       if (cursor) url.searchParams.append('cursor', cursor.toString());
 
-      const res = await fetch(url.toString(), { credentials: 'include' });
+      const res = await fetch(url.toString(), {
+        credentials: 'include',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         const fetchedMsgs: Message[] = data.messages || [];
@@ -385,6 +420,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       await fetch(`${API_BASE}/chat/read/${partnerId}`, {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       setChats((prev) =>
         prev.map((chat) => {
@@ -437,7 +473,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       try {
         const res = await fetch(`${API_BASE}/chat/send`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({ receiverId, content: content.trim() }),
           credentials: 'include',
         });
@@ -489,7 +528,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const res = await fetch(`${API_BASE}/chat/messages/${messageId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ content: content.trim() }),
         credentials: 'include',
       });
@@ -520,6 +562,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       const res = await fetch(`${API_BASE}/chat/messages/${messageId}`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         setChats((prevChats) =>
@@ -555,13 +598,17 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const res = await fetch(`${API_BASE}/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ title, content, imageUrl: coverImage, tags }),
         credentials: 'include',
       });
       if (res.ok) {
         const postsRes = await fetch(`${API_BASE}/posts`, {
           credentials: 'include',
+          headers: getAuthHeaders(),
         });
         if (postsRes.ok) {
           const postsData = await postsRes.json();
@@ -597,11 +644,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       const res = await fetch(`${API_BASE}/posts/${postId}/like`, {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) {
         const postsRes = await fetch(`${API_BASE}/posts`, {
           credentials: 'include',
+          headers: getAuthHeaders(),
         });
         if (postsRes.ok) {
           const postsData = await postsRes.json();
@@ -621,7 +670,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     try {
       const res = await fetch(`${API_BASE}/posts/${postId}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ content, parentId }),
         credentials: 'include',
       });
@@ -638,6 +690,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       const res = await fetch(`${API_BASE}/posts/comments/${commentId}`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       return res.ok;
     } catch (err) {
@@ -651,6 +704,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       const res = await fetch(`${API_BASE}/posts/${postId}`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         setPosts((prev) => prev.filter((p) => p.id !== postId));
@@ -668,14 +722,20 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       if (currentlyFollowing) {
         await fetch(`${API_BASE}/follow`, {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({ toUnfollowUserId: userId }),
           credentials: 'include',
         });
       } else {
         await fetch(`${API_BASE}/follow`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
           body: JSON.stringify({ toFollowUserId: userId }),
           credentials: 'include',
         });
@@ -688,6 +748,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
   const fetchFollowCounts = useCallback(async (userId: number) => {
     const res = await fetch(`${API_BASE}/follow/${userId}/counts`, {
       credentials: 'include',
+      headers: getAuthHeaders(),
     });
     if (!res.ok)
       return {
@@ -713,6 +774,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       await fetch(`${API_BASE}/users/${userId}/block`, {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
     } catch (err) {
       console.error('blockUser error', err);
@@ -724,6 +786,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       await fetch(`${API_BASE}/users/${userId}/unblock`, {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
     } catch (err) {
       console.error('unblockUser error', err);
@@ -735,6 +798,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       await fetch(`${API_BASE}/chat/clear/${partnerId}`, {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       setChats((prev) =>
         prev.map((c) => (c.id === partnerId ? { ...c, messages: [] } : c))
@@ -755,6 +819,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          ...getAuthHeaders(),
         },
         body: JSON.stringify({ name, bio, gender, socialLink }),
         credentials: 'include',

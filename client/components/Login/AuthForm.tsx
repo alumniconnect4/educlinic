@@ -116,7 +116,7 @@ const AuthForm = () => {
         );
 
         e.target.reset();
-        useUserStore.getState().setUser(res.data.user);
+        useUserStore.getState().setUser(res.data.user, res.data.sessionId);
         toast.success('Logged in successfully!');
         router.push('/');
       }

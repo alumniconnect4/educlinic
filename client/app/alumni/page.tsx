@@ -11,7 +11,25 @@ const AlumniPage = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
+      const baseUrl = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
+      if (baseUrl !== '/') {
+        const session =
+          useUserStore.getState().sessionId ||
+          (typeof window !== 'undefined'
+            ? localStorage.getItem('sessionId')
+            : null);
+        try {
+          const url = new URL(baseUrl);
+          if (session) {
+            url.searchParams.set('session', session);
+          }
+          window.location.href = url.toString();
+        } catch (err) {
+          window.location.href = baseUrl;
+        }
+      } else {
+        window.location.href = '/';
+      }
     } else {
       toast.error('Login first to connect with Alumni', {
         toastId: 'alumni-login-error',
