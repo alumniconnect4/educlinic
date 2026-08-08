@@ -72,6 +72,10 @@ app.get('/', (req: Request, res: Response) => {
   res.send('API is running...');
 });
 
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/posts', postRoutes);
