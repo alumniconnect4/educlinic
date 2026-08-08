@@ -43,8 +43,13 @@ const io = new SocketIOServer(httpServer, {
 setupChatSocket(io);
 app.set('io', io);
 
+import { startKafkaConsumer } from './src/services/kafka.service.js';
+import { initChatWorker } from './src/services/queue.service.js';
+
 const startAllServices: () => Promise<void> = async () => {
   await Promise.all([connectRedis()]);
+  initChatWorker();
+  await startKafkaConsumer(io);
 };
 
 startAllServices().then(() => {
