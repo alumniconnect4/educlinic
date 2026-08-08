@@ -1,4 +1,4 @@
-import { Kafka, Producer, Consumer } from 'kafkajs';
+import { Kafka, type Producer, type Consumer } from 'kafkajs';
 import { config } from '../config/index.js';
 import { logger } from '../config/logger.js';
 import { Server as SocketIOServer } from 'socket.io';
