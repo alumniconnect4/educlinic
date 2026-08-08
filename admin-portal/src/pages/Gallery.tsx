@@ -38,8 +38,9 @@ export default function Gallery() {
       if (searchQuery.trim()) params.append("search", searchQuery.trim())
 
       const queryString = params.toString() ? `?${params.toString()}` : ""
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/gallery/all/${itemsPerPage}/${offset}${queryString}`,
+        `${apiUrl}/gallery/all/${itemsPerPage}/${offset}${queryString}`,
         { withCredentials: true }
       )
       setAlbums(response.data.albums || [])
@@ -65,11 +66,12 @@ export default function Gallery() {
   const handleCreateAlbum = async (formData: CreateAlbumFormData) => {
     setIsCreating(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        "http://localhost:4000/api/gallery/create",
+        `${apiUrl}/gallery/create`,
         {
           name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
+          description: formData.description?.trim() || undefined,
           category: formData.category.trim(),
           coverImageUrl: formData.coverImageUrl || undefined
         },
@@ -91,11 +93,12 @@ export default function Gallery() {
   const handleUpdateAlbum = async (albumId: number, updatedData: any) => {
     setIsUpdating(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.patch(
-        `http://localhost:4000/api/gallery/update/${albumId}`,
+        `${apiUrl}/gallery/update/${albumId}`,
         {
           name: updatedData.name.trim(),
-          description: updatedData.description.trim() || undefined,
+          description: updatedData.description?.trim() || undefined,
           category: updatedData.category.trim(),
           coverImageUrl: updatedData.coverImageUrl || undefined
         },
@@ -123,8 +126,9 @@ export default function Gallery() {
     try {
       const totalCount = images.length
       for (let i = 0; i < totalCount; i++) {
+        const apiUrl = import.meta.env.VITE_API_URL;
         await axios.post(
-          `http://localhost:4000/api/gallery/${albumId}/image`,
+          `${apiUrl}/gallery/${albumId}/image`,
           { image: images[i] },
           { withCredentials: true }
         )
@@ -150,8 +154,9 @@ export default function Gallery() {
   // Delete album handler
   const executeDeleteAlbum = async (albumId: number) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/gallery/delete/${albumId}`,
+        `${apiUrl}/gallery/delete/${albumId}`,
         { withCredentials: true }
       )
       toast.success("Album deleted successfully!")
@@ -215,14 +220,14 @@ export default function Gallery() {
   }
 
   return (
-    <div className="w-full h-[calc(100vh-64px)] min-h-[640px] p-6 lg:p-8 flex flex-col">
+    <div className="w-full lg:h-[calc(100vh-112px)] lg:min-h-[580px] flex flex-col">
       {/* Main Grid: Create Form + Albums Directory List */}
       <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[360px_1fr] xl:grid-cols-[380px_1fr] gap-6 lg:gap-8 relative">
         {/* Left Panel: Create Album Form */}
         <CreateAlbumForm onSubmit={handleCreateAlbum} isCreating={isCreating} />
 
         {/* Right Panel: Photo Albums Directory */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col lg:h-full overflow-hidden">
           {/* Header Bar inside Right Panel */}
           <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-3">

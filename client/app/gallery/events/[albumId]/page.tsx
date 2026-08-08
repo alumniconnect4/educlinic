@@ -11,7 +11,7 @@ export default async function AlbumPage({
   params: Promise<{ albumId: string }>;
 }) {
   const { albumId } = await params;
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   let title = '';
   let category = 'Event Gallery';

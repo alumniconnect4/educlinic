@@ -44,7 +44,8 @@ export const ViewEventModal: React.FC<ViewEventModalProps> = ({
   };
 
   const handleCopyLink = () => {
-    const url = `http://localhost:3000/events/${event.id}`;
+    const clientUrl = import.meta.env.VITE_CLIENT_URL;
+    const url = `${clientUrl}/events/${event.id}`;
     navigator.clipboard.writeText(url);
     toast.success(`Copied Event URL: ${url}`);
   };

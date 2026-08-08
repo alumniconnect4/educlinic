@@ -34,8 +34,9 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
     if (!album) return
     setIsLoading(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/gallery/${album.id}`,
+        `${apiUrl}/gallery/${album.id}`,
         { withCredentials: true }
       )
       setImages(response.data.album.images || [])
@@ -75,8 +76,9 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
     if (selectedIds.length === 0) return
     setIsDeletingBulk(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        "http://localhost:4000/api/gallery/images/bulk",
+        `${apiUrl}/gallery/images/bulk`,
         {
           data: { imageIds: selectedIds },
           withCredentials: true

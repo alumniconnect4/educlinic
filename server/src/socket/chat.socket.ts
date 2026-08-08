@@ -73,7 +73,11 @@ export const setupChatSocket = (io: SocketIOServer) => {
 
     socket.on(
       'send_message',
-      async (data: { receiverId: number; content: string; tempId?: number }) => {
+      async (data: {
+        receiverId: number;
+        content: string;
+        tempId?: number;
+      }) => {
         try {
           const { receiverId, content, tempId } = data;
           if (!receiverId || !content?.trim()) return;
@@ -112,14 +116,14 @@ export const setupChatSocket = (io: SocketIOServer) => {
 
           // Optimistic payload for immediate delivery via Kafka
           const formattedMessage = {
-            id: Date.now(), // Temporary ID until saved
-            senderId: user.id,
-            receiverId,
-            content: content.trim(),
-            isRead: false,
-            createdAt: new Date().toISOString(),
-            sender: { id: user.id, name: user.name },
-            receiver: { id: receiverExists.id, name: receiverExists.name },
+            id: message.id,
+            senderId: message.senderId,
+            receiverId: message.receiverId,
+            content: message.content,
+            isRead: message.isRead,
+            createdAt: message.createdAt.toISOString(),
+            sender: message.sender,
+            receiver: message.receiver,
             tempId,
           };
 

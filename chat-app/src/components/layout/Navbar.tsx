@@ -85,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
         <div className="flex items-center gap-2 sm:gap-4">
           <a
-            href="http://localhost:3000/"
+            href={import.meta.env.VITE_CLIENT_URL || "http://localhost:3000/"}
             className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-primary transition-colors px-3 py-1.5 rounded-full text-sm font-semibold border border-gray-200"
             title="Back to Alumni Portal"
           >

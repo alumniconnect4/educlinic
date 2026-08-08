@@ -44,7 +44,7 @@ export default function DynamicGalleryView({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // API base URL
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const fetchData = async () => {
     setIsLoading(true);

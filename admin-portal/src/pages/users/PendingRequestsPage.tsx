@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   Eye,
   ArrowLeft,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios, { isAxiosError } from 'axios';
@@ -43,11 +44,14 @@ export default function PendingRequestsPage() {
     null
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [processingAction, setProcessingAction] = useState<'APPROVE' | 'DECLINE' | null>(null);
 
   const fetchPendingRequests = async () => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const res = await axios.get(
-        `http://localhost:4000/api/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+        `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
         { withCredentials: true }
       );
       setPendingRequests(res.data.data);
@@ -61,9 +65,10 @@ export default function PendingRequestsPage() {
   useEffect(() => {
     let ignore = false;
     const timer = setTimeout(() => {
+      const apiUrl = import.meta.env.VITE_API_URL;
       axios
         .get(
-          `http://localhost:4000/api/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+          `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
           { withCredentials: true }
         )
         .then((res) => {
@@ -86,9 +91,12 @@ export default function PendingRequestsPage() {
   }, [searchQuery, currentPage, roleFilter]);
 
   const handleApprove = async (id: number, name: string) => {
+    setProcessingId(id);
+    setProcessingAction('APPROVE');
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
-        `http://localhost:4000/api/admin-portal/pending-requests/${id}/approve`,
+        `${apiUrl}/admin-portal/pending-requests/${id}/approve`,
         {},
         { withCredentials: true }
       );
@@ -104,13 +112,19 @@ export default function PendingRequestsPage() {
       } else {
         toast.error('Failed to approve request');
       }
+    } finally {
+      setProcessingId(null);
+      setProcessingAction(null);
     }
   };
 
   const handleDecline = async (id: number, name: string) => {
+    setProcessingId(id);
+    setProcessingAction('DECLINE');
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/admin-portal/pending-requests/${id}/decline`,
+        `${apiUrl}/admin-portal/pending-requests/${id}/decline`,
         { withCredentials: true }
       );
       toast.success(`Request for "${name}" declined.`);
@@ -125,6 +139,9 @@ export default function PendingRequestsPage() {
       } else {
         toast.error('Failed to decline request');
       }
+    } finally {
+      setProcessingId(null);
+      setProcessingAction(null);
     }
   };
 
@@ -134,7 +151,7 @@ export default function PendingRequestsPage() {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-112px)] flex flex-col gap-4 overflow-hidden">
+    <div className="w-full lg:h-[calc(100vh-112px)] flex flex-col gap-4 overflow-y-auto lg:overflow-hidden">
       {/* Top Banner Bar */}
       <div className="bg-white border border-gray-200 shadow-2xs rounded-sm p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-3">
@@ -239,14 +256,39 @@ export default function PendingRequestsPage() {
             </thead>
             <tbody className="text-sm text-gray-600">
               {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="p-10 text-center text-gray-400 font-medium"
-                  >
-                    Loading pending requests...
-                  </td>
-                </tr>
+                Array.from({ length: Math.min(itemsPerPage, 4) }).map((_, i) => (
+                  <tr key={`skeleton-${i}`} className="border-b border-gray-100 animate-pulse">
+                    <td className="py-3.5 px-6">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full mr-3 shrink-0"></div>
+                        <div className="space-y-2">
+                          <div className="h-3 bg-gray-200 rounded w-24"></div>
+                          <div className="h-2 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-6">
+                      <div className="h-3 bg-gray-200 rounded w-32"></div>
+                    </td>
+                    <td className="py-3.5 px-6 text-center">
+                      <div className="flex justify-center">
+                        <div className="h-6 bg-gray-200 rounded w-24"></div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-6 text-center">
+                      <div className="flex justify-center">
+                        <div className="h-5 bg-gray-200 rounded w-16"></div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-6">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                        <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                        <div className="w-20 h-6 bg-gray-200 rounded"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : pendingRequests.length === 0 ? (
                 <tr>
                   <td
@@ -303,11 +345,10 @@ export default function PendingRequestsPage() {
                     <td className="py-3.5 px-6 align-middle text-center">
                       <div className="flex justify-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${
-                            req.role === 'ALUMNI'
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${req.role === 'ALUMNI'
                               ? 'bg-slate-100 text-slate-800 border-slate-300'
                               : 'bg-slate-100 text-slate-700 border-slate-200'
-                          }`}
+                            }`}
                         >
                           {req.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                         </span>
@@ -324,18 +365,26 @@ export default function PendingRequestsPage() {
                           Details
                         </button>
                         <button
+                          disabled={processingId === req.id}
                           onClick={() => handleDecline(req.id, req.name)}
-                          className="px-2.5 py-1 border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-semibold transition-colors"
+                          className="px-2.5 py-1 border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
-                          <X className="w-3.5 h-3.5 text-slate-600 inline mr-1" />
-                          Decline
+                          {processingId === req.id && processingAction === 'DECLINE' ? (
+                            <Loader2 className="w-3.5 h-3.5 text-slate-600 inline mr-1 animate-spin" />
+                          ) : (
+                            <X className="w-3.5 h-3.5 text-slate-600 inline mr-1" />
+                          )}
                         </button>
                         <button
+                          disabled={processingId === req.id}
                           onClick={() => handleApprove(req.id, req.name)}
-                          className="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold transition-colors shadow-2xs"
+                          className="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold transition-colors shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
-                          <Check className="w-3.5 h-3.5 text-white inline mr-1" />
-                          Approve
+                          {processingId === req.id && processingAction === 'APPROVE' ? (
+                            <Loader2 className="w-3.5 h-3.5 text-white inline mr-1 animate-spin" />
+                          ) : (
+                            <Check className="w-3.5 h-3.5 text-white inline mr-1" />
+                          )}
                         </button>
                       </div>
                     </td>
@@ -519,19 +568,27 @@ export default function PendingRequestsPage() {
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
                 <button
+                  disabled={processingId === selectedRequest.id}
                   onClick={() =>
                     handleDecline(selectedRequest.id, selectedRequest.name)
                   }
-                  className="px-3 py-1.5 border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-semibold transition-colors"
+                  className="px-3 py-1.5 border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
+                  {processingId === selectedRequest.id && processingAction === 'DECLINE' ? (
+                    <Loader2 className="w-3.5 h-3.5 inline mr-1 animate-spin" />
+                  ) : null}
                   Decline
                 </button>
                 <button
+                  disabled={processingId === selectedRequest.id}
                   onClick={() =>
                     handleApprove(selectedRequest.id, selectedRequest.name)
                   }
-                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold transition-colors shadow-2xs"
+                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold transition-colors shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
+                  {processingId === selectedRequest.id && processingAction === 'APPROVE' ? (
+                    <Loader2 className="w-3.5 h-3.5 inline mr-1 animate-spin text-white" />
+                  ) : null}
                   Approve
                 </button>
               </div>

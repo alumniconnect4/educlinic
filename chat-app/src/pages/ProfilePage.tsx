@@ -4,6 +4,7 @@ import type { User } from '../types';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfilePostList } from '../components/profile/ProfilePostList';
 import { useSearchParams } from 'react-router-dom';
+import { Skeleton } from '../components/ui/skeleton';
 
 interface ProfilePageProps {
   userId?: number;
@@ -77,10 +78,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   const [totalPosts, setTotalPosts] = useState(0);
 
   const [fetchedUser, setFetchedUser] = useState<User | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
       if (targetId && targetId !== currentUser?.id) {
+        setIsLoadingUser(true);
         try {
           const apiUrl =
             import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -93,6 +96,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           }
         } catch (e) {
           console.error(e);
+        } finally {
+          setIsLoadingUser(false);
         }
       } else {
         setFetchedUser(null);
@@ -116,6 +121,32 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
   useEffect(() => {
     loadCounts();
   }, [loadCounts]);
+
+  if (isLoadingUser) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6 pb-12 p-4">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 bg-card p-6 rounded-xl border shadow-sm">
+          <Skeleton className="w-24 h-24 md:w-32 md:h-32 rounded-full" />
+          <div className="flex-1 space-y-4 text-center md:text-left w-full">
+            <Skeleton className="h-8 w-48 mx-auto md:mx-0" />
+            <Skeleton className="h-4 w-32 mx-auto md:mx-0" />
+            <div className="flex justify-center md:justify-start gap-6 pt-2">
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+            <div className="flex justify-center md:justify-start gap-3 pt-4">
+              <Skeleton className="h-10 w-24 rounded-md" />
+              <Skeleton className="h-10 w-24 rounded-md" />
+            </div>
+          </div>
+        </div>
+        <div className="space-y-4 pt-4">
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+          <Skeleton className="h-[200px] w-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
 
   if (!profileUser) return null;
 

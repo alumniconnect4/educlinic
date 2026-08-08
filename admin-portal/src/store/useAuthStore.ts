@@ -8,7 +8,8 @@ interface AuthState {
     email?: string;
     [key: string]: any;
   } | null;
-  login: (user: any) => void;
+  token: string | null;
+  login: (user: any, token?: string) => void;
   logout: () => void;
   isAuthenticated: () => boolean;
 }
@@ -17,15 +18,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: localStorage.getItem('adminUser')
     ? JSON.parse(localStorage.getItem('adminUser')!)
     : null,
+  token: localStorage.getItem('adminToken') || null,
 
-  login: (user: any) => {
+  login: (user: any, token?: string) => {
     localStorage.setItem('adminUser', JSON.stringify(user));
-    set({ user });
+    if (token) {
+      localStorage.setItem('adminToken', token);
+    }
+    set({ user, token: token || get().token });
   },
 
   logout: () => {
     localStorage.removeItem('adminUser');
-    set({ user: null });
+    localStorage.removeItem('adminToken');
+    set({ user: null, token: null });
   },
 
   isAuthenticated: () => {

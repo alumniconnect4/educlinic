@@ -51,4 +51,23 @@ export const leadershipMessages: LeadershipMessage[] = [
       'Let us leverage this platform to build a vibrant ecosystem of knowledge sharing and mentorship. I am confident that with your continued association, our students will reach unprecedented heights and continue the legacy of excellence that defines our institution.',
     ],
   },
+  {
+    id: 'dean-message',
+    title: 'Message from the Dean',
+    salutation: 'Dear Students & Corporate Partners,',
+    name: 'Major Chavvi Saxena',
+    role: 'Dean - Corporate Relation, Industry Connect and HR',
+    image: '/images/dean.png',
+    imageAlt: 'Dean - Corporate Relation, Industry Connect and HR',
+    highlights: [
+      'Bridging the Academia-Industry Gap',
+      'Fostering Strategic Corporate Partnerships',
+      'Empowering Students for Global Careers',
+    ],
+    content: [
+      'At Baba Farid Group of Institutions, our primary objective is to cultivate a dynamic ecosystem where academic excellence converges with real-world industry requirements. Our Corporate Relations and HR department is dedicated to ensuring our students are not just degree holders, but industry-ready professionals equipped to tackle modern challenges.',
+      'We actively collaborate with leading multinational corporations, industry experts, and HR leaders to align our curriculum and training programs with the latest market trends. Through continuous industry connect initiatives, internships, and skill development workshops, we provide our students with the unparalleled exposure they need to thrive in a competitive global landscape.',
+      'I encourage our students to leverage these opportunities, engage with our corporate partners, and actively participate in placement drives and professional development sessions. To our corporate partners, we extend our deepest gratitude for your continued trust in our talent pool, and we look forward to building even stronger, mutually beneficial relationships.',
+    ],
+  },
 ];

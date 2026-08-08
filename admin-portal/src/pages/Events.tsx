@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Search, Loader2, Calendar } from 'lucide-react';
+import { CalendarDays, Search, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -12,6 +12,7 @@ import {
 import { EventCard } from '@/components/events/EventCard';
 import { ViewEventModal } from '@/components/events/ViewEventModal';
 import { EditEventModal } from '@/components/events/EditEventModal';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function Events() {
   const navigate = useNavigate();
@@ -47,8 +48,9 @@ export default function Events() {
       if (searchQuery.trim()) params.append('search', searchQuery.trim());
 
       const queryString = params.toString() ? `?${params.toString()}` : '';
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/events/all-events/${itemsPerPage}/${offset}${queryString}`,
+        `${apiUrl}/events/all-events/${itemsPerPage}/${offset}${queryString}`,
         { withCredentials: true }
       );
       setEvents(response.data.events || []);
@@ -87,8 +89,9 @@ export default function Events() {
 
     setIsCreating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        'http://localhost:4000/api/events/create',
+        `${apiUrl}/events/create`,
         {
           name: formData.name.trim(),
           description: formData.description.trim() || undefined,
@@ -127,8 +130,9 @@ export default function Events() {
 
     setIsUpdating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.patch(
-        `http://localhost:4000/api/events/update/${eventId}`,
+        `${apiUrl}/events/update/${eventId}`,
         {
           name: updatedData.name.trim(),
           description: updatedData.description.trim() || undefined,
@@ -161,7 +165,8 @@ export default function Events() {
   // Delete Event Handler
   const executeDeleteEvent = async (eventId: number) => {
     try {
-      await axios.delete(`http://localhost:4000/api/events/delete/${eventId}`, {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      await axios.delete(`${apiUrl}/events/delete/${eventId}`, {
         withCredentials: true,
       });
       toast.success('Event deleted successfully!');
@@ -190,20 +195,21 @@ export default function Events() {
 
   // Share / Copy Event URL Handler
   const handleShareEvent = (ev: EventItem) => {
-    const eventUrl = `http://localhost:3000/events/${ev.id}`;
+    const clientUrl = import.meta.env.VITE_CLIENT_URL;
+    const eventUrl = `${clientUrl}/events/${ev.id}`;
     navigator.clipboard.writeText(eventUrl);
     toast.success(`Copied Event URL: ${eventUrl}`);
   };
 
   return (
-    <div className="w-full h-[calc(100vh-64px)] min-h-[640px] p-6 lg:p-8 flex flex-col">
+    <div className="w-full lg:h-[calc(100vh-112px)] lg:min-h-[580px] flex flex-col">
       {/* Main Grid: Create Form + Events Directory List */}
       <div className="w-full flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[360px_1fr] xl:grid-cols-[380px_1fr] gap-6 lg:gap-8 relative">
         {/* Left Modular Component: Create Event Form */}
         <CreateEventForm onSubmit={handleCreateEvent} isCreating={isCreating} />
 
         {/* Right Panel: Events Directory */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col lg:h-full overflow-hidden">
           {/* Header Bar inside Right Panel */}
           <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
             <div className="flex items-center gap-3">
@@ -284,9 +290,36 @@ export default function Events() {
           {/* Cards List Body */}
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
             {isLoading ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400">
-                <Loader2 className="w-7 h-7 animate-spin text-slate-800" />
-                <span className="text-xs font-medium">Loading events...</span>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={`skeleton-event-${i}`}
+                    className="flex flex-col sm:flex-row bg-white border border-gray-200 rounded-sm overflow-hidden shadow-2xs"
+                  >
+                    <Skeleton className="sm:w-56 md:w-64 h-48 sm:h-auto flex-shrink-0" />
+                    <div className="flex-1 p-5 md:p-6 flex flex-col justify-between space-y-4">
+                      <div>
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <Skeleton className="h-6 w-2/3" />
+                          <div className="flex gap-2">
+                            <Skeleton className="w-6 h-6 rounded" />
+                            <Skeleton className="w-6 h-6 rounded" />
+                            <Skeleton className="w-6 h-6 rounded" />
+                          </div>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          <Skeleton className="h-4 w-1/2" />
+                          <Skeleton className="h-4 w-1/3" />
+                          <Skeleton className="h-4 w-1/4" />
+                        </div>
+                      </div>
+                      <div className="pt-2 flex gap-2">
+                        <Skeleton className="w-24 h-8 rounded-sm" />
+                        <Skeleton className="w-36 h-8 rounded-sm" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredEvents.length === 0 ? (
               <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400 border border-dashed border-gray-200 rounded-sm">
@@ -336,7 +369,7 @@ export default function Events() {
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
@@ -349,8 +382,9 @@ export default function Events() {
                     <button
                       key={num}
                       type="button"
+                      disabled={isLoading}
                       onClick={() => setCurrentPage(num)}
-                      className={`px-3 py-1.5 rounded border text-xs font-bold transition-colors ${
+                      className={`px-3 py-1.5 rounded border text-xs font-bold transition-colors disabled:opacity-40 disabled:pointer-events-none ${
                         currentPage === num
                           ? 'border-slate-800 bg-slate-800 text-white'
                           : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
@@ -362,7 +396,7 @@ export default function Events() {
                 )}
                 <button
                   type="button"
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }

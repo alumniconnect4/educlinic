@@ -48,6 +48,7 @@ export const authMiddleware =
         ? authHeader.slice(7)
         : undefined;
       const cookieSessionId = req.cookies?.sessionId;
+
       const sessionId = cookieSessionId || bearerToken;
       const token = req.cookies?.token || bearerToken;
 

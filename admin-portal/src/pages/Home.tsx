@@ -6,8 +6,6 @@ import {
   ShieldCheck,
   MessageCircle,
   FileText,
-  AlertCircle,
-  CheckCircle2,
   TrendingUp,
 } from 'lucide-react';
 import axios from 'axios';
@@ -56,83 +54,24 @@ export default function Home() {
     roleStats: [],
     monthlyTrend: [],
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/overview',
-          {
-            withCredentials: true,
-          }
-        );
-        setStats(response.data);
-      } catch (err) {
-        console.error('Failed to fetch overview stats', err);
-      }
+    const apiUrl = import.meta.env.VITE_API_URL;
+    setIsLoading(true);
+
+    const fetchAllData = async () => {
+      await Promise.allSettled([
+        axios.get(`${apiUrl}/admin-portal/analytics/overview`, { withCredentials: true }).then((res) => setStats(res.data)),
+        axios.get(`${apiUrl}/admin-portal/analytics/recent-events`, { withCredentials: true }).then((res) => setRecentEvents(res.data)),
+        axios.get(`${apiUrl}/admin-portal/analytics/community`, { withCredentials: true }).then((res) => setCommunityStats(res.data)),
+        axios.get(`${apiUrl}/admin-portal/analytics/help-tickets`, { withCredentials: true }).then((res) => setTicketStats(res.data)),
+        axios.get(`${apiUrl}/admin-portal/analytics/user-registrations`, { withCredentials: true }).then((res) => setUserRegStats(res.data)),
+      ]);
+      setIsLoading(false);
     };
 
-    const fetchEvents = async () => {
-      try {
-        const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/recent-events',
-          {
-            withCredentials: true,
-          }
-        );
-        setRecentEvents(response.data);
-      } catch (err) {
-        console.error('Failed to fetch recent events', err);
-      }
-    };
-
-    const fetchCommunity = async () => {
-      try {
-        const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/community',
-          {
-            withCredentials: true,
-          }
-        );
-        setCommunityStats(response.data);
-      } catch (err) {
-        console.error('Failed to fetch community stats', err);
-      }
-    };
-
-    const fetchTickets = async () => {
-      try {
-        const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/help-tickets',
-          {
-            withCredentials: true,
-          }
-        );
-        setTicketStats(response.data);
-      } catch (err) {
-        console.error('Failed to fetch help ticket stats', err);
-      }
-    };
-
-    const fetchUserRegAnalytics = async () => {
-      try {
-        const response = await axios.get(
-          'http://localhost:4000/api/admin-portal/analytics/user-registrations',
-          {
-            withCredentials: true,
-          }
-        );
-        setUserRegStats(response.data);
-      } catch (err) {
-        console.error('Failed to fetch user registration analytics', err);
-      }
-    };
-
-    fetchStats();
-    fetchEvents();
-    fetchCommunity();
-    fetchTickets();
-    fetchUserRegAnalytics();
+    fetchAllData();
   }, []);
 
   const createPostChartData = (value: number, total: number, label: string) => [
@@ -149,9 +88,9 @@ export default function Home() {
   const ROLE_COLORS = ['#84749f', '#6ea2e6', '#f59e0b', '#10b981'];
 
   return (
-    <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
-      <div className="p-4 sm:p-6 flex-1 bg-transparent">
-        <PlatformAnalytics stats={stats} user={user} />
+    <div className="w-full flex flex-col">
+      <div className="flex-1 bg-transparent">
+        <PlatformAnalytics stats={stats} user={user} isLoading={isLoading} />
 
         {/* ── Verified Users Analytics ── */}
         <div className="mt-8 bg-[#f8f9fa] border border-gray-200 shadow-sm rounded-sm mb-8">
