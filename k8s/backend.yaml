@@ -4,6 +4,9 @@ metadata:
   name: educlinic-backend
   labels:
     app: educlinic-backend
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: backend=ghcr.io/alumniconnect4/educlinic-backend:latest
+    argocd-image-updater.argoproj.io/backend.update-strategy: digest
 spec:
   replicas: 3
   selector:
@@ -17,6 +20,7 @@ spec:
       containers:
       - name: backend
         image: ghcr.io/alumniconnect4/educlinic-backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 4000
         env:
@@ -31,6 +35,13 @@ spec:
         envFrom:
         - secretRef:
             name: backend-secrets
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
 ---
 apiVersion: v1
 kind: Service
