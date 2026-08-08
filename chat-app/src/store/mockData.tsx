@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import type { User, Post, Chat, Message, Comment } from '../types';
 import { getSocket, connectSocket, disconnectSocket } from '../lib/socket';
+import { handleChatAuthError } from '../utils/authRedirect';
 
 interface StoreState {
   currentUser: User | null;
@@ -113,9 +114,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
           headers,
         });
         if (!userRes.ok) {
-          localStorage.removeItem('chatSessionId');
-          window.location.href =
-            import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
+          handleChatAuthError();
           return;
         }
         const userData = await userRes.json();
@@ -134,8 +133,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         }
       } catch (err) {
         console.error('Failed to init store', err);
-        window.location.href =
-          import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
+        handleChatAuthError();
       } finally {
         setIsLoading(false);
       }

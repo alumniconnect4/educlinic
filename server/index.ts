@@ -12,7 +12,10 @@ const allowedOrigins = [
   "https://educlinic-admin-portal.vercel.app",
   "https://educlinic-chat-app.vercel.app",
   "https://alumni-connect.ikeshav.in",
-  "https://alumni-chat.ikeshav.in"
+  "https://alumni-chat.ikeshav.in",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:5174",
 ];
 
 const io = new SocketIOServer(httpServer, {
