@@ -11,6 +11,7 @@ export interface SocketUser {
   id: number;
   name: string;
   email: string;
+  avatarUrl?: string | null;
 }
 
 declare module 'socket.io' {
@@ -48,7 +49,7 @@ export const setupChatSocket = (io: SocketIOServer) => {
 
       const user = await prisma.user.findUnique({
         where: { id: session.id },
-        select: { id: true, name: true, email: true },
+        select: { id: true, name: true, email: true, avatarUrl: true },
       });
 
       if (!user) {
@@ -116,14 +117,22 @@ export const setupChatSocket = (io: SocketIOServer) => {
 
           // Optimistic payload for immediate delivery via Kafka
           const formattedMessage = {
-            id: message.id,
-            senderId: message.senderId,
-            receiverId: message.receiverId,
-            content: message.content,
-            isRead: message.isRead,
-            createdAt: message.createdAt.toISOString(),
-            sender: message.sender,
-            receiver: message.receiver,
+            id: tempId || Math.floor(Math.random() * 1000000), // Optimistic temporary ID
+            senderId: user.id,
+            receiverId: receiverExists.id,
+            content: content.trim(),
+            isRead: false,
+            createdAt: new Date().toISOString(),
+            sender: {
+              id: user.id,
+              name: user.name,
+              avatarUrl: user.avatarUrl,
+            },
+            receiver: {
+              id: receiverExists.id,
+              name: receiverExists.name,
+              avatarUrl: receiverExists.avatarUrl,
+            },
             tempId,
           };
 
