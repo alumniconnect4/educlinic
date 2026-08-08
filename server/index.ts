@@ -1,45 +1,28 @@
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import app from './src/app.js';
+import app, { isOriginAllowed } from './src/app.js';
 import { env } from './src/config/env.js';
 import { connectRedis } from './src/config/redis.js';
 import { setupChatSocket } from './src/socket/chat.socket.js';
 
 const httpServer = http.createServer(app);
 
-const allowedOrigins = [
-  "https://educlinic-henna.vercel.app",
-  "https://educlinic-admin-portal.vercel.app",
-  "https://educlinic-chat-app.vercel.app",
-  "https://alumni-connect.ikeshav.in",
-  "https://alumni-chat.ikeshav.in",
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://localhost:5174",
-];
-
 const io = new SocketIOServer(httpServer, {
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
   cors: {
     origin: (origin, callback) => {
-      // Allow non-browser clients (Postman, server-to-server, etc.)
-      if (!origin) return callback(null, true);
-
-      // Explicit allowlist
-      if (allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         return callback(null, true);
       }
-
-      // Allow all Vercel preview/production deployments
-      if (origin.endsWith(".vercel.app")) {
-        return callback(null, true);
-      }
-
       return callback(
         new Error(`Socket.IO CORS: Origin ${origin} is not allowed`)
       );
     },
     credentials: true,
-    methods: ["GET", "POST"],
+    methods: ['GET', 'POST'],
   },
 });
 
