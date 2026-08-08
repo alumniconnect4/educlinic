@@ -36,6 +36,9 @@ export const useUserStore = create<UserStore>()((set, get) => ({
   clearUser: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('sessionId');
+      localStorage.removeItem('chatSessionId');
+      document.cookie =
+        'sessionId=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
     set({ user: null, sessionId: null, isAuthenticated: false });
   },
@@ -48,16 +51,11 @@ export const useUserStore = create<UserStore>()((set, get) => ({
         typeof window !== 'undefined'
           ? localStorage.getItem('sessionId')
           : null;
-      const headers: Record<string, string> = {};
-      if (storedSession) {
-        headers.Authorization = `Bearer ${storedSession}`;
-      }
 
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
         {
           withCredentials: true,
-          headers,
         }
       );
 
@@ -72,10 +70,7 @@ export const useUserStore = create<UserStore>()((set, get) => ({
         isAuthenticated: true,
       });
     } catch (err) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('sessionId');
-      }
-      set({ user: null, sessionId: null, isAuthenticated: false });
+      get().clearUser();
     }
   },
 }));

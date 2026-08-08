@@ -16,27 +16,44 @@ const app: express.Application = express();
 
 app.set("trust proxy", 1);
 
-const allowedOrigins = [
-  "https://educlinic-henna.vercel.app",
-  "https://educlinic-admin-portal.vercel.app",
-  "https://educlinic-chat-app.vercel.app",
-  "https://alumni-connect.ikeshav.in",
-  "https://alumni-chat.ikeshav.in"
-];
+export const isOriginAllowed = (origin?: string): boolean => {
+  if (!origin) return true;
+
+  const allowedOrigins = [
+    "https://educlinic-henna.vercel.app",
+    "https://educlinic-admin-portal.vercel.app",
+    "https://educlinic-chat-app.vercel.app",
+    "https://alumni-connect.ikeshav.in",
+    "https://alumni-chat.ikeshav.in",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://localhost:5174",
+  ];
+
+  if (allowedOrigins.includes(origin)) return true;
+
+  try {
+    const parsed = new URL(origin);
+    const hostname = parsed.hostname;
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") return true;
+    if (hostname.endsWith(".vercel.app")) return true;
+    if (hostname === "h4x.co.in" || hostname.endsWith(".h4x.co.in")) return true;
+    if (hostname === "ikeshav.in" || hostname.endsWith(".ikeshav.in")) return true;
+  } catch (err) {
+    // Ignore URL parse error
+  }
+
+  return false;
+};
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin) return callback(null, true);
-
-      if (
-        allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
-      ) {
+      if (isOriginAllowed(origin)) {
         return callback(null, true);
       }
-
-      callback(new Error("Not allowed by CORS"));
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     },
     credentials: true,
   })
