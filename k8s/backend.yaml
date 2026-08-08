@@ -19,6 +19,15 @@ spec:
         image: ghcr.io/alumniconnect4/educlinic-backend:latest
         ports:
         - containerPort: 4000
+        env:
+        - name: NODE_ENV
+          value: "PRODUCTION"
+        - name: DATABASE_URL
+          value: "postgresql://educlinic:pass123@host.minikube.internal:5432/educlinic"
+        - name: REDIS_HOST
+          value: "host.minikube.internal"
+        - name: KAFKA_BROKERS
+          value: "kafka-svc:9092"
         envFrom:
         - secretRef:
             name: backend-secrets
