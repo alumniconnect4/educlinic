@@ -29,26 +29,44 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
   consumer = kafka.consumer({ groupId: `chat-backend-${Date.now()}` }); // Unique group ID so every instance gets the message
 
   try {
-    await consumer.connect();
-    await consumer.subscribe({ topic: 'chat-messages', fromBeginning: false });
-    logger.info('Kafka Consumer connected and subscribed to chat-messages');
-
-    await consumer.run({
-      eachMessage: async ({ topic, partition, message }: { topic: string, partition: number, message: any }) => {
-        if (!message.value) return;
-        try {
-          const payload = JSON.parse(message.value.toString());
-          // Payload should be the formattedMessage
-          // Emit to the receiver's room and the sender's room
-          io.to(`user:${payload.receiverId}`).emit('receive_message', payload);
-          // Only emit back to sender if the sender is on this specific node, but io.to handles that
-          io.to(`user:${payload.senderId}`).emit('receive_message', payload);
-        } catch (err) {
-          logger.error('Error processing Kafka message:', err);
-        }
-      },
+    const admin = kafka.admin();
+    await admin.connect();
+    await admin.createTopics({
+      topics: [{ topic: 'chat-messages', numPartitions: 3, replicationFactor: 1 }],
+      waitForLeaders: true,
     });
-  } catch (error) {
-    logger.error('Failed to start Kafka Consumer:', error);
+    await admin.disconnect();
+  } catch (err) {
+    logger.warn('Kafka admin topic check warning:', err);
+  }
+
+  let retries = 5;
+  while (retries > 0) {
+    try {
+      await consumer.connect();
+      await consumer.subscribe({ topic: 'chat-messages', fromBeginning: false });
+      logger.info('Kafka Consumer connected and subscribed to chat-messages');
+
+      await consumer.run({
+        eachMessage: async ({ topic, partition, message }: { topic: string, partition: number, message: any }) => {
+          if (!message.value) return;
+          try {
+            const payload = JSON.parse(message.value.toString());
+            // Payload should be the formattedMessage
+            // Emit to the receiver's room and the sender's room
+            io.to(`user:${payload.receiverId}`).emit('receive_message', payload);
+            io.to(`user:${payload.senderId}`).emit('receive_message', payload);
+          } catch (err) {
+            logger.error('Error processing Kafka message:', err);
+          }
+        },
+      });
+      break;
+    } catch (error) {
+      retries--;
+      logger.error(`Failed to start Kafka Consumer (${retries} retries left):`, error);
+      if (retries === 0) break;
+      await new Promise((res) => setTimeout(res, 3000));
+    }
   }
 };
