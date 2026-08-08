@@ -6,7 +6,6 @@ import { logger } from '../config/logger.js';
 import { chatQueue } from '../services/queue.service.js';
 import { getKafkaProducer } from '../services/kafka.service.js';
 
-
 export interface SocketUser {
   id: number;
   name: string;
@@ -19,6 +18,15 @@ declare module 'socket.io' {
     user?: SocketUser;
   }
 }
+
+const sanitizeAvatar = (url?: string | null): string | null => {
+  if (!url) return null;
+  // If the avatarUrl is a massive base64 data URI (> 2000 chars), omit it from the real-time Kafka/Socket payload
+  if (url.startsWith('data:') && url.length > 2000) {
+    return null;
+  }
+  return url;
+};
 
 export const setupChatSocket = (io: SocketIOServer) => {
   io.use(async (socket: Socket, next) => {
@@ -112,10 +120,10 @@ export const setupChatSocket = (io: SocketIOServer) => {
           await chatQueue.add('save_message', {
             senderId: user.id,
             receiverId,
-            content: content.trim()
+            content: content.trim(),
           });
 
-          // Optimistic payload for immediate delivery via Kafka
+          // Optimistic payload for immediate delivery via Kafka / Socket.IO
           const formattedMessage = {
             id: tempId || Math.floor(Math.random() * 1000000), // Optimistic temporary ID
             senderId: user.id,
@@ -126,22 +134,38 @@ export const setupChatSocket = (io: SocketIOServer) => {
             sender: {
               id: user.id,
               name: user.name,
-              avatarUrl: user.avatarUrl,
+              avatarUrl: sanitizeAvatar(user.avatarUrl),
             },
             receiver: {
               id: receiverExists.id,
               name: receiverExists.name,
-              avatarUrl: receiverExists.avatarUrl,
+              avatarUrl: sanitizeAvatar(receiverExists.avatarUrl),
             },
             tempId,
           };
 
           // Publish to Kafka so all replicas broadcast it
-          const producer = await getKafkaProducer();
-          await producer.send({
-            topic: 'chat-messages',
-            messages: [{ value: JSON.stringify(formattedMessage) }],
-          });
+          try {
+            const producer = await getKafkaProducer();
+            await producer.send({
+              topic: 'chat-messages',
+              messages: [{ value: JSON.stringify(formattedMessage) }],
+            });
+          } catch (kafkaErr) {
+            logger.warn(
+              'Kafka publish failed, falling back to direct Socket.IO broadcast:',
+              kafkaErr
+            );
+            // Fallback: direct broadcast via Socket.IO if Kafka is down or payload exceeds limit
+            io.to(`user:${receiverExists.id}`).emit(
+              'receive_message',
+              formattedMessage
+            );
+            io.to(`user:${user.id}`).emit(
+              'receive_message',
+              formattedMessage
+            );
+          }
         } catch (err) {
           logger.error('Failed to handle send_message socket event', err);
           socket.emit('error_message', { message: 'Failed to send message' });
