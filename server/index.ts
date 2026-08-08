@@ -7,22 +7,49 @@ import { setupChatSocket } from './src/socket/chat.socket.js';
 
 const httpServer = http.createServer(app);
 
+const allowedOrigins = [
+  "https://educlinic-henna.vercel.app",
+  "https://educlinic-admin-portal.vercel.app",
+  "https://educlinic-chat-app.vercel.app",
+  "https://alumni-connect.ikeshav.in",
+  "https://alumni-chat.ikeshav.in"
+];
+
 const io = new SocketIOServer(httpServer, {
   cors: {
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:5174',
-    ],
+    origin: (origin, callback) => {
+      // Allow non-browser clients (Postman, server-to-server, etc.)
+      if (!origin) return callback(null, true);
+
+      // Explicit allowlist
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow all Vercel preview/production deployments
+      if (origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error(`Socket.IO CORS: Origin ${origin} is not allowed`)
+      );
+    },
     credentials: true,
+    methods: ["GET", "POST"],
   },
 });
 
 setupChatSocket(io);
 app.set('io', io);
 
+import { startKafkaConsumer } from './src/services/kafka.service.js';
+import { initChatWorker } from './src/services/queue.service.js';
+
 const startAllServices: () => Promise<void> = async () => {
   await Promise.all([connectRedis()]);
+  initChatWorker();
+  await startKafkaConsumer(io);
 };
 
 startAllServices().then(() => {

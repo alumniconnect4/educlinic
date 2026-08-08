@@ -3,6 +3,9 @@ import { parseCookie } from 'cookie';
 import { getSession } from '../config/cache.js';
 import { prisma } from '../config/db.js';
 import { logger } from '../config/logger.js';
+import { chatQueue } from '../services/queue.service.js';
+import { getKafkaProducer } from '../services/kafka.service.js';
+
 
 export interface SocketUser {
   id: number;
@@ -104,18 +107,14 @@ export const setupChatSocket = (io: SocketIOServer) => {
             return;
           }
 
-          const message = await prisma.message.create({
-            data: {
-              senderId: user.id,
-              receiverId,
-              content: content.trim(),
-            },
-            include: {
-              sender: { select: { id: true, name: true } },
-              receiver: { select: { id: true, name: true } },
-            },
+          // Push to BullMQ for background DB save
+          await chatQueue.add('save_message', {
+            senderId: user.id,
+            receiverId,
+            content: content.trim()
           });
 
+          // Optimistic payload for immediate delivery via Kafka
           const formattedMessage = {
             id: message.id,
             senderId: message.senderId,
@@ -128,8 +127,12 @@ export const setupChatSocket = (io: SocketIOServer) => {
             tempId,
           };
 
-          io.to(`user:${receiverId}`).emit('receive_message', formattedMessage);
-          io.to(`user:${user.id}`).emit('receive_message', formattedMessage);
+          // Publish to Kafka so all replicas broadcast it
+          const producer = await getKafkaProducer();
+          await producer.send({
+            topic: 'chat-messages',
+            messages: [{ value: JSON.stringify(formattedMessage) }],
+          });
         } catch (err) {
           logger.error('Failed to handle send_message socket event', err);
           socket.emit('error_message', { message: 'Failed to send message' });

@@ -43,11 +43,11 @@ export const authMiddleware =
   (requiredRole?: UserRoleEnum) =>
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const cookieSessionId = req.cookies?.sessionId;
       const authHeader = req.headers.authorization;
       const bearerToken = authHeader?.startsWith('Bearer ')
         ? authHeader.slice(7)
         : undefined;
+      const cookieSessionId = req.cookies?.sessionId;
 
       const sessionId = cookieSessionId || bearerToken;
       const token = req.cookies?.token || bearerToken;

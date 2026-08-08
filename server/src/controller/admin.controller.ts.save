@@ -44,13 +44,11 @@ export const loginAdmin = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       message: 'Login successful',
-      token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
-        avatarUrl: user.avatarUrl,
       },
     });
   } catch (err) {
@@ -89,11 +87,11 @@ export const getAdmins = async (req: Request, res: Response) => {
       },
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -281,10 +279,6 @@ export const updateAdmin = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    
-    await deleteUserCache(updatedAdmin.email);
-
-    await deleteUserCache(updatedAdmin.email);
 
     return res
       .status(200)
@@ -348,11 +342,11 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
       isVerified: true,
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -519,9 +513,6 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    await deleteUserCache(updatedUser.email);
-
-    await deleteUserCache(updatedUser.email);
 
     return res
       .status(200)
@@ -573,11 +564,11 @@ export const getPendingRequests = async (req: Request, res: Response) => {
       role: { in: roleCondition },
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -746,9 +737,6 @@ export const updateAdminProfile = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    await deleteUserCache(updatedUser.email);
-
-    await deleteUserCache(updatedUser.email);
 
     return res
       .status(200)
@@ -794,9 +782,6 @@ export const changeAdminPassword = async (req: Request, res: Response) => {
       where: { id },
       data: { password: hashedPassword },
     });
-    await deleteUserCache(user.email);
-
-    await deleteUserCache(user.email);
 
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (err) {

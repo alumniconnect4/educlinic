@@ -2,7 +2,7 @@
   "name": "server",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
     "lint": "eslint .",
@@ -43,6 +43,8 @@
     "redis": "^5.12.1",
     "socket.io": "^4.8.3",
     "tsc-watch": "^7.2.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "kafkajs": "^2.2.4",
+    "bullmq": "^5.7.8"
   }
 }

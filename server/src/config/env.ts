@@ -8,7 +8,7 @@ const envSchema = z.object({
     .enum(['DEVELOPMENT', 'PRODUCTION', 'TEST'])
     .default('DEVELOPMENT'),
 
-  HOST: z.string('HOST is required').default('localhost'),
+  HOST: z.string('HOST is required').default('0.0.0.0'),
   PORT: z
     .string('PORT is required')
     .default('5000')
