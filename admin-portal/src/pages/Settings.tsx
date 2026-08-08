@@ -104,8 +104,9 @@ export default function Settings() {
   const fetchProfile = async () => {
     setIsLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const res = await axios.get(
-        'http://localhost:4000/api/admin-portal/profile',
+        `${apiUrl}/admin-portal/profile`,
         {
           withCredentials: true,
         }
@@ -279,8 +280,9 @@ export default function Settings() {
         const base64String = canvas.toDataURL('image/jpeg', 0.9);
 
         // Upload to backend
+        const apiUrl = import.meta.env.VITE_API_URL;
         const res = await axios.post(
-          'http://localhost:4000/api/admin-portal/upload',
+          `${apiUrl}/admin-portal/upload`,
           { image: base64String },
           { withCredentials: true }
         );
@@ -290,7 +292,7 @@ export default function Settings() {
 
           // Save avatarUrl immediately to profile in database
           const updateRes = await axios.put(
-            'http://localhost:4000/api/admin-portal/profile',
+            `${apiUrl}/admin-portal/profile`,
             {
               name: profileData.name.trim(),
               email: profileData.email.trim(),
@@ -382,8 +384,9 @@ export default function Settings() {
         schoolCategory: profileData.schoolCategory || null,
       };
 
+      const apiUrl = import.meta.env.VITE_API_URL;
       const res = await axios.put(
-        'http://localhost:4000/api/admin-portal/profile',
+        `${apiUrl}/admin-portal/profile`,
         payload,
         { withCredentials: true }
       );
@@ -436,8 +439,9 @@ export default function Settings() {
     try {
       // Simulate network latency for a better UX feeling
       await new Promise((resolve) => setTimeout(resolve, 800));
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
-        'http://localhost:4000/api/admin-portal/change-password',
+        `${apiUrl}/admin-portal/change-password`,
         { currentPassword, newPassword },
         { withCredentials: true }
       );
@@ -479,7 +483,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="w-full flex flex-col min-h-[calc(100vh-64px)]">
+    <div className="w-full flex flex-col">
       {/* Breadcrumb Header */}
       <div className="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 shadow-sm flex-shrink-0">
         <div className="flex items-center text-sm text-gray-500">

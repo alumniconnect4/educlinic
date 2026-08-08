@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { Eye, Trash2, Upload, CheckCircle2, X } from 'lucide-react';
+import { Eye, Trash2, Upload, CheckCircle2, X, Loader2 } from 'lucide-react';
 
 const AuthForm = () => {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
@@ -19,6 +19,7 @@ const AuthForm = () => {
   } | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleFileUpload = (
@@ -41,6 +42,7 @@ const AuthForm = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setIsLoading(true);
 
     try {
       if (activeTab === 'register') {
@@ -49,12 +51,14 @@ const AuthForm = () => {
         if (!avatarUrl) {
           setError('Profile avatar image is compulsory for registration.');
           toast.error('Profile avatar image is compulsory for registration.');
+          setIsLoading(false);
           return;
         }
 
         if (role === 'USER' && !idCardUrl) {
           setError('Student registration requires uploading an ID Card.');
           toast.error('Student registration requires uploading an ID Card.');
+          setIsLoading(false);
           return;
         }
 
@@ -65,6 +69,7 @@ const AuthForm = () => {
           toast.error(
             'Alumni registration requires uploading either an ID Card or Degree Certificate.'
           );
+          setIsLoading(false);
           return;
         }
 
@@ -111,7 +116,7 @@ const AuthForm = () => {
         );
 
         e.target.reset();
-        useUserStore.getState().setUser(res.data.user);
+        useUserStore.getState().setUser(res.data.user, res.data.sessionId);
         toast.success('Logged in successfully!');
         router.push('/');
       }
@@ -120,12 +125,14 @@ const AuthForm = () => {
       setError(msg);
       toast.error(msg);
       console.log(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="w-full lg:w-5/12 max-w-md z-10 relative">
-      <div className="bg-white rounded-lg shadow-2xl overflow-hidden relative border-t-4 border-[#d60000]">
+    <div className="w-full max-w-md lg:max-w-lg z-10 relative">
+      <div className="bg-white rounded-xl shadow-2xl overflow-hidden relative border-t-4 border-[#d60000]">
         <div className="relative flex p-1 bg-gray-100 border-b border-gray-200">
           <div
             className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded shadow-sm border border-gray-200 transition-all duration-300 ease-in-out"
@@ -151,7 +158,7 @@ const AuthForm = () => {
           </button>
         </div>
 
-        <div className="p-8 relative">
+        <div className="p-5 sm:p-8 relative">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
             {activeTab === 'login' ? 'Welcome Back!' : 'Join the Network'}
           </h2>
@@ -689,9 +696,25 @@ const AuthForm = () => {
 
             <button
               type="submit"
-              className="w-full cursor-pointer bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md uppercase tracking-wider text-sm"
+              disabled={isLoading}
+              className={`w-full bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md uppercase tracking-wider text-sm flex items-center justify-center gap-2 ${
+                isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+              }`}
             >
-              {activeTab === 'login' ? 'Login' : 'Send Approval Request'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>
+                    {activeTab === 'login'
+                      ? 'Logging in...'
+                      : 'Submitting Request...'}
+                  </span>
+                </>
+              ) : (
+                <span>
+                  {activeTab === 'login' ? 'Login' : 'Send Approval Request'}
+                </span>
+              )}
             </button>
           </form>
         </div>

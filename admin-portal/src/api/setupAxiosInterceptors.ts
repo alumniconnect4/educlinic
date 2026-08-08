@@ -5,6 +5,20 @@ import { useAuthStore } from '@/store/useAuthStore';
 let isRedirecting = false;
 
 export const setupAxiosInterceptors = () => {
+  axios.defaults.withCredentials = true;
+
+  axios.interceptors.request.use(
+    (config) => {
+      const token =
+        useAuthStore.getState().token || localStorage.getItem('adminToken');
+      if (token && config.headers) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
   axios.interceptors.response.use(
     (response) => response,
     (error) => {

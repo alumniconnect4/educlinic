@@ -16,6 +16,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
   const { deleteMessage } = useStore();
   const [showOptions, setShowOptions] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,10 +58,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this message?')) {
-      deleteMessage(message.id);
-    }
+    setShowDeleteModal(true);
     setShowOptions(false);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteMessage(message.id);
+      setShowDeleteModal(false);
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleEdit = () => {
@@ -134,6 +146,39 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         {formatTime(message.createdAt)}
         {message.isEdited && <span className="italic ml-1">(edited)</span>}
       </span>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl w-full max-w-sm flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Delete Message</h3>
+            <p className="text-[15px] text-zinc-500 dark:text-zinc-400">
+              Are you sure you want to delete this message? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2.5 text-sm font-medium rounded-xl text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2.5 text-sm font-medium rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

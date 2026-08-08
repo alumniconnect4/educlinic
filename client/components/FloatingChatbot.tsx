@@ -124,7 +124,7 @@ export default function FloatingChatbot() {
   return (
     <>
       <div
-        className={`fixed bottom-0 right-4 sm:right-10 z-[60] flex flex-col w-[350px] h-[35rem] max-h-[85vh] bg-white rounded-t-2xl shadow-[0_-5px_25px_rgba(0,0,0,0.15)] overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-gray-200 ${
+        className={`fixed bottom-0 right-2 sm:right-10 z-[60] flex flex-col w-[calc(100vw-1rem)] max-w-[350px] sm:w-[350px] h-[35rem] max-h-[85vh] bg-white rounded-t-2xl shadow-[0_-5px_25px_rgba(0,0,0,0.15)] overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-gray-200 ${
           isOpen
             ? 'translate-y-0 opacity-100'
             : 'translate-y-full opacity-0 pointer-events-none'

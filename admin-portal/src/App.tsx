@@ -18,6 +18,7 @@ import EventRegistrations from './pages/EventRegistrations';
 import Gallery from './pages/Gallery';
 import HelpTickets from './pages/HelpTickets';
 import Settings from './pages/Settings';
+import Guide from './pages/Guide';
 
 const App = () => {
   return (
@@ -65,6 +66,7 @@ const App = () => {
           />
           <Route path="gallery" element={<Gallery />} />
           <Route path="help-tickets" element={<HelpTickets />} />
+          <Route path="guide" element={<Guide />} />
           <Route path="settings" element={<Settings />} />
           <Route path="analytics/:role" element={<AnalyticsDetail />} />
         </Route>

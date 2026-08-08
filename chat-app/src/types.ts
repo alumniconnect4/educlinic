@@ -50,6 +50,7 @@ export interface Message {
   createdAt: string;
   sender?: { id: number; name: string };
   receiver?: { id: number; name: string };
+  tempId?: number;
 }
 
 export interface Chat {

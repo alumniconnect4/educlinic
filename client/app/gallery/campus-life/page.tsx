@@ -14,7 +14,7 @@ export default function CampusLifeGallery() {
     <div className="min-h-screen bg-white">
       <div className="relative w-full h-[250px] md:h-[350px] bg-gray-900 overflow-hidden">
         <Image
-          src="/gallery-images/17.jpg"
+          src="/gallery/campus-life/17.jpg"
           alt="Campus Life Banner"
           fill
           className="object-cover"

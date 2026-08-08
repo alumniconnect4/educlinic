@@ -83,6 +83,7 @@ export const Chat: React.FC = () => {
         setNewMessage={setNewMessage}
         handleSend={handleSend}
         isLoading={isLoading || messagesLoading}
+        hasChats={chats.length > 0}
         className={`${showMobileChatView ? 'flex' : 'hidden md:flex'} flex-1 bg-background overflow-hidden flex-col`}
         onBack={() => {
           setShowMobileChatView(false);

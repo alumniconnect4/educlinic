@@ -15,6 +15,7 @@ import {
   FileText,
   ExternalLink,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios, { isAxiosError } from 'axios';
@@ -64,6 +65,7 @@ export default function ManageAlumniStudents() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>(
     'ALL'
@@ -118,9 +120,11 @@ export default function ManageAlumniStudents() {
   });
 
   const fetchUsers = async () => {
+    setIsFetching(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+        `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
         { withCredentials: true }
       );
       setUsers(response.data.data);
@@ -128,13 +132,16 @@ export default function ManageAlumniStudents() {
       setTotalPages(response.data.totalPages);
     } catch (err) {
       console.error('Failed to fetch users', err);
+    } finally {
+      setIsFetching(false);
     }
   };
 
   useEffect(() => {
     let ignore = false;
+    const apiUrl = import.meta.env.VITE_API_URL;
     axios
-      .get('http://localhost:4000/api/admin-portal/pending-requests', {
+      .get(`${apiUrl}/admin-portal/pending-requests`, {
         withCredentials: true,
       })
       .then((res) => {
@@ -150,10 +157,12 @@ export default function ManageAlumniStudents() {
 
   useEffect(() => {
     let ignore = false;
+    setIsFetching(true);
     const timer = setTimeout(() => {
+      const apiUrl = import.meta.env.VITE_API_URL;
       axios
         .get(
-          `http://localhost:4000/api/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+          `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
           { withCredentials: true }
         )
         .then((res) => {
@@ -161,9 +170,13 @@ export default function ManageAlumniStudents() {
             setUsers(res.data.data);
             setTotal(res.data.total);
             setTotalPages(res.data.totalPages);
+            setIsFetching(false);
           }
         })
-        .catch((err) => console.error('Failed to fetch users', err));
+        .catch((err) => {
+          console.error('Failed to fetch users', err);
+          if (!ignore) setIsFetching(false);
+        });
     }, 300);
     return () => {
       ignore = true;
@@ -223,8 +236,9 @@ export default function ManageAlumniStudents() {
     }
     setIsLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        'http://localhost:4000/api/admin-portal/alumni-students',
+        `${apiUrl}/admin-portal/alumni-students`,
         formData,
         { withCredentials: true }
       );
@@ -273,8 +287,9 @@ export default function ManageAlumniStudents() {
     if (!editingUser) return;
     setIsUpdating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
-        `http://localhost:4000/api/admin-portal/alumni-students/${editingUser.id}`,
+        `${apiUrl}/admin-portal/alumni-students/${editingUser.id}`,
         editFormData,
         { withCredentials: true }
       );
@@ -295,8 +310,9 @@ export default function ManageAlumniStudents() {
 
   const executeDelete = async (userId: number) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/admin-portal/alumni-students/${userId}`,
+        `${apiUrl}/admin-portal/alumni-students/${userId}`,
         { withCredentials: true }
       );
       toast.success('User deleted successfully!');
@@ -321,7 +337,7 @@ export default function ManageAlumniStudents() {
       },
       cancel: {
         label: 'Cancel',
-        onClick: () => {},
+        onClick: () => { },
       },
     });
   };
@@ -361,9 +377,9 @@ export default function ManageAlumniStudents() {
       </div>
 
       {/* Main Grid: Create Form + Directory Table */}
-      <div className="w-full h-[calc(100vh-180px)] min-h-[560px] grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 relative">
+      <div className="w-full xl:h-[calc(100vh-180px)] min-h-0 xl:min-h-[560px] grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 relative">
         {/* Create User Form */}
-        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col h-full overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col xl:h-full overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 shrink-0">
             <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-slate-800" />
@@ -586,7 +602,41 @@ export default function ManageAlumniStudents() {
                 </tr>
               </thead>
               <tbody className="text-sm text-gray-600">
-                {users.length === 0 ? (
+                {isFetching ? (
+                  Array.from({ length: Math.min(itemsPerPage, 4) }).map((_, i) => (
+                    <tr key={`skeleton-${i}`} className="border-b border-gray-100 animate-pulse">
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-3 shrink-0"></div>
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            <div className="h-2 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6">
+                        <div className="h-3 bg-gray-200 rounded w-32"></div>
+                      </td>
+                      <td className="py-3.5 px-6 text-center">
+                        <div className="flex justify-center">
+                          <div className="h-6 bg-gray-200 rounded w-24"></div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6 text-center">
+                        <div className="flex justify-center">
+                          <div className="h-5 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : users.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
@@ -644,11 +694,10 @@ export default function ManageAlumniStudents() {
                       <td className="py-3.5 px-6 align-middle text-center">
                         <div className="flex justify-center">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${
-                              user.role === 'ALUMNI'
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${user.role === 'ALUMNI'
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : 'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}
+                              }`}
                           >
                             {user.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                           </span>
@@ -786,20 +835,18 @@ export default function ManageAlumniStudents() {
                       {viewingUser.name}
                     </h4>
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                        viewingUser.role === 'ALUMNI'
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${viewingUser.role === 'ALUMNI'
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-blue-50 text-blue-700 border-blue-200'
-                      }`}
+                        }`}
                     >
                       {viewingUser.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                        viewingUser.isVerified
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${viewingUser.isVerified
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}
+                        }`}
                     >
                       <ShieldCheck className="w-3 h-3" />
                       {viewingUser.isVerified
@@ -1538,9 +1585,16 @@ export default function ManageAlumniStudents() {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="px-4 h-9 bg-slate-700 hover:bg-slate-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
+                  className="px-4 h-9 bg-slate-700 hover:bg-slate-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </form>

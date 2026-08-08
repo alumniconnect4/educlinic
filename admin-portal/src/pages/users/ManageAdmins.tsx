@@ -13,6 +13,7 @@ import {
   Mail,
   Clock,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios, { isAxiosError } from 'axios';
@@ -100,8 +101,9 @@ export default function ManageAdmins() {
   const fetchAdmins = async () => {
     setIsTableLoading(true)
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `http://localhost:4000/api/admin-portal/admins?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
+        `${apiUrl}/admin-portal/admins?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
         { withCredentials: true }
       );
       setAdmins(response.data.data);
@@ -153,8 +155,9 @@ export default function ManageAdmins() {
     }
     setIsLoading(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.post(
-        'http://localhost:4000/api/admin-portal/admins',
+        `${apiUrl}/admin-portal/admins`,
         formData,
         { withCredentials: true }
       );
@@ -201,8 +204,9 @@ export default function ManageAdmins() {
     if (!editingAdmin) return;
     setIsUpdating(true);
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
-        `http://localhost:4000/api/admin-portal/admins/${editingAdmin.id}`,
+        `${apiUrl}/admin-portal/admins/${editingAdmin.id}`,
         editFormData,
         { withCredentials: true }
       );
@@ -223,8 +227,9 @@ export default function ManageAdmins() {
 
   const executeDelete = async (adminId: number) => {
     try {
+      const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
-        `http://localhost:4000/api/admin-portal/admins/${adminId}`,
+        `${apiUrl}/admin-portal/admins/${adminId}`,
         { withCredentials: true }
       );
       toast.success('Admin deleted successfully!');
@@ -260,9 +265,9 @@ export default function ManageAdmins() {
   };
 
   return (
-    <div className="w-full h-[calc(100vh-112px)] min-h-[580px] grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 relative">
+    <div className="w-full xl:h-[calc(100vh-112px)] min-h-0 xl:min-h-[580px] grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 relative">
       {/* Create Admin Form */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col h-full overflow-hidden">
+      <div className="bg-white border border-gray-200 shadow-sm rounded-sm flex flex-col xl:h-full overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 shrink-0">
           <h3 className="text-[#333] font-bold text-sm uppercase tracking-wider flex items-center gap-2">
             <UserPlus className="w-4 h-4 text-slate-800" />
@@ -399,9 +404,16 @@ export default function ManageAdmins() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-sm shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full h-10 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-sm shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Creating...' : 'Create Administrator'}
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  'Create Administrator'
+                )}
               </button>
             </div>
           </form>
@@ -1144,9 +1156,16 @@ export default function ManageAdmins() {
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="px-4 h-9 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer"
+                  className="px-4 h-9 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
                 >
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </form>

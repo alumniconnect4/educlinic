@@ -53,7 +53,14 @@ export const createPost = async (
       },
       include: {
         createdBy: {
-          select: { id: true, name: true, role: true, bio: true, avatarUrl: true, createdAt: true },
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            bio: true,
+            avatarUrl: true,
+            createdAt: true,
+          },
         },
       },
     });
@@ -113,7 +120,14 @@ export const getAllPosts = async (
         take: limit,
         include: {
           createdBy: {
-            select: { id: true, name: true, role: true, bio: true, avatarUrl: true, createdAt: true },
+            select: {
+              id: true,
+              name: true,
+              role: true,
+              bio: true,
+              avatarUrl: true,
+              createdAt: true,
+            },
           },
           _count: {
             select: { comments: true, likes: true },
@@ -165,7 +179,14 @@ export const getPostById = async (
       where: { id: parseInt(id as string) },
       include: {
         createdBy: {
-          select: { id: true, name: true, role: true, bio: true, avatarUrl: true, createdAt: true },
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            bio: true,
+            avatarUrl: true,
+            createdAt: true,
+          },
         },
         _count: {
           select: { likes: true },

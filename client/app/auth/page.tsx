@@ -42,9 +42,13 @@ const LoginPage = () => {
 
       <AuthNav />
 
-      <div className="container mx-auto px-6 lg:px-12 xl:px-32 relative z-10 flex flex-col lg:flex-row items-center justify-between w-full mt-32 lg:mt-40 gap-12 lg:gap-20 mb-16">
-        <AuthContent />
-        <AuthForm />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-12 xl:px-20 relative z-10 flex flex-col lg:flex-row items-center justify-center lg:justify-between w-full mt-24 sm:mt-28 lg:mt-36 gap-8 lg:gap-12 mb-12">
+        <div className="hidden lg:block lg:w-1/2">
+          <AuthContent />
+        </div>
+        <div className="w-full max-w-md lg:max-w-lg lg:w-1/2 flex justify-center lg:justify-end">
+          <AuthForm />
+        </div>
       </div>
     </div>
   );

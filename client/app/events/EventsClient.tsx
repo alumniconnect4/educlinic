@@ -7,6 +7,7 @@ import {
   MapPin,
   Calendar,
   Share2,
+  Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -54,6 +55,7 @@ export default function EventsClient() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [navigatingId, setNavigatingId] = useState<number | null>(null);
   const ITEMS_PER_PAGE = 8;
 
   useEffect(() => {
@@ -65,8 +67,9 @@ export default function EventsClient() {
       setLoading(true);
       try {
         const offset = (page - 1) * ITEMS_PER_PAGE;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const res = await axios.get(
-          `http://localhost:4000/api/events/all-events/${ITEMS_PER_PAGE}/${offset}?filter=${filter}`
+          `${apiUrl}/events/all-events/${ITEMS_PER_PAGE}/${offset}?filter=${filter}`
         );
         setEvents(res.data.events || []);
         setTotalPages(
@@ -247,11 +250,29 @@ export default function EventsClient() {
                         </div>
                       </div>
 
-                      <Link href={`/events/${event.id}`}>
+                      <Link
+                        href={`/events/${event.id}`}
+                        onClick={() => setNavigatingId(event.id)}
+                      >
                         <div className="mt-8">
-                          <span className="inline-block cursor-pointer bg-[#a62025] hover:bg-[#85161a] text-white text-[13px] font-semibold px-5 py-2.5 rounded transition-colors shadow-sm">
-                            View Event
-                          </span>
+                          <button
+                            type="button"
+                            disabled={navigatingId === event.id}
+                            className={`inline-flex items-center gap-2 bg-[#a62025] hover:bg-[#85161a] text-white text-[13px] font-semibold px-5 py-2.5 rounded transition-all shadow-sm ${
+                              navigatingId === event.id
+                                ? 'opacity-80 cursor-wait'
+                                : 'cursor-pointer'
+                            }`}
+                          >
+                            {navigatingId === event.id ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                <span>Loading...</span>
+                              </>
+                            ) : (
+                              <span>View Event</span>
+                            )}
+                          </button>
                         </div>
                       </Link>
                     </div>
