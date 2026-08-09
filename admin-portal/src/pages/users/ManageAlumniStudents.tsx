@@ -313,7 +313,11 @@ export default function ManageAlumniStudents() {
         withCredentials: true,
       });
       toast.success('User deleted successfully!');
-      fetchUsers();
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      setTotal((prev) => Math.max(0, prev - 1));
+      if (viewingUser?.id === userId) {
+        setViewingUser(null);
+      }
     } catch (err: unknown) {
       console.error('Failed to delete user', err);
       if (isAxiosError(err)) {

@@ -230,7 +230,11 @@ export default function ManageAdmins() {
         withCredentials: true,
       });
       toast.success('Admin deleted successfully!');
-      fetchAdmins();
+      setAdmins((prev) => prev.filter((a) => a.id !== adminId));
+      setTotal((prev) => Math.max(0, prev - 1));
+      if (viewingAdmin?.id === adminId) {
+        setViewingAdmin(null);
+      }
     } catch (err: unknown) {
       console.error('Failed to delete admin', err);
       if (isAxiosError(err)) {

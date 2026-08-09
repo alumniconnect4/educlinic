@@ -72,6 +72,8 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
+    await invalidateUsersCache();
+
     if (newUser.role === 'USER' || newUser.role === 'ALUMNI') {
       return res.status(201).json({
         message:
@@ -91,8 +93,6 @@ export const register = async (req: Request, res: Response) => {
     const sessionId = crypto.randomUUID();
     await storeSession(sessionId, { id: newUser.id, role: newUser.role });
     res.cookie('sessionId', sessionId, { ...config.cookieOptions });
-
-    await invalidateUsersCache();
 
     res.json({
       message: 'User registered successfully',
