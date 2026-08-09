@@ -102,7 +102,8 @@ export default function HelpTickets() {
             <span>Contact Us Submissions</span>
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            View messages submitted by visitors and users from the Contact Us page.
+            View messages submitted by visitors and users from the Contact Us
+            page.
           </p>
         </div>
         <div className="bg-slate-50 border border-slate-200 px-5 py-2.5 rounded-sm text-right shrink-0">
@@ -142,7 +143,10 @@ export default function HelpTickets() {
             {isLoading ? (
               <div className="space-y-3 p-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={`skeleton-${i}`} className="p-4 space-y-3 bg-white border border-gray-100 rounded-sm">
+                  <div
+                    key={`skeleton-${i}`}
+                    className="p-4 space-y-3 bg-white border border-gray-100 rounded-sm"
+                  >
                     <div className="flex items-center justify-between">
                       <Skeleton className="h-4 w-1/3" />
                       <Skeleton className="h-3 w-16" />
@@ -229,7 +233,9 @@ export default function HelpTickets() {
                 <button
                   type="button"
                   disabled={currentPage === 1 || isLoading}
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
                   className="px-3 py-1.5 rounded border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer font-medium"
                 >
                   Previous

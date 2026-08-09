@@ -10,7 +10,6 @@ import {
   invalidatePostsCache,
 } from '../config/cache.js';
 
-
 export const createPost = async (
   req: Request,
   res: Response

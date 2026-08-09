@@ -66,7 +66,6 @@ export const createAlbum = async (req: Request, res: Response) => {
     return res
       .status(201)
       .json({ message: 'Album created successfully', album });
-
   } catch (error) {
     console.error('createAlbum error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -88,7 +87,9 @@ export const getAllAlbums = async (req: Request, res: Response) => {
     const search = (req.query.search as string)?.trim() || '';
 
     const cacheKey = generateGalleryListCacheKey(limit, offset, search);
-    const cachedData = await getCache<{ albums: any[]; total: number }>(cacheKey);
+    const cachedData = await getCache<{ albums: any[]; total: number }>(
+      cacheKey
+    );
     if (cachedData) {
       return res.status(200).json(cachedData);
     }
@@ -161,7 +162,6 @@ export const getAlbumById = async (req: Request, res: Response) => {
   }
 };
 
-
 // ─── Delete Album ─────────────────────────────────────────────────────────────
 export const deleteAlbum = async (req: Request, res: Response) => {
   try {
@@ -189,7 +189,6 @@ export const deleteAlbum = async (req: Request, res: Response) => {
     await invalidateGalleryCache();
 
     return res.status(200).json({ message: 'Album deleted successfully' });
-
   } catch (error) {
     console.error('deleteAlbum error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -244,7 +243,6 @@ export const addSingleImageToAlbum = async (req: Request, res: Response) => {
     return res
       .status(201)
       .json({ message: 'Image added successfully', image: galleryImage });
-
   } catch (error) {
     console.error('addSingleImageToAlbum error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -311,7 +309,6 @@ export const addImagesToAlbum = async (req: Request, res: Response) => {
       message: `${galleryImages.length} image(s) added successfully`,
       images: galleryImages,
     });
-
   } catch (error) {
     console.error('addImagesToAlbum error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -344,7 +341,6 @@ export const deleteImage = async (req: Request, res: Response) => {
     await invalidateGalleryCache();
 
     return res.status(200).json({ message: 'Image deleted successfully' });
-
   } catch (error) {
     console.error('deleteImage error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -382,7 +378,6 @@ export const deleteBulkImages = async (req: Request, res: Response) => {
     return res
       .status(200)
       .json({ message: `${images.length} image(s) deleted successfully` });
-
   } catch (error) {
     console.error('deleteBulkImages error:', error);
     return res.status(500).json({ message: 'Internal server error' });
@@ -439,7 +434,6 @@ export const updateAlbum = async (req: Request, res: Response) => {
     return res
       .status(200)
       .json({ message: 'Album updated successfully', album: updated });
-
   } catch (error) {
     console.error('updateAlbum error:', error);
     return res.status(500).json({ message: 'Internal server error' });

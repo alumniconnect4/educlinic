@@ -314,9 +314,7 @@ export default function AdminLayout() {
                         <button
                           type="button"
                           onClick={() =>
-                            setExpandedSubMenu(
-                              isSubExpanded ? null : item.name
-                            )
+                            setExpandedSubMenu(isSubExpanded ? null : item.name)
                           }
                           className={`w-full flex items-center justify-between py-3.5 px-4 text-xs font-semibold uppercase tracking-wider transition-all border-l-[3px] select-none ${
                             isActive

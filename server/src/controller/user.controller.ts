@@ -7,7 +7,6 @@ import {
   invalidateUsersCache,
 } from '../config/cache.js';
 
-
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -202,7 +201,6 @@ export const blockUser = async (req: Request, res: Response) => {
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'User blocked successfully' });
-
   } catch (err) {
     console.error('Error blocking user:', err);
     return res.status(500).json({ message: 'Internal server error' });
@@ -255,7 +253,6 @@ export const unblockUser = async (req: Request, res: Response) => {
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'User unblocked successfully' });
-
   } catch (err) {
     console.error('Error unblocking user:', err);
     return res.status(500).json({ message: 'Internal server error' });
@@ -297,7 +294,6 @@ export const updateProfile = async (req: Request, res: Response) => {
     return res
       .status(200)
       .json({ message: 'Profile updated successfully', user: updatedUser });
-
   } catch (err) {
     console.error('Error updating profile:', err);
     return res.status(500).json({ message: 'Internal server error' });

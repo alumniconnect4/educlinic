@@ -138,42 +138,42 @@ export function UpcomingEvents() {
             <div className="flex flex-col gap-2 min-h-[300px]">
               {loading || events.length === 0
                 ? Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-4 items-start p-3 rounded-lg border border-transparent animate-pulse"
-                  >
-                    <div className="min-w-[55px] h-[55px] bg-gray-200 rounded-md"></div>
-                    <div className="flex flex-col gap-2 w-full mt-1">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  </div>
-                ))
-                : events.map((event) => {
-                  const { month, day } = formatDate(event.startDate);
-                  return (
-                    <Link key={event.id} href={`/events/${event.id}`}>
-                      <div className="flex gap-4 items-start p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 cursor-pointer transition-all group">
-                        <div className="flex flex-col items-center justify-center min-w-[55px] py-1.5 bg-gray-50 border border-gray-100 rounded-md group-hover:border-[#a62025]/30 group-hover:bg-[#a62025]/5 transition-colors">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                            {month}
-                          </span>
-                          <span className="text-xl font-bold text-[#a62025] leading-none mt-1">
-                            {day}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1 mt-0.5">
-                          <h4 className="text-[15px] font-medium text-gray-800 leading-snug group-hover:text-[#a62025] transition-colors line-clamp-2">
-                            {event.name}
-                          </h4>
-                          <span className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                            <MapPin size={12} /> {event.place}
-                          </span>
-                        </div>
+                    <div
+                      key={i}
+                      className="flex gap-4 items-start p-3 rounded-lg border border-transparent animate-pulse"
+                    >
+                      <div className="min-w-[55px] h-[55px] bg-gray-200 rounded-md"></div>
+                      <div className="flex flex-col gap-2 w-full mt-1">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                       </div>
-                    </Link>
-                  );
-                })}
+                    </div>
+                  ))
+                : events.map((event) => {
+                    const { month, day } = formatDate(event.startDate);
+                    return (
+                      <Link key={event.id} href={`/events/${event.id}`}>
+                        <div className="flex gap-4 items-start p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-100 cursor-pointer transition-all group">
+                          <div className="flex flex-col items-center justify-center min-w-[55px] py-1.5 bg-gray-50 border border-gray-100 rounded-md group-hover:border-[#a62025]/30 group-hover:bg-[#a62025]/5 transition-colors">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                              {month}
+                            </span>
+                            <span className="text-xl font-bold text-[#a62025] leading-none mt-1">
+                              {day}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1 mt-0.5">
+                            <h4 className="text-[15px] font-medium text-gray-800 leading-snug group-hover:text-[#a62025] transition-colors line-clamp-2">
+                              {event.name}
+                            </h4>
+                            <span className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                              <MapPin size={12} /> {event.place}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
             </div>
 
             {totalPages > 0 && (

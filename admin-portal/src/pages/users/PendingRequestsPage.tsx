@@ -45,7 +45,9 @@ export default function PendingRequestsPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
-  const [processingAction, setProcessingAction] = useState<'APPROVE' | 'DECLINE' | null>(null);
+  const [processingAction, setProcessingAction] = useState<
+    'APPROVE' | 'DECLINE' | null
+  >(null);
 
   const fetchPendingRequests = async () => {
     try {
@@ -290,39 +292,44 @@ export default function PendingRequestsPage() {
             </thead>
             <tbody className="text-sm text-gray-600">
               {isLoading ? (
-                Array.from({ length: Math.min(itemsPerPage, 4) }).map((_, i) => (
-                  <tr key={`skeleton-${i}`} className="border-b border-gray-100 animate-pulse">
-                    <td className="py-3.5 px-6">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full mr-3 shrink-0"></div>
-                        <div className="space-y-2">
-                          <div className="h-3 bg-gray-200 rounded w-24"></div>
-                          <div className="h-2 bg-gray-200 rounded w-16"></div>
+                Array.from({ length: Math.min(itemsPerPage, 4) }).map(
+                  (_, i) => (
+                    <tr
+                      key={`skeleton-${i}`}
+                      className="border-b border-gray-100 animate-pulse"
+                    >
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-3 shrink-0"></div>
+                          <div className="space-y-2">
+                            <div className="h-3 bg-gray-200 rounded w-24"></div>
+                            <div className="h-2 bg-gray-200 rounded w-16"></div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-6">
-                      <div className="h-3 bg-gray-200 rounded w-32"></div>
-                    </td>
-                    <td className="py-3.5 px-6 text-center">
-                      <div className="flex justify-center">
-                        <div className="h-6 bg-gray-200 rounded w-24"></div>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-6 text-center">
-                      <div className="flex justify-center">
-                        <div className="h-5 bg-gray-200 rounded w-16"></div>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-6">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-16 h-6 bg-gray-200 rounded"></div>
-                        <div className="w-16 h-6 bg-gray-200 rounded"></div>
-                        <div className="w-20 h-6 bg-gray-200 rounded"></div>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="py-3.5 px-6">
+                        <div className="h-3 bg-gray-200 rounded w-32"></div>
+                      </td>
+                      <td className="py-3.5 px-6 text-center">
+                        <div className="flex justify-center">
+                          <div className="h-6 bg-gray-200 rounded w-24"></div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6 text-center">
+                        <div className="flex justify-center">
+                          <div className="h-5 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                          <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                          <div className="w-20 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )
               ) : pendingRequests.length === 0 ? (
                 <tr>
                   <td
@@ -379,10 +386,11 @@ export default function PendingRequestsPage() {
                     <td className="py-3.5 px-6 align-middle text-center">
                       <div className="flex justify-center">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${req.role === 'ALUMNI'
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${
+                            req.role === 'ALUMNI'
                               ? 'bg-slate-100 text-slate-800 border-slate-300'
                               : 'bg-slate-100 text-slate-700 border-slate-200'
-                            }`}
+                          }`}
                         >
                           {req.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                         </span>
@@ -403,7 +411,8 @@ export default function PendingRequestsPage() {
                           onClick={() => handleDecline(req.id, req.name)}
                           className="px-2.5 py-1 border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
-                          {processingId === req.id && processingAction === 'DECLINE' ? (
+                          {processingId === req.id &&
+                          processingAction === 'DECLINE' ? (
                             <Loader2 className="w-3.5 h-3.5 text-slate-600 inline mr-1 animate-spin" />
                           ) : (
                             <X className="w-3.5 h-3.5 text-slate-600 inline mr-1" />
@@ -414,7 +423,8 @@ export default function PendingRequestsPage() {
                           onClick={() => handleApprove(req.id, req.name)}
                           className="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold transition-colors shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
-                          {processingId === req.id && processingAction === 'APPROVE' ? (
+                          {processingId === req.id &&
+                          processingAction === 'APPROVE' ? (
                             <Loader2 className="w-3.5 h-3.5 text-white inline mr-1 animate-spin" />
                           ) : (
                             <Check className="w-3.5 h-3.5 text-white inline mr-1" />
@@ -608,7 +618,8 @@ export default function PendingRequestsPage() {
                   }
                   className="px-3 py-1.5 border border-slate-200 text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-sm text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
-                  {processingId === selectedRequest.id && processingAction === 'DECLINE' ? (
+                  {processingId === selectedRequest.id &&
+                  processingAction === 'DECLINE' ? (
                     <Loader2 className="w-3.5 h-3.5 inline mr-1 animate-spin" />
                   ) : null}
                   Decline
@@ -620,7 +631,8 @@ export default function PendingRequestsPage() {
                   }
                   className="px-4 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-bold transition-colors shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
-                  {processingId === selectedRequest.id && processingAction === 'APPROVE' ? (
+                  {processingId === selectedRequest.id &&
+                  processingAction === 'APPROVE' ? (
                     <Loader2 className="w-3.5 h-3.5 inline mr-1 animate-spin text-white" />
                   ) : null}
                   Approve

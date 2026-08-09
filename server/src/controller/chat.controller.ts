@@ -8,7 +8,6 @@ import {
   invalidateChatCache,
 } from '../config/cache.js';
 
-
 export const getConversations = async (
   req: Request,
   res: Response

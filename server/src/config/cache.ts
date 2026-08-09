@@ -192,7 +192,8 @@ export const generatePostCommentsCacheKey = (
   postId: number | string | string[],
   page: number,
   limit: number
-) => `posts:comments:${Array.isArray(postId) ? postId[0] : postId}:${page}:${limit}`;
+) =>
+  `posts:comments:${Array.isArray(postId) ? postId[0] : postId}:${page}:${limit}`;
 
 export const invalidatePostsCache = async (): Promise<void> => {
   await deleteCachePattern('posts:*');
@@ -212,7 +213,8 @@ export const generateAdminUserListCacheKey = (
   limit: number,
   role?: string,
   search?: string
-) => `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}`;
+) =>
+  `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}`;
 
 export const invalidateUsersCache = async (): Promise<void> => {
   await deleteCachePattern('user:*');
@@ -242,7 +244,3 @@ export const invalidateChatCache = async (
     deleteCachePattern(`chat:messages:${userId2}:${userId1}:*`),
   ]);
 };
-
-
-
-

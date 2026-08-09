@@ -225,7 +225,9 @@ export const getAllEvents = async (_req: Request, res: Response) => {
       filter as string | undefined,
       searchString
     );
-    const cachedData = await getCache<{ events: any[]; total: number }>(cacheKey);
+    const cachedData = await getCache<{ events: any[]; total: number }>(
+      cacheKey
+    );
     if (cachedData) {
       return res.json(cachedData);
     }
@@ -294,7 +296,6 @@ export const getAllEvents = async (_req: Request, res: Response) => {
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
-
 
 export const updateEvent = async (req: Request, res: Response) => {
   try {
@@ -467,7 +468,6 @@ export const deleteEvent = async (req: Request, res: Response) => {
     await invalidateEventsCache();
 
     return res.json({ message: 'Event deleted successfully' });
-
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
@@ -548,7 +548,6 @@ export const registerEvent = async (req: Request, res: Response) => {
       message: 'Successfully registered for the event',
       registration: newRegistration,
     });
-
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
@@ -639,7 +638,6 @@ export const unregisterEventRegistration = async (
     await invalidateEventsCache();
 
     return res.json({ message: 'User unregistered successfully' });
-
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });

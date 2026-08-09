@@ -72,7 +72,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Mobile overlay */}
       <div
         className={`fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300 ${
-          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          isOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
@@ -134,7 +136,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <nav className="flex flex-col space-y-0.5">
           {mainNavItems.map((item) => {
             let isActive = location.pathname === item.path;
-            
+
             // If it's the profile tab, it should only be active if we are viewing our OWN profile
             if (item.path === '/profile' && isActive) {
               const searchParams = new URLSearchParams(location.search);

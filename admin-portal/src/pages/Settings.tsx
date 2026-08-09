@@ -105,12 +105,9 @@ export default function Settings() {
     setIsLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      const res = await axios.get(
-        `${apiUrl}/admin-portal/profile`,
-        {
-          withCredentials: true,
-        }
-      );
+      const res = await axios.get(`${apiUrl}/admin-portal/profile`, {
+        withCredentials: true,
+      });
       const fetchedUser = res.data.user;
       if (fetchedUser) {
         setProfileData({
@@ -385,11 +382,9 @@ export default function Settings() {
       };
 
       const apiUrl = import.meta.env.VITE_API_URL;
-      const res = await axios.put(
-        `${apiUrl}/admin-portal/profile`,
-        payload,
-        { withCredentials: true }
-      );
+      const res = await axios.put(`${apiUrl}/admin-portal/profile`, payload, {
+        withCredentials: true,
+      });
 
       const updatedUser = res.data.user;
       if (updatedUser) {

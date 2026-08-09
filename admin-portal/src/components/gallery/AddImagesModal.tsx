@@ -1,134 +1,137 @@
-import React, { useState, useRef } from "react"
-import { X, Upload, ImagePlus, Loader2, GripVertical } from "lucide-react"
-import { toast } from "sonner"
-import type { AlbumItem } from "./CreateAlbumForm"
+import React, { useState, useRef } from 'react';
+import { X, Upload, ImagePlus, Loader2, GripVertical } from 'lucide-react';
+import { toast } from 'sonner';
+import type { AlbumItem } from './CreateAlbumForm';
 
 interface AddImagesModalProps {
-  album: AlbumItem
-  onClose: () => void
+  album: AlbumItem;
+  onClose: () => void;
   onUpload: (
     albumId: number,
     images: string[],
     onProgress?: (percent: number, current: number, totalCount: number) => void
-  ) => Promise<void>
-  isUploading: boolean
+  ) => Promise<void>;
+  isUploading: boolean;
 }
 
 export const AddImagesModal: React.FC<AddImagesModalProps> = ({
   album,
   onClose,
   onUpload,
-  isUploading
+  isUploading,
 }) => {
-  const [previews, setPreviews] = useState<string[]>([])
-  const [draggedIdx, setDraggedIdx] = useState<number | null>(null)
-  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-  const [currentUploadingIndex, setCurrentUploadingIndex] = useState<number>(0)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [currentUploadingIndex, setCurrentUploadingIndex] = useState<number>(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const BATCH_LIMIT = 10
+  const BATCH_LIMIT = 10;
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isUploading) return
-    const files = Array.from(e.target.files || [])
-    if (files.length === 0) return
+    if (isUploading) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    const remainingSlots = BATCH_LIMIT - previews.length
+    const remainingSlots = BATCH_LIMIT - previews.length;
     if (remainingSlots <= 0) {
-      toast.error(`Maximum limit of ${BATCH_LIMIT} images reached for this batch.`)
-      e.target.value = ""
-      return
+      toast.error(
+        `Maximum limit of ${BATCH_LIMIT} images reached for this batch.`
+      );
+      e.target.value = '';
+      return;
     }
 
     if (files.length > remainingSlots) {
-      toast.warning(`Only ${remainingSlots} more image(s) can be added to reach the limit of ${BATCH_LIMIT}.`)
+      toast.warning(
+        `Only ${remainingSlots} more image(s) can be added to reach the limit of ${BATCH_LIMIT}.`
+      );
     }
 
-    const filesToProcess = files.slice(0, remainingSlots)
+    const filesToProcess = files.slice(0, remainingSlots);
 
-    filesToProcess.forEach(file => {
-      const reader = new FileReader()
+    filesToProcess.forEach((file) => {
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviews(prev => {
-          if (prev.length >= BATCH_LIMIT) return prev
-          return [...prev, reader.result as string]
-        })
-      }
-      reader.readAsDataURL(file)
-    })
-    e.target.value = ""
-  }
+        setPreviews((prev) => {
+          if (prev.length >= BATCH_LIMIT) return prev;
+          return [...prev, reader.result as string];
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
 
   const removePreview = (idx: number) => {
-    if (isUploading) return
-    setPreviews(prev => prev.filter((_, i) => i !== idx))
-  }
+    if (isUploading) return;
+    setPreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   // ── Drag & Drop reordering ──
   const handleDragStart = (e: React.DragEvent, index: number) => {
-    if (isUploading) return
-    setDraggedIdx(index)
-    e.dataTransfer.effectAllowed = "move"
-  }
+    if (isUploading) return;
+    setDraggedIdx(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
-    if (isUploading) return
-    e.preventDefault()
-    e.dataTransfer.dropEffect = "move"
+    if (isUploading) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
     if (dragOverIdx !== index) {
-      setDragOverIdx(index)
+      setDragOverIdx(index);
     }
-  }
+  };
 
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    if (isUploading) return
-    e.preventDefault()
+    if (isUploading) return;
+    e.preventDefault();
     if (draggedIdx === null || draggedIdx === targetIndex) {
-      setDraggedIdx(null)
-      setDragOverIdx(null)
-      return
+      setDraggedIdx(null);
+      setDragOverIdx(null);
+      return;
     }
 
-    setPreviews(prev => {
-      const updated = [...prev]
-      const [movedItem] = updated.splice(draggedIdx, 1)
-      updated.splice(targetIndex, 0, movedItem)
-      return updated
-    })
+    setPreviews((prev) => {
+      const updated = [...prev];
+      const [movedItem] = updated.splice(draggedIdx, 1);
+      updated.splice(targetIndex, 0, movedItem);
+      return updated;
+    });
 
-    setDraggedIdx(null)
-    setDragOverIdx(null)
-  }
+    setDraggedIdx(null);
+    setDragOverIdx(null);
+  };
 
   const handleDragEnd = () => {
-    setDraggedIdx(null)
-    setDragOverIdx(null)
-  }
+    setDraggedIdx(null);
+    setDragOverIdx(null);
+  };
 
   const handleUpload = async () => {
-    if (previews.length === 0 || isUploading) return
-    setUploadProgress(0)
-    setCurrentUploadingIndex(0)
+    if (previews.length === 0 || isUploading) return;
+    setUploadProgress(0);
+    setCurrentUploadingIndex(0);
     try {
       await onUpload(album.id, previews, (percent, current) => {
-        setUploadProgress(percent)
-        setCurrentUploadingIndex(current)
-      })
-      setPreviews([])
-      setUploadProgress(null)
-      setCurrentUploadingIndex(0)
-      onClose()
+        setUploadProgress(percent);
+        setCurrentUploadingIndex(current);
+      });
+      setPreviews([]);
+      setUploadProgress(null);
+      setCurrentUploadingIndex(0);
+      onClose();
     } catch (err) {
-      setUploadProgress(null)
-      setCurrentUploadingIndex(0)
+      setUploadProgress(null);
+      setCurrentUploadingIndex(0);
     }
-  }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-sm shadow-xl w-full max-w-xl flex flex-col max-h-[90vh] overflow-hidden">
-
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0 bg-slate-50">
           <div>
@@ -137,7 +140,8 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
               Add Images
             </h2>
             <p className="text-xs text-gray-400 mt-0.5 font-normal">
-              Album: <span className="font-medium text-slate-600">{album.name}</span>
+              Album:{' '}
+              <span className="font-medium text-slate-600">{album.name}</span>
             </p>
           </div>
           <button
@@ -151,7 +155,6 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-
           {/* Progress bar live synced with backend */}
           {isUploading && (
             <div className="space-y-2 bg-slate-50 border border-slate-200 p-4 rounded-sm shadow-2xs">
@@ -159,10 +162,14 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
                 <span className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-slate-800 shrink-0" />
                   <span>
-                    Uploading image {currentUploadingIndex > 0 ? currentUploadingIndex : 1} of {previews.length} to cloud storage...
+                    Uploading image{' '}
+                    {currentUploadingIndex > 0 ? currentUploadingIndex : 1} of{' '}
+                    {previews.length} to cloud storage...
                   </span>
                 </span>
-                <span className="text-slate-900 font-bold text-sm">{uploadProgress ?? 0}%</span>
+                <span className="text-slate-900 font-bold text-sm">
+                  {uploadProgress ?? 0}%
+                </span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
                 <div
@@ -179,23 +186,27 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
           {/* Upload drop zone */}
           <div
             onClick={() => {
-              if (isUploading) return
+              if (isUploading) return;
               if (previews.length >= BATCH_LIMIT) {
-                toast.error(`Batch limit of ${BATCH_LIMIT} images reached. Delete some or upload current batch.`)
-                return
+                toast.error(
+                  `Batch limit of ${BATCH_LIMIT} images reached. Delete some or upload current batch.`
+                );
+                return;
               }
-              fileInputRef.current?.click()
+              fileInputRef.current?.click();
             }}
             className={`border-2 border-dashed rounded-sm p-7 text-center transition-all ${
               isUploading
-                ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
+                ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
                 : previews.length >= BATCH_LIMIT
-                ? "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
-                : "border-gray-200 cursor-pointer hover:border-slate-400 hover:bg-slate-50"
+                  ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                  : 'border-gray-200 cursor-pointer hover:border-slate-400 hover:bg-slate-50'
             }`}
           >
             <Upload className="w-7 h-7 mx-auto text-gray-300 mb-2" />
-            <p className="text-sm text-slate-500 font-medium">Click to select images</p>
+            <p className="text-sm text-slate-500 font-medium">
+              Click to select images
+            </p>
             <p className="text-xs text-gray-400 mt-0.5">
               PNG, JPG, WEBP — max 10 images per batch
             </p>
@@ -224,9 +235,10 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
 
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
                 {previews.map((src, idx) => {
-                  const isDragging = draggedIdx === idx
-                  const isDragOver = dragOverIdx === idx
-                  const isCurrentlyUploadingThis = isUploading && currentUploadingIndex === idx + 1
+                  const isDragging = draggedIdx === idx;
+                  const isDragOver = dragOverIdx === idx;
+                  const isCurrentlyUploadingThis =
+                    isUploading && currentUploadingIndex === idx + 1;
 
                   return (
                     <div
@@ -238,16 +250,16 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
                       onDragEnd={handleDragEnd}
                       className={`relative group aspect-square rounded-sm overflow-hidden border transition-all ${
                         isUploading
-                          ? "opacity-60 cursor-not-allowed border-gray-200"
-                          : "cursor-grab active:cursor-grabbing select-none"
+                          ? 'opacity-60 cursor-not-allowed border-gray-200'
+                          : 'cursor-grab active:cursor-grabbing select-none'
                       } ${
                         isDragging
-                          ? "opacity-30 border-dashed border-slate-400 scale-95"
+                          ? 'opacity-30 border-dashed border-slate-400 scale-95'
                           : isDragOver
-                          ? "border-slate-800 ring-2 ring-slate-800 scale-[1.02] shadow-md"
-                          : isCurrentlyUploadingThis
-                          ? "ring-2 ring-blue-500 border-blue-500"
-                          : "border-gray-200 hover:border-slate-400 hover:shadow-sm"
+                            ? 'border-slate-800 ring-2 ring-slate-800 scale-[1.02] shadow-md'
+                            : isCurrentlyUploadingThis
+                              ? 'ring-2 ring-blue-500 border-blue-500'
+                              : 'border-gray-200 hover:border-slate-400 hover:shadow-sm'
                       }`}
                     >
                       {/* Image Thumbnail */}
@@ -275,8 +287,8 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
                         <button
                           type="button"
                           onClick={(e) => {
-                            e.stopPropagation()
-                            removePreview(idx)
+                            e.stopPropagation();
+                            removePreview(idx);
                           }}
                           className="absolute top-1 right-1 bg-slate-800 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 cursor-pointer shadow-xs"
                           title="Remove"
@@ -285,7 +297,7 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
                         </button>
                       )}
                     </div>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -314,14 +326,15 @@ export const AddImagesModal: React.FC<AddImagesModalProps> = ({
             ) : (
               <>
                 <ImagePlus className="w-3.5 h-3.5" />
-                Upload {previews.length > 0
-                  ? `${previews.length} Image${previews.length > 1 ? "s" : ""}`
-                  : "Images"}
+                Upload{' '}
+                {previews.length > 0
+                  ? `${previews.length} Image${previews.length > 1 ? 's' : ''}`
+                  : 'Images'}
               </>
             )}
           </button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

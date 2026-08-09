@@ -63,14 +63,19 @@ export default function EventsGallery() {
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3 text-gray-500">
               <Loader2 className="w-8 h-8 animate-spin text-[#b91c1c]" />
-              <span className="text-sm font-semibold">Loading gallery albums...</span>
+              <span className="text-sm font-semibold">
+                Loading gallery albums...
+              </span>
             </div>
           ) : albums.length === 0 ? (
             <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-xl bg-white max-w-2xl mx-auto p-8">
               <Images className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-lg font-bold text-gray-800">No Albums Found</h3>
+              <h3 className="text-lg font-bold text-gray-800">
+                No Albums Found
+              </h3>
               <p className="text-xs text-gray-500 mt-1">
-                New photo albums uploaded via the admin portal will appear here automatically.
+                New photo albums uploaded via the admin portal will appear here
+                automatically.
               </p>
             </div>
           ) : (
@@ -86,17 +91,27 @@ export default function EventsGallery() {
                       alt={album.name}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      unoptimized={album.coverImageUrl?.startsWith('data:image')}
+                      unoptimized={album.coverImageUrl?.startsWith(
+                        'data:image'
+                      )}
                     />
                   </div>
                   <div className="p-6 sm:p-8 flex flex-col justify-between w-full sm:w-2/3">
                     <div>
-                      <h3 className="text-xl sm:text-2xl font-bold text-[#1e293b] leading-snug mb-3 line-clamp-2" title={album.name}>
+                      <h3
+                        className="text-xl sm:text-2xl font-bold text-[#1e293b] leading-snug mb-3 line-clamp-2"
+                        title={album.name}
+                      >
                         {album.name}
                       </h3>
                       <div className="flex items-center gap-2.5 text-gray-500 text-sm mb-6">
-                        <Calendar size={18} className="text-gray-400 shrink-0" />
-                        <span>{album._count?.images || 0} Photos in this Gallery</span>
+                        <Calendar
+                          size={18}
+                          className="text-gray-400 shrink-0"
+                        />
+                        <span>
+                          {album._count?.images || 0} Photos in this Gallery
+                        </span>
                       </div>
                     </div>
 
@@ -105,7 +120,9 @@ export default function EventsGallery() {
                         href={`/gallery/events/${album.id}`}
                         onClick={() => setLoadingAlbumId(album.id)}
                         className={`bg-[#b91c1c] hover:bg-[#991b1b] cursor-pointer text-white px-7 py-2.5 rounded font-semibold text-sm transition-colors shadow-xs inline-flex items-center gap-2 ${
-                          loadingAlbumId === album.id ? 'opacity-80 pointer-events-none' : ''
+                          loadingAlbumId === album.id
+                            ? 'opacity-80 pointer-events-none'
+                            : ''
                         }`}
                       >
                         {loadingAlbumId === album.id ? (

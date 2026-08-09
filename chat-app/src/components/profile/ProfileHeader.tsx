@@ -107,7 +107,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between -mt-16 sm:-mt-20 mb-4 gap-4">
           <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-card ring-2 ring-border/40 shadow-md bg-card shrink-0">
             <AvatarImage
-              src={getAvatarUrl(profileUser.name, profileUser.avatarUrl || profileUser.avatar)}
+              src={getAvatarUrl(
+                profileUser.name,
+                profileUser.avatarUrl || profileUser.avatar
+              )}
             />
             <AvatarFallback>{profileUser.name.substring(0, 2)}</AvatarFallback>
           </Avatar>
@@ -201,7 +204,13 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {profileUser.name}
             </h1>
             <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded border border-gray-300 bg-white text-gray-700 shadow-2xs uppercase tracking-wider shrink-0 my-auto">
-              {profileUser.role === 'USER' ? 'Student' : profileUser.role === 'ALUMNI' ? 'Alumni' : profileUser.role === 'SUPER_ADMIN' ? 'Super Admin' : profileUser.role || 'Student'}
+              {profileUser.role === 'USER'
+                ? 'Student'
+                : profileUser.role === 'ALUMNI'
+                  ? 'Alumni'
+                  : profileUser.role === 'SUPER_ADMIN'
+                    ? 'Super Admin'
+                    : profileUser.role || 'Student'}
             </span>
           </div>
           {profileUser.bio && (

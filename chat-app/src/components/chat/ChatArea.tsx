@@ -321,7 +321,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
         {/* Static Input Bar (Always visible at bottom) */}
         <div className="p-4 pt-2 bg-slate-50/50 flex flex-col gap-2 border-t border-border/20 shrink-0">
           <div className="flex-1 relative flex items-center">
-            <button disabled className="absolute left-4 text-muted-foreground/40 z-10">
+            <button
+              disabled
+              className="absolute left-4 text-muted-foreground/40 z-10"
+            >
               <Paperclip className="h-5 w-5" />
             </button>
             <Input
@@ -329,7 +332,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               placeholder="Message"
               className="h-12 pl-12 pr-12 text-sm bg-background border border-border/50 rounded-full shadow-sm w-full cursor-not-allowed opacity-70"
             />
-            <button disabled className="absolute right-4 text-muted-foreground/40 z-10">
+            <button
+              disabled
+              className="absolute right-4 text-muted-foreground/40 z-10"
+            >
               <Send className="h-5 w-5" />
             </button>
           </div>
@@ -368,7 +374,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 <AvatarImage
                   src={getAvatarUrl(
                     activeChat.participant.name,
-                    activeChat.participant.avatarUrl || activeChat.participant.avatar
+                    activeChat.participant.avatarUrl ||
+                      activeChat.participant.avatar
                   )}
                 />
                 <AvatarFallback className="font-semibold bg-muted">
@@ -523,7 +530,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               </div>
             ) : !followStatus ? (
               <div className="flex-1 relative flex items-center">
-                <button disabled className="absolute left-4 text-muted-foreground/40 z-10">
+                <button
+                  disabled
+                  className="absolute left-4 text-muted-foreground/40 z-10"
+                >
                   <Paperclip className="h-5 w-5" />
                 </button>
                 <Input
@@ -531,7 +541,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   placeholder="Checking permissions..."
                   className="h-12 pl-12 pr-12 text-sm bg-muted/30 border border-border/40 rounded-full w-full cursor-not-allowed opacity-70"
                 />
-                <button disabled className="absolute right-4 text-muted-foreground/40 z-10">
+                <button
+                  disabled
+                  className="absolute right-4 text-muted-foreground/40 z-10"
+                >
                   <Send className="h-5 w-5" />
                 </button>
               </div>

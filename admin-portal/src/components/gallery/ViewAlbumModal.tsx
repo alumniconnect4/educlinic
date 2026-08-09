@@ -1,103 +1,111 @@
-import React, { useState, useEffect } from "react"
-import { X, Images, Tag, Loader2, Trash2, ImagePlus, CheckSquare, Square, Eye } from "lucide-react"
-import axios from "axios"
-import { toast } from "sonner"
-import type { AlbumItem } from "./CreateAlbumForm"
-import { Skeleton } from "@/components/ui/Skeleton"
+import React, { useState, useEffect } from 'react';
+import {
+  X,
+  Images,
+  Tag,
+  Loader2,
+  Trash2,
+  ImagePlus,
+  CheckSquare,
+  Square,
+  Eye,
+} from 'lucide-react';
+import axios from 'axios';
+import { toast } from 'sonner';
+import type { AlbumItem } from './CreateAlbumForm';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface GalleryImageItem {
-  id: number
-  imageUrl: string
-  createdAt: string
+  id: number;
+  imageUrl: string;
+  createdAt: string;
 }
 
 interface ViewAlbumModalProps {
-  album: AlbumItem | null
-  onClose: () => void
-  onAddImagesClick: (album: AlbumItem) => void
-  onAlbumUpdated?: () => void
+  album: AlbumItem | null;
+  onClose: () => void;
+  onAddImagesClick: (album: AlbumItem) => void;
+  onAlbumUpdated?: () => void;
 }
 
 export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
   album,
   onClose,
   onAddImagesClick,
-  onAlbumUpdated
+  onAlbumUpdated,
 }) => {
-  const [images, setImages] = useState<GalleryImageItem[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [selectedIds, setSelectedIds] = useState<number[]>([])
-  const [isDeletingBulk, setIsDeletingBulk] = useState(false)
+  const [images, setImages] = useState<GalleryImageItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
 
   const fetchAlbumDetails = async () => {
-    if (!album) return
-    setIsLoading(true)
+    if (!album) return;
+    setIsLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await axios.get(
-        `${apiUrl}/gallery/${album.id}`,
-        { withCredentials: true }
-      )
-      setImages(response.data.album.images || [])
-      setSelectedIds([])
+      const response = await axios.get(`${apiUrl}/gallery/${album.id}`, {
+        withCredentials: true,
+      });
+      setImages(response.data.album.images || []);
+      setSelectedIds([]);
     } catch (error) {
-      console.error("Failed to load album images:", error)
-      toast.error("Failed to load album images")
+      console.error('Failed to load album images:', error);
+      toast.error('Failed to load album images');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (album) {
-      fetchAlbumDetails()
+      fetchAlbumDetails();
     } else {
-      setImages([])
-      setSelectedIds([])
+      setImages([]);
+      setSelectedIds([]);
     }
-  }, [album])
+  }, [album]);
 
   const toggleSelectImage = (id: number) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    )
-  }
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const toggleSelectAll = () => {
     if (selectedIds.length === images.length) {
-      setSelectedIds([])
+      setSelectedIds([]);
     } else {
-      setSelectedIds(images.map(img => img.id))
+      setSelectedIds(images.map((img) => img.id));
     }
-  }
+  };
 
   const executeBulkDelete = async () => {
-    if (selectedIds.length === 0) return
-    setIsDeletingBulk(true)
+    if (selectedIds.length === 0) return;
+    setIsDeletingBulk(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      await axios.delete(
-        `${apiUrl}/gallery/images/bulk`,
-        {
-          data: { imageIds: selectedIds },
-          withCredentials: true
-        }
-      )
-      toast.success(`${selectedIds.length} image(s) deleted successfully!`)
-      setImages(prev => prev.filter(img => !selectedIds.includes(img.id)))
-      setSelectedIds([])
-      if (onAlbumUpdated) onAlbumUpdated()
+      await axios.delete(`${apiUrl}/gallery/images/bulk`, {
+        data: { imageIds: selectedIds },
+        withCredentials: true,
+      });
+      toast.success(`${selectedIds.length} image(s) deleted successfully!`);
+      setImages((prev) => prev.filter((img) => !selectedIds.includes(img.id)));
+      setSelectedIds([]);
+      if (onAlbumUpdated) onAlbumUpdated();
     } catch (error: any) {
-      console.error("Failed to bulk delete images:", error)
-      toast.error(error.response?.data?.message || "Failed to delete selected images")
+      console.error('Failed to bulk delete images:', error);
+      toast.error(
+        error.response?.data?.message || 'Failed to delete selected images'
+      );
     } finally {
-      setIsDeletingBulk(false)
+      setIsDeletingBulk(false);
     }
-  }
+  };
 
   const handleBulkDeletePrompt = () => {
-    if (selectedIds.length === 0) return
+    if (selectedIds.length === 0) return;
     toast.custom(
       (t) => (
         <div className="bg-white border border-gray-200 rounded-sm shadow-xl p-4 w-full max-w-sm font-sans text-slate-800 space-y-3">
@@ -135,8 +143,8 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
             <button
               type="button"
               onClick={() => {
-                toast.dismiss(t)
-                executeBulkDelete()
+                toast.dismiss(t);
+                executeBulkDelete();
               }}
               className="px-3.5 py-1.5 text-xs font-bold bg-slate-900 hover:bg-black text-white rounded-sm transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
             >
@@ -145,13 +153,14 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
           </div>
         </div>
       ),
-      { duration: 8000, position: "bottom-right" }
-    )
-  }
+      { duration: 8000, position: 'bottom-right' }
+    );
+  };
 
-  if (!album) return null
+  if (!album) return null;
 
-  const isAllSelected = images.length > 0 && selectedIds.length === images.length
+  const isAllSelected =
+    images.length > 0 && selectedIds.length === images.length;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -160,7 +169,9 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0 bg-slate-50">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-900">{album.name}</h2>
+              <h2 className="text-base font-bold text-slate-900">
+                {album.name}
+              </h2>
               {album.category && (
                 <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                   <Tag className="w-2.5 h-2.5" />
@@ -169,7 +180,9 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
               )}
             </div>
             {album.description && (
-              <p className="text-xs text-gray-500 mt-0.5">{album.description}</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {album.description}
+              </p>
             )}
           </div>
           <div className="flex items-center gap-2.5">
@@ -203,7 +216,7 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
                 ) : (
                   <Square className="w-4 h-4 text-slate-400" />
                 )}
-                <span>{isAllSelected ? "Deselect All" : "Select All"}</span>
+                <span>{isAllSelected ? 'Deselect All' : 'Select All'}</span>
               </button>
               {selectedIds.length > 0 && (
                 <span className="text-slate-500 bg-slate-200/80 px-2 py-0.5 rounded text-[11px] font-bold">
@@ -241,7 +254,9 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
           ) : images.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center gap-2 text-gray-400 border border-dashed border-gray-200 rounded-sm">
               <Images className="w-8 h-8 text-gray-300" />
-              <span className="text-sm font-bold text-gray-700">No Photos in this Album</span>
+              <span className="text-sm font-bold text-gray-700">
+                No Photos in this Album
+              </span>
               <span className="text-xs text-gray-400">
                 Click "Add Images" above to upload photos to this album.
               </span>
@@ -256,30 +271,30 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {images.map((img) => {
-                const isSelected = selectedIds.includes(img.id)
+                const isSelected = selectedIds.includes(img.id);
 
                 return (
                   <div
                     key={img.id}
                     className={`aspect-square rounded-sm overflow-hidden border group relative bg-slate-100 transition-all ${
                       isSelected
-                        ? "ring-2 ring-slate-800 border-transparent shadow-md"
-                        : "border-gray-200 shadow-2xs hover:shadow-md"
+                        ? 'ring-2 ring-slate-800 border-transparent shadow-md'
+                        : 'border-gray-200 shadow-2xs hover:shadow-md'
                     }`}
                   >
                     {/* Checkbox overlay top-left */}
                     <div
                       className="absolute top-2 left-2 z-10 cursor-pointer"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        toggleSelectImage(img.id)
+                        e.stopPropagation();
+                        toggleSelectImage(img.id);
                       }}
                     >
                       <div
                         className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
                           isSelected
-                            ? "bg-slate-800 text-white shadow-xs"
-                            : "bg-white/90 border border-gray-300 hover:bg-white text-transparent"
+                            ? 'bg-slate-800 text-white shadow-xs'
+                            : 'bg-white/90 border border-gray-300 hover:bg-white text-transparent'
                         }`}
                       >
                         ✓
@@ -304,7 +319,7 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           )}
@@ -331,7 +346,10 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
           className="fixed inset-0 z-60 bg-black/80 flex items-center justify-center p-4 cursor-pointer"
           onClick={() => setSelectedImage(null)}
         >
-          <div className="relative max-w-4xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative max-w-4xl max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setSelectedImage(null)}
               className="absolute -top-10 right-0 text-white hover:text-gray-300 p-1 cursor-pointer"
@@ -347,5 +365,5 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};

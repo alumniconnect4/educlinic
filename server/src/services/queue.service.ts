@@ -15,7 +15,7 @@ export const initChatWorker = () => {
     'chat-queue',
     async (job: Job) => {
       const { senderId, receiverId, content } = job.data;
-      
+
       try {
         const message = await prisma.message.create({
           data: {

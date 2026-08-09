@@ -99,7 +99,7 @@ export default function ManageAdmins() {
   });
 
   const fetchAdmins = async () => {
-    setIsTableLoading(true)
+    setIsTableLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
@@ -156,11 +156,9 @@ export default function ManageAdmins() {
     setIsLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      await axios.post(
-        `${apiUrl}/admin-portal/admins`,
-        formData,
-        { withCredentials: true }
-      );
+      await axios.post(`${apiUrl}/admin-portal/admins`, formData, {
+        withCredentials: true,
+      });
       toast.success('Admin created successfully!');
       setFormData({
         name: '',
@@ -228,10 +226,9 @@ export default function ManageAdmins() {
   const executeDelete = async (adminId: number) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      await axios.delete(
-        `${apiUrl}/admin-portal/admins/${adminId}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`${apiUrl}/admin-portal/admins/${adminId}`, {
+        withCredentials: true,
+      });
       toast.success('Admin deleted successfully!');
       fetchAdmins();
     } catch (err: unknown) {
@@ -471,10 +468,18 @@ export default function ManageAdmins() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-40" /></td>
-                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-28 mx-auto" /></td>
-                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-16 mx-auto" /></td>
-                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-12 mx-auto" /></td>
+                    <td className="py-3.5 px-6">
+                      <Skeleton className="h-4 w-40" />
+                    </td>
+                    <td className="py-3.5 px-6">
+                      <Skeleton className="h-4 w-28 mx-auto" />
+                    </td>
+                    <td className="py-3.5 px-6">
+                      <Skeleton className="h-4 w-16 mx-auto" />
+                    </td>
+                    <td className="py-3.5 px-6">
+                      <Skeleton className="h-4 w-12 mx-auto" />
+                    </td>
                   </tr>
                 ))
               ) : admins.length === 0 ? (

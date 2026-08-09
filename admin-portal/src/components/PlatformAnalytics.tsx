@@ -12,7 +12,11 @@ interface PlatformAnalyticsProps {
   isLoading?: boolean;
 }
 
-export function PlatformAnalytics({ stats, user, isLoading }: PlatformAnalyticsProps) {
+export function PlatformAnalytics({
+  stats,
+  user,
+  isLoading,
+}: PlatformAnalyticsProps) {
   const createChartData = (value: number, _: string, label: string) => [
     { name: label, value: value },
     { name: 'Other', value: stats.total - value > 0 ? stats.total - value : 1 },
@@ -30,7 +34,10 @@ export function PlatformAnalytics({ stats, user, isLoading }: PlatformAnalyticsP
       >
         {isLoading ? (
           Array.from({ length: cardCount }).map((_, i) => (
-            <div key={`skeleton-analytics-${i}`} className="bg-white border border-gray-200 rounded-sm p-4 flex flex-col space-y-4 shadow-sm animate-pulse h-[280px]">
+            <div
+              key={`skeleton-analytics-${i}`}
+              className="bg-white border border-gray-200 rounded-sm p-4 flex flex-col space-y-4 shadow-sm animate-pulse h-[280px]"
+            >
               <div className="flex justify-between items-center pb-2 border-b border-gray-100">
                 <Skeleton className="h-5 w-36" />
                 <Skeleton className="h-4 w-16" />

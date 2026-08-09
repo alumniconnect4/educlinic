@@ -6,7 +6,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getAvatarUrl(
-  userOrName?: string | { name?: string; avatar?: string; avatarUrl?: string } | null,
+  userOrName?:
+    | string
+    | { name?: string; avatar?: string; avatarUrl?: string }
+    | null,
   avatarParam?: string | null
 ) {
   let name: string | undefined = undefined;

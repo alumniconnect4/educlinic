@@ -13,7 +13,6 @@ import {
   invalidateUsersCache,
 } from '../config/cache.js';
 
-
 export const loginAdmin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -94,7 +93,13 @@ export const getAdmins = async (req: Request, res: Response) => {
     const search = (req.query.search as string) || '';
     const skip = (page - 1) * limit;
 
-    const cacheKey = generateAdminUserListCacheKey('admins', page, limit, undefined, search);
+    const cacheKey = generateAdminUserListCacheKey(
+      'admins',
+      page,
+      limit,
+      undefined,
+      search
+    );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       return res.status(200).json(cachedData);
@@ -107,11 +112,11 @@ export const getAdmins = async (req: Request, res: Response) => {
       },
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -304,7 +309,7 @@ export const updateAdmin = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    
+
     await deleteUserCache(updatedAdmin.email);
     await invalidateUsersCache();
 
@@ -368,7 +373,13 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
 
     const skip = (page - 1) * limit;
 
-    const cacheKey = generateAdminUserListCacheKey('alumnistudents', page, limit, roleFilter, search);
+    const cacheKey = generateAdminUserListCacheKey(
+      'alumnistudents',
+      page,
+      limit,
+      roleFilter,
+      search
+    );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       return res.status(200).json(cachedData);
@@ -386,11 +397,11 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
       isVerified: true,
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -613,7 +624,13 @@ export const getPendingRequests = async (req: Request, res: Response) => {
 
     const skip = (page - 1) * limit;
 
-    const cacheKey = generateAdminUserListCacheKey('pending', page, limit, roleFilter, search);
+    const cacheKey = generateAdminUserListCacheKey(
+      'pending',
+      page,
+      limit,
+      roleFilter,
+      search
+    );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       return res.status(200).json(cachedData);
@@ -631,11 +648,11 @@ export const getPendingRequests = async (req: Request, res: Response) => {
       role: { in: roleCondition },
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 

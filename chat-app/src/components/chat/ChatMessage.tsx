@@ -170,9 +170,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       {showDeleteModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
           <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-xl w-full max-w-sm flex flex-col gap-4 animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Delete Message</h3>
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Delete Message
+            </h3>
             <p className="text-[15px] text-zinc-500 dark:text-zinc-400">
-              Are you sure you want to delete this message? This action cannot be undone.
+              Are you sure you want to delete this message? This action cannot
+              be undone.
             </p>
             <div className="flex justify-end gap-3 mt-2">
               <button
