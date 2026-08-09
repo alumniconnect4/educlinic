@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/token.js';
 import { config } from '../config/index.js';
 import cloudinary from '../config/cloudinary.js';
-import { deleteUserCache } from '../config/cache.js';
+import { deleteUserCache, deleteSession } from '../config/cache.js';
 
 
 export const loginAdmin = async (req: Request, res: Response) => {
@@ -61,7 +61,12 @@ export const loginAdmin = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
-    res.clearCookie('token');
+    const sessionId = req.cookies?.sessionId;
+    if (sessionId) {
+      await deleteSession(sessionId);
+    }
+    res.clearCookie('token', config.cookieOptions);
+    res.clearCookie('sessionId', config.cookieOptions);
     res.json({ message: 'User logged out successfully' });
   } catch (err) {
     console.log(err);

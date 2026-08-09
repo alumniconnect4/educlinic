@@ -105,3 +105,69 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
     logger.error('Failed to delete session from Redis!');
   }
 };
+
+// --- Generic Cache Helpers ---
+export const getCache = async <T>(key: string): Promise<T | null> => {
+  try {
+    const data = await redis.get(key);
+    if (data) {
+      return JSON.parse(data) as T;
+    }
+  } catch (error) {
+    logger.error(`Redis getCache failed for key "${key}"`);
+  }
+  return null;
+};
+
+export const setCache = async <T>(
+  key: string,
+  value: T,
+  ttlSeconds: number = REDIS_TTL_SECONDS
+): Promise<void> => {
+  try {
+    await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
+  } catch (error) {
+    logger.error(`Redis setCache failed for key "${key}"`);
+  }
+};
+
+export const deleteCachePattern = async (pattern: string): Promise<void> => {
+  try {
+    const keys = await redis.keys(pattern);
+    if (keys && keys.length > 0) {
+      await redis.del(keys);
+    }
+  } catch (error) {
+    logger.error(`Redis deleteCachePattern failed for pattern "${pattern}"`);
+  }
+};
+
+// --- Event Cache Helpers ---
+export const generateEventListCacheKey = (
+  limit: number | string,
+  offset: number | string,
+  filter?: string,
+  search?: string
+) => `events:list:${limit}:${offset}:${filter || 'all'}:${search || ''}`;
+
+export const generateEventDetailCacheKey = (id: number | string) =>
+  `events:detail:${id}`;
+
+export const invalidateEventsCache = async (): Promise<void> => {
+  await deleteCachePattern('events:*');
+};
+
+// --- Gallery Cache Helpers ---
+export const generateGalleryListCacheKey = (
+  limit: number | string,
+  offset: number | string,
+  search?: string
+) => `gallery:albums:list:${limit}:${offset}:${search || ''}`;
+
+export const generateGalleryDetailCacheKey = (id: number | string) =>
+  `gallery:album:detail:${id}`;
+
+export const invalidateGalleryCache = async (): Promise<void> => {
+  await deleteCachePattern('gallery:*');
+};
+

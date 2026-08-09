@@ -169,7 +169,8 @@ export const logout = async (req: Request, res: Response) => {
     if (sessionId) {
       await deleteSession(sessionId);
     }
-    res.clearCookie('sessionId');
+    res.clearCookie('sessionId', config.cookieOptions);
+    res.clearCookie('token', config.cookieOptions);
     res.json({ message: 'User logged out successfully' });
   } catch (err) {
     console.log(err);
