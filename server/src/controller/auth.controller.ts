@@ -12,6 +12,8 @@ import {
 import type { User } from '../../generated/prisma/browser.js';
 import { prisma } from '../config/db.js';
 
+const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
+
 export const register = async (req: Request, res: Response) => {
   try {
     const {
@@ -29,11 +31,10 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'All text fields are required' });
     }
 
-    if (!avatarUrl || avatarUrl.trim() === '') {
-      return res.status(400).json({
-        message: 'Profile avatar image upload is compulsory for registration.',
-      });
-    }
+    const finalAvatarUrl =
+      avatarUrl && avatarUrl.trim() !== ''
+        ? avatarUrl.trim()
+        : DEFAULT_USER_AVATAR;
 
     if (role === 'USER' && !idCardUrl) {
       return res.status(400).json({
@@ -65,7 +66,7 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         role,
         schoolCategory,
-        avatarUrl,
+        avatarUrl: finalAvatarUrl,
         idCardUrl: idCardUrl || null,
         degreeUrl: degreeUrl || null,
       },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useStore } from '../store/mockData';
+import { useStore, getAuthHeaders } from '../store/mockData';
 import type { User } from '../types';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfilePostList } from '../components/profile/ProfilePostList';
@@ -88,6 +88,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           const apiUrl =
             import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
           const res = await fetch(`${apiUrl}/users/${targetId}`, {
+            headers: getAuthHeaders(),
             credentials: 'include',
           });
           if (res.ok) {

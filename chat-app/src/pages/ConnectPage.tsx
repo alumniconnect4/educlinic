@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useStore } from '../store/mockData';
+import { useStore, getAuthHeaders } from '../store/mockData';
 import { getAvatarUrl } from '../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
@@ -26,13 +26,20 @@ interface ConnectUser {
 }
 
 export const ConnectPage: React.FC = () => {
-  const { toggleFollow, startDirectMessage } = useStore();
+  const {
+    toggleFollow,
+    startDirectMessage,
+    connectUsersCache,
+    setConnectUsersCache,
+    connectTotalCache,
+    setConnectTotalCache,
+  } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [users, setUsers] = useState<ConnectUser[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<ConnectUser[]>(connectUsersCache);
+  const [loading, setLoading] = useState(connectUsersCache.length === 0);
   const [skip, setSkip] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(connectTotalCache);
   const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
 
@@ -45,27 +52,36 @@ export const ConnectPage: React.FC = () => {
   }, [searchQuery]);
 
   const fetchUsers = useCallback(async () => {
-    setLoading(true);
+    if (connectUsersCache.length === 0 || skip > 0 || debouncedSearch !== '') {
+      setLoading(true);
+    }
     try {
       const apiUrl =
         import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
       const res = await fetch(
         `${apiUrl}/users?limit=16&skip=${skip}&search=${encodeURIComponent(debouncedSearch)}`,
         {
+          headers: getAuthHeaders(),
           credentials: 'include',
         }
       );
       if (res.ok) {
         const data = await res.json();
-        setUsers(data.users || []);
-        setTotal(data.total || 0);
+        const fetchedUsers = data.users || [];
+        const fetchedTotal = data.total || 0;
+        setUsers(fetchedUsers);
+        setTotal(fetchedTotal);
+        if (!debouncedSearch && skip === 0) {
+          setConnectUsersCache(fetchedUsers);
+          setConnectTotalCache(fetchedTotal);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch users', err);
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, skip]);
+  }, [debouncedSearch, skip, connectUsersCache.length, setConnectUsersCache, setConnectTotalCache]);
 
   useEffect(() => {
     fetchUsers();
@@ -89,6 +105,11 @@ export const ConnectPage: React.FC = () => {
     try {
       await toggleFollow(userId, isFollowing);
       setUsers((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, isFollowed: !isFollowing } : u
+        )
+      );
+      setConnectUsersCache((prev) =>
         prev.map((u) =>
           u.id === userId ? { ...u, isFollowed: !isFollowing } : u
         )
@@ -184,8 +205,8 @@ export const ConnectPage: React.FC = () => {
                         user.avatarUrl || user.avatar
                       )}
                     />
-                    <AvatarFallback className="bg-muted text-xl font-bold">
-                      {user.name.substring(0, 2).toUpperCase()}
+                    <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xl font-bold">
+                      {user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </div>

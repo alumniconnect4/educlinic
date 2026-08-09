@@ -3,6 +3,7 @@ import { MessageSquare, HelpCircle, Flame } from 'lucide-react';
 import { stripHtml } from '../../utils/text';
 import type { Post } from '../../types';
 import { useNavigate } from 'react-router-dom';
+import { getAuthHeaders } from '../../store/mockData';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -16,6 +17,7 @@ export const RightSidebar: React.FC = () => {
     const fetchTrending = async () => {
       try {
         const res = await fetch(`${API_BASE}/posts?limit=2&sortBy=likes`, {
+          headers: getAuthHeaders(),
           credentials: 'include',
         });
         if (res.ok) {
@@ -30,6 +32,7 @@ export const RightSidebar: React.FC = () => {
     const fetchDiscussions = async () => {
       try {
         const res = await fetch(`${API_BASE}/posts?limit=2&tag=discussions`, {
+          headers: getAuthHeaders(),
           credentials: 'include',
         });
         if (res.ok) {
@@ -44,6 +47,7 @@ export const RightSidebar: React.FC = () => {
     const fetchHelp = async () => {
       try {
         const res = await fetch(`${API_BASE}/posts?limit=2&tag=help`, {
+          headers: getAuthHeaders(),
           credentials: 'include',
         });
         if (res.ok) {

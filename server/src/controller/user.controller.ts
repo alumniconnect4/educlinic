@@ -11,7 +11,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const search = (req.query.search as string) || '';
-    const limit = parseInt(req.query.limit as string) || 16;
+    const limit = Math.min(parseInt(req.query.limit as string) || 16, 50);
     const skip = parseInt(req.query.skip as string) || 0;
 
     const cacheKey = generateUserListCacheKey(userId, limit, skip, search);
@@ -21,24 +21,29 @@ export const getAllUsers = async (req: Request, res: Response) => {
     }
 
     const whereClause: any = {};
+    let followingIdsSet = new Set<number>();
 
     if (userId) {
-      let followingIds: number[] = [];
-      if (!search) {
-        const following = await prisma.follow.findMany({
+      const [following, blockers] = await Promise.all([
+        prisma.follow.findMany({
           where: { followerId: userId },
           select: { followingId: true },
-        });
-        followingIds = following.map((f) => f.followingId);
+        }),
+        prisma.block.findMany({
+          where: { blockedId: userId },
+          select: { blockerId: true },
+        }),
+      ]);
+
+      followingIdsSet = new Set(following.map((f) => f.followingId));
+      const blockerIds = blockers.map((b) => b.blockerId);
+      const excludedIds = [userId, ...blockerIds];
+
+      if (!search) {
+        excludedIds.push(...Array.from(followingIdsSet));
       }
 
-      const blockers = await prisma.block.findMany({
-        where: { blockedId: userId },
-        select: { blockerId: true },
-      });
-      const blockerIds = blockers.map((b) => b.blockerId);
-
-      whereClause.id = { notIn: [userId, ...followingIds, ...blockerIds] };
+      whereClause.id = { notIn: excludedIds };
     }
 
     if (search) {
@@ -67,20 +72,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
       prisma.user.count({ where: whereClause }),
     ]);
 
-    let followingIds = new Set<number>();
-    if (userId) {
-      const following = await prisma.follow.findMany({
-        where: {
-          followerId: userId,
-          followingId: { in: users.map((u) => u.id) },
-        },
-      });
-      followingIds = new Set(following.map((f) => f.followingId));
-    }
-
     const formattedUsers = users.map((u) => ({
       ...u,
-      isFollowed: followingIds.has(u.id),
+      isFollowed: followingIdsSet.has(u.id),
     }));
 
     const responsePayload = { users: formattedUsers, total };
@@ -266,12 +260,13 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { name, bio, gender, socialLink } = req.body;
+    const { name, bio, gender, socialLink, avatarUrl } = req.body;
 
     const updatedUser = await prisma.user.update({
       where: { id: currentUserId },
       data: {
         ...(name && { name }),
+        ...(avatarUrl !== undefined && { avatarUrl }),
         bio,
         gender,
         socialLink,
@@ -282,6 +277,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        avatarUrl: true,
         bio: true,
         gender: true,
         socialLink: true,

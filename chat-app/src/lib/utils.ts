@@ -41,6 +41,5 @@ export function getAvatarUrl(
     return `${baseUrl}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
   }
 
-  const seed = name ? encodeURIComponent(name) : 'DEV';
-  return `https://api.dicebear.com/7.x/notionists/svg?seed=${seed}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffdfbf,ffd5dc`;
+  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
 }

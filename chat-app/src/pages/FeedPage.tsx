@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useStore } from '../store/mockData';
+import { useStore, getAuthHeaders } from '../store/mockData';
 import { PostCard } from '../components/feed/PostCard';
 import { PostSkeleton } from '../components/feed/PostSkeleton';
 import type { Post } from '../types';
@@ -61,6 +61,7 @@ export const FeedPage: React.FC = () => {
     try {
       await fetch(`${API_BASE}/posts/${postId}/like`, {
         method: 'POST',
+        headers: getAuthHeaders(),
         credentials: 'include',
       });
     } catch (err) {
@@ -83,6 +84,7 @@ export const FeedPage: React.FC = () => {
         const res = await fetch(
           `${API_BASE}/posts?page=${pageNum}&limit=5${tagQuery}${searchQuery}`,
           {
+            headers: getAuthHeaders(),
             credentials: 'include',
           }
         );

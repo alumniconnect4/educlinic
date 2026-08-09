@@ -44,13 +44,27 @@ export const authMiddleware =
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const authHeader = req.headers.authorization;
-      const bearerToken = authHeader?.startsWith('Bearer ')
-        ? authHeader.slice(7)
+      const rawBearer = authHeader?.startsWith('Bearer ')
+        ? authHeader.slice(7).trim()
         : undefined;
-      const cookieSessionId = req.cookies?.sessionId;
+      const bearerToken =
+        rawBearer &&
+        rawBearer !== 'undefined' &&
+        rawBearer !== 'null' &&
+        rawBearer !== '[object Object]'
+          ? rawBearer
+          : undefined;
 
-      const sessionId = cookieSessionId || bearerToken;
-      const token = req.cookies?.token || bearerToken;
+      const cookieSessionId = req.cookies?.sessionId;
+      const cookieToken = req.cookies?.token;
+
+      const isJwt = (t?: string) =>
+        typeof t === 'string' && t.split('.').length === 3;
+
+      const sessionId =
+        cookieSessionId || (!isJwt(bearerToken) ? bearerToken : undefined);
+      const token =
+        cookieToken || (isJwt(bearerToken) ? bearerToken : undefined);
 
       let userId: number | undefined;
 
@@ -71,7 +85,7 @@ export const authMiddleware =
             userId = decoded.id;
           }
         } catch (jwtErr) {
-          console.error('JWT verify failed in authMiddleware:', jwtErr);
+          // Expected auth failure for invalid/expired JWT tokens
         }
       }
 

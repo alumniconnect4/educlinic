@@ -30,12 +30,19 @@ export const PostEditor: React.FC<PostEditorProps> = ({
         try {
           const apiUrl =
             import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+          const token =
+            localStorage.getItem('token') ||
+            localStorage.getItem('chatSessionId');
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          };
+          if (token) {
+            headers.Authorization = `Bearer ${token}`;
+          }
+
           const response = await fetch(`${apiUrl}/posts/upload`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-            },
+            headers,
             credentials: 'include',
             body: JSON.stringify({ image: base64Image }),
           });

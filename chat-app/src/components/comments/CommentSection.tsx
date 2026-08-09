@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useStore } from '../../store/mockData';
+import { useStore, getAuthHeaders } from '../../store/mockData';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { CommentItem } from './CommentItem';
@@ -58,7 +58,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         setLoading(true);
         const res = await fetch(
           `${API_BASE}/posts/${postId}/comments?page=${page}&limit=10`,
-          { credentials: 'include' }
+          {
+            headers: getAuthHeaders(),
+            credentials: 'include',
+          }
         );
         if (res.ok) {
           const data = await res.json();
