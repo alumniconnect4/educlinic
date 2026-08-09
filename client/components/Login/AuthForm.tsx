@@ -22,19 +22,80 @@ const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleFileUpload = (
+  const compressImage = (
+    file: File,
+    maxWidth = 1280,
+    maxHeight = 1280,
+    quality = 0.7
+  ): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            return resolve(e.target?.result as string);
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(dataUrl);
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     type: 'idCard' | 'degree' | 'avatar'
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (type === 'idCard') setIdCardUrl(reader.result as string);
-      if (type === 'degree') setDegreeUrl(reader.result as string);
-      if (type === 'avatar') setAvatarUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+
+    if (file.size > 20 * 1024 * 1024) {
+      const msg = 'File size is too large. Please select a file under 20MB.';
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+
+    try {
+      const compressedDataUrl = await compressImage(file);
+      if (type === 'idCard') setIdCardUrl(compressedDataUrl);
+      if (type === 'degree') setDegreeUrl(compressedDataUrl);
+      if (type === 'avatar') setAvatarUrl(compressedDataUrl);
+    } catch (err) {
+      console.error('Failed to process image file', err);
+      toast.error('Failed to process file. Please try another image.');
+    }
     e.target.value = '';
   };
 
@@ -47,13 +108,6 @@ const AuthForm = () => {
     try {
       if (activeTab === 'register') {
         const role = e.target.role.value as 'USER' | 'ALUMNI';
-
-        if (!avatarUrl) {
-          setError('Profile avatar image is compulsory for registration.');
-          toast.error('Profile avatar image is compulsory for registration.');
-          setIsLoading(false);
-          return;
-        }
 
         if (role === 'USER' && !idCardUrl) {
           setError('Student registration requires uploading an ID Card.');
@@ -81,7 +135,7 @@ const AuthForm = () => {
             password: e.target.password.value,
             role,
             schoolCategory: e.target.schoolCategory.value,
-            avatarUrl,
+            avatarUrl: avatarUrl || undefined,
             idCardUrl,
             degreeUrl,
           },
@@ -121,7 +175,12 @@ const AuthForm = () => {
         router.push('/');
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Something went wrong';
+      let msg = err.response?.data?.message;
+      if (err.response?.status === 413 || err.status === 413) {
+        msg =
+          'File size is too large (HTTP 413 Request Entity Too Large). Please select smaller image files or documents.';
+      }
+      if (!msg) msg = 'Something went wrong';
       setError(msg);
       toast.error(msg);
       console.log(err);
