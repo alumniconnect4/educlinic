@@ -71,7 +71,7 @@ const appMiddleware: express.RequestHandler[] = [
 app.use(appMiddleware);
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('API is working...');
+  res.send('API is running...');
 });
 
 app.get('/api/health', (req: Request, res: Response) => {
