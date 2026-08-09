@@ -237,11 +237,9 @@ export default function ManageAlumniStudents() {
     setIsLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      await axios.post(
-        `${apiUrl}/admin-portal/alumni-students`,
-        formData,
-        { withCredentials: true }
-      );
+      await axios.post(`${apiUrl}/admin-portal/alumni-students`, formData, {
+        withCredentials: true,
+      });
       toast.success('User account created successfully!');
       setFormData({
         name: '',
@@ -311,10 +309,9 @@ export default function ManageAlumniStudents() {
   const executeDelete = async (userId: number) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      await axios.delete(
-        `${apiUrl}/admin-portal/alumni-students/${userId}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`${apiUrl}/admin-portal/alumni-students/${userId}`, {
+        withCredentials: true,
+      });
       toast.success('User deleted successfully!');
       fetchUsers();
     } catch (err: unknown) {
@@ -337,7 +334,7 @@ export default function ManageAlumniStudents() {
       },
       cancel: {
         label: 'Cancel',
-        onClick: () => { },
+        onClick: () => {},
       },
     });
   };
@@ -603,39 +600,44 @@ export default function ManageAlumniStudents() {
               </thead>
               <tbody className="text-sm text-gray-600">
                 {isFetching ? (
-                  Array.from({ length: Math.min(itemsPerPage, 4) }).map((_, i) => (
-                    <tr key={`skeleton-${i}`} className="border-b border-gray-100 animate-pulse">
-                      <td className="py-3.5 px-6">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gray-200 rounded-full mr-3 shrink-0"></div>
-                          <div className="space-y-2">
-                            <div className="h-3 bg-gray-200 rounded w-24"></div>
-                            <div className="h-2 bg-gray-200 rounded w-16"></div>
+                  Array.from({ length: Math.min(itemsPerPage, 4) }).map(
+                    (_, i) => (
+                      <tr
+                        key={`skeleton-${i}`}
+                        className="border-b border-gray-100 animate-pulse"
+                      >
+                        <td className="py-3.5 px-6">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-gray-200 rounded-full mr-3 shrink-0"></div>
+                            <div className="space-y-2">
+                              <div className="h-3 bg-gray-200 rounded w-24"></div>
+                              <div className="h-2 bg-gray-200 rounded w-16"></div>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-6">
-                        <div className="h-3 bg-gray-200 rounded w-32"></div>
-                      </td>
-                      <td className="py-3.5 px-6 text-center">
-                        <div className="flex justify-center">
-                          <div className="h-6 bg-gray-200 rounded w-24"></div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-6 text-center">
-                        <div className="flex justify-center">
-                          <div className="h-5 bg-gray-200 rounded w-16"></div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-6">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="py-3.5 px-6">
+                          <div className="h-3 bg-gray-200 rounded w-32"></div>
+                        </td>
+                        <td className="py-3.5 px-6 text-center">
+                          <div className="flex justify-center">
+                            <div className="h-6 bg-gray-200 rounded w-24"></div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-6 text-center">
+                          <div className="flex justify-center">
+                            <div className="h-5 bg-gray-200 rounded w-16"></div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-6">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  )
                 ) : users.length === 0 ? (
                   <tr>
                     <td
@@ -694,10 +696,11 @@ export default function ManageAlumniStudents() {
                       <td className="py-3.5 px-6 align-middle text-center">
                         <div className="flex justify-center">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${user.role === 'ALUMNI'
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold border ${
+                              user.role === 'ALUMNI'
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : 'bg-blue-50 text-blue-700 border-blue-200'
-                              }`}
+                            }`}
                           >
                             {user.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                           </span>
@@ -835,18 +838,20 @@ export default function ManageAlumniStudents() {
                       {viewingUser.name}
                     </h4>
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${viewingUser.role === 'ALUMNI'
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                        viewingUser.role === 'ALUMNI'
                           ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                           : 'bg-blue-50 text-blue-700 border-blue-200'
-                        }`}
+                      }`}
                     >
                       {viewingUser.role === 'ALUMNI' ? 'Alumni' : 'Student'}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${viewingUser.isVerified
+                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                        viewingUser.isVerified
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}
+                      }`}
                     >
                       <ShieldCheck className="w-3 h-3" />
                       {viewingUser.isVerified

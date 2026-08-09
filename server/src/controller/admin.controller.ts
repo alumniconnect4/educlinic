@@ -13,7 +13,6 @@ import {
   invalidateUsersCache,
 } from '../config/cache.js';
 
-
 export const loginAdmin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -94,7 +93,13 @@ export const getAdmins = async (req: Request, res: Response) => {
     const search = (req.query.search as string) || '';
     const skip = (page - 1) * limit;
 
-    const cacheKey = generateAdminUserListCacheKey('admins', page, limit, undefined, search);
+    const cacheKey = generateAdminUserListCacheKey(
+      'admins',
+      page,
+      limit,
+      undefined,
+      search
+    );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       return res.status(200).json(cachedData);
@@ -107,11 +112,11 @@ export const getAdmins = async (req: Request, res: Response) => {
       },
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -304,7 +309,7 @@ export const updateAdmin = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
-    
+
     await deleteUserCache(updatedAdmin.email);
     await invalidateUsersCache();
 
@@ -336,10 +341,18 @@ export const deleteAdmin = async (req: Request, res: Response) => {
         .json({ message: 'You cannot delete your own account' });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true },
+    });
+
     await prisma.user.delete({
       where: { id },
     });
 
+    if (user?.email) {
+      await deleteUserCache(user.email);
+    }
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'Admin deleted successfully' });
@@ -360,7 +373,13 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
 
     const skip = (page - 1) * limit;
 
-    const cacheKey = generateAdminUserListCacheKey('alumnistudents', page, limit, roleFilter, search);
+    const cacheKey = generateAdminUserListCacheKey(
+      'alumnistudents',
+      page,
+      limit,
+      roleFilter,
+      search
+    );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       return res.status(200).json(cachedData);
@@ -378,11 +397,11 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
       isVerified: true,
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -573,10 +592,18 @@ export const deleteAlumniStudent = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid User ID' });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true },
+    });
+
     await prisma.user.delete({
       where: { id },
     });
 
+    if (user?.email) {
+      await deleteUserCache(user.email);
+    }
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'User deleted successfully' });
@@ -597,7 +624,13 @@ export const getPendingRequests = async (req: Request, res: Response) => {
 
     const skip = (page - 1) * limit;
 
-    const cacheKey = generateAdminUserListCacheKey('pending', page, limit, roleFilter, search);
+    const cacheKey = generateAdminUserListCacheKey(
+      'pending',
+      page,
+      limit,
+      roleFilter,
+      search
+    );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       return res.status(200).json(cachedData);
@@ -615,11 +648,11 @@ export const getPendingRequests = async (req: Request, res: Response) => {
       role: { in: roleCondition },
       ...(search
         ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ],
-        }
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
         : {}),
     };
 
@@ -681,6 +714,7 @@ export const approvePendingRequest = async (req: Request, res: Response) => {
       },
     });
 
+    await deleteUserCache(approvedUser.email);
     await invalidateUsersCache();
 
     return res
@@ -699,10 +733,18 @@ export const declinePendingRequest = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid Request ID' });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true },
+    });
+
     await prisma.user.delete({
       where: { id },
     });
 
+    if (user?.email) {
+      await deleteUserCache(user.email);
+    }
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'Registration request declined' });

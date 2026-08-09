@@ -142,11 +142,17 @@ const Footer = () => {
               ABOUT
             </Link>
             <span className="text-gray-500">|</span>
-            <Link href="/contact" className="hover:text-white transition-colors">
+            <Link
+              href="/contact"
+              className="hover:text-white transition-colors"
+            >
               CONTACT
             </Link>
             <span className="text-gray-500">|</span>
-            <Link href="/sitemap" className="hover:text-white transition-colors">
+            <Link
+              href="/sitemap"
+              className="hover:text-white transition-colors"
+            >
               SITEMAP
             </Link>
           </div>

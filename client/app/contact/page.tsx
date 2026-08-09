@@ -154,9 +154,12 @@ const ContactPage = () => {
                 <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mb-4">
                   <span className="text-emerald-600 text-2xl font-bold">✓</span>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">Thank You!</h3>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                  Thank You!
+                </h3>
                 <p className="text-gray-600 text-sm mb-6 max-w-xs leading-relaxed">
-                  Your message has been sent successfully. We will get back to you soon.
+                  Your message has been sent successfully. We will get back to
+                  you soon.
                 </p>
                 <button
                   type="button"
@@ -168,7 +171,9 @@ const ContactPage = () => {
               </div>
             ) : (
               <>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">Get in Touch</h2>
+                <h2 className="text-3xl font-bold text-slate-900 mb-2">
+                  Get in Touch
+                </h2>
                 <p className="text-gray-500 text-sm mb-8">
                   Please fill out the form and we will contact you asap.
                 </p>
@@ -240,7 +245,9 @@ const ContactPage = () => {
                       type="submit"
                       disabled={loading}
                       className={`bg-[#b91c1c] hover:bg-[#991b1b] text-white font-bold py-3 px-8 rounded-sm shadow-xs transition-all flex items-center justify-center gap-2 text-sm ${
-                        loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+                        loading
+                          ? 'opacity-70 cursor-not-allowed'
+                          : 'cursor-pointer'
                       }`}
                     >
                       {loading ? (

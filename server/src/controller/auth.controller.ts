@@ -139,6 +139,15 @@ export const login = async (req: Request, res: Response) => {
     }
 
     if (!user.isVerified && (user.role === 'USER' || user.role === 'ALUMNI')) {
+      // Re-verify against database in case cache was stale when admin approved user
+      const dbUser = await prisma.user.findUnique({ where: { email } });
+      if (dbUser && dbUser.isVerified) {
+        user = dbUser;
+        await cacheUser(user);
+      }
+    }
+
+    if (!user.isVerified && (user.role === 'USER' || user.role === 'ALUMNI')) {
       return res.status(403).json({
         message:
           'Your registration request is pending admin approval. Please wait for an administrator to review and approve your account.',

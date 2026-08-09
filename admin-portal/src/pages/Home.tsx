@@ -62,11 +62,31 @@ export default function Home() {
 
     const fetchAllData = async () => {
       await Promise.allSettled([
-        axios.get(`${apiUrl}/admin-portal/analytics/overview`, { withCredentials: true }).then((res) => setStats(res.data)),
-        axios.get(`${apiUrl}/admin-portal/analytics/recent-events`, { withCredentials: true }).then((res) => setRecentEvents(res.data)),
-        axios.get(`${apiUrl}/admin-portal/analytics/community`, { withCredentials: true }).then((res) => setCommunityStats(res.data)),
-        axios.get(`${apiUrl}/admin-portal/analytics/help-tickets`, { withCredentials: true }).then((res) => setTicketStats(res.data)),
-        axios.get(`${apiUrl}/admin-portal/analytics/user-registrations`, { withCredentials: true }).then((res) => setUserRegStats(res.data)),
+        axios
+          .get(`${apiUrl}/admin-portal/analytics/overview`, {
+            withCredentials: true,
+          })
+          .then((res) => setStats(res.data)),
+        axios
+          .get(`${apiUrl}/admin-portal/analytics/recent-events`, {
+            withCredentials: true,
+          })
+          .then((res) => setRecentEvents(res.data)),
+        axios
+          .get(`${apiUrl}/admin-portal/analytics/community`, {
+            withCredentials: true,
+          })
+          .then((res) => setCommunityStats(res.data)),
+        axios
+          .get(`${apiUrl}/admin-portal/analytics/help-tickets`, {
+            withCredentials: true,
+          })
+          .then((res) => setTicketStats(res.data)),
+        axios
+          .get(`${apiUrl}/admin-portal/analytics/user-registrations`, {
+            withCredentials: true,
+          })
+          .then((res) => setUserRegStats(res.data)),
       ]);
       setIsLoading(false);
     };
@@ -462,7 +482,9 @@ export default function Home() {
                         </p>
                         <div className="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
                           <span className="font-semibold text-slate-700">
-                            {ticket.createdBy?.name || ticket.name || 'Guest User'}
+                            {ticket.createdBy?.name ||
+                              ticket.name ||
+                              'Guest User'}
                           </span>
                           {(ticket.createdBy?.email || ticket.email) && (
                             <span className="font-mono text-gray-400">

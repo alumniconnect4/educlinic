@@ -161,10 +161,7 @@ export const setupChatSocket = (io: SocketIOServer) => {
               'receive_message',
               formattedMessage
             );
-            io.to(`user:${user.id}`).emit(
-              'receive_message',
-              formattedMessage
-            );
+            io.to(`user:${user.id}`).emit('receive_message', formattedMessage);
           }
         } catch (err) {
           logger.error('Failed to handle send_message socket event', err);

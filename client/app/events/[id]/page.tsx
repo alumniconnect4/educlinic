@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, MapPin, ArrowLeft, Eye, Share2, Loader2 } from 'lucide-react';
+import {
+  Calendar,
+  MapPin,
+  ArrowLeft,
+  Eye,
+  Share2,
+  Loader2,
+} from 'lucide-react';
 import Image from 'next/image';
 import axios from 'axios';
 import { useUserStore } from '@/store/useUserStore';
@@ -531,8 +538,11 @@ export default function EventDetailPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`px-8 py-2.5 text-[15px] text-white bg-[#85161a] hover:bg-[#6c1215] transition-colors tracking-wider flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
-                    }`}
+                  className={`px-8 py-2.5 text-[15px] text-white bg-[#85161a] hover:bg-[#6c1215] transition-colors tracking-wider flex items-center justify-center gap-2 ${
+                    isSubmitting
+                      ? 'opacity-75 cursor-not-allowed'
+                      : 'cursor-pointer'
+                  }`}
                 >
                   {isSubmitting ? (
                     <>

@@ -178,7 +178,12 @@ export const ConnectPage: React.FC = () => {
 
                 <div className="absolute top-10 left-4">
                   <Avatar className="h-20 w-20 border-4 border-card bg-card">
-                    <AvatarImage src={getAvatarUrl(user.name, user.avatarUrl || user.avatar)} />
+                    <AvatarImage
+                      src={getAvatarUrl(
+                        user.name,
+                        user.avatarUrl || user.avatar
+                      )}
+                    />
                     <AvatarFallback className="bg-muted text-xl font-bold">
                       {user.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -191,7 +196,13 @@ export const ConnectPage: React.FC = () => {
                       {user.name}
                     </h3>
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-gray-300 bg-white text-gray-700 shadow-2xs uppercase tracking-wider shrink-0">
-                      {user.role === 'USER' ? 'Student' : user.role === 'ALUMNI' ? 'Alumni' : user.role === 'SUPER_ADMIN' ? 'Super Admin' : user.role || 'Student'}
+                      {user.role === 'USER'
+                        ? 'Student'
+                        : user.role === 'ALUMNI'
+                          ? 'Alumni'
+                          : user.role === 'SUPER_ADMIN'
+                            ? 'Super Admin'
+                            : user.role || 'Student'}
                     </span>
                   </div>
                   <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-1">

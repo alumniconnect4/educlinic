@@ -23,7 +23,9 @@ export default async function AlbumPage({
   const numericId = parseInt(albumId, 10);
   if (!isNaN(numericId)) {
     try {
-      const res = await fetch(`${apiUrl}/gallery/${numericId}`, { cache: 'no-store' });
+      const res = await fetch(`${apiUrl}/gallery/${numericId}`, {
+        cache: 'no-store',
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.album) {
@@ -32,7 +34,9 @@ export default async function AlbumPage({
           description = data.album.description || '';
           coverImageUrl = data.album.coverImageUrl || '';
           images = (data.album.images || [])
-            .map((img: any) => (typeof img === 'string' ? img : img?.url || img?.imageUrl || ''))
+            .map((img: any) =>
+              typeof img === 'string' ? img : img?.url || img?.imageUrl || ''
+            )
             .filter(Boolean);
         }
       }
@@ -92,7 +96,9 @@ export default async function AlbumPage({
         ) : (
           <div className="py-16 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 max-w-md mx-auto p-8">
             <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-slate-800">No Photos In This Album Yet</h3>
+            <h3 className="text-lg font-bold text-slate-800">
+              No Photos In This Album Yet
+            </h3>
             <p className="text-xs text-gray-500 mt-1">
               Images uploaded to this album will automatically appear here.
             </p>

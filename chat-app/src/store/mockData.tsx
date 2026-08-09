@@ -199,7 +199,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
               return true;
             });
             const exists = updatedMessages.some((m) => m.id === msg.id);
-            const finalMessages = exists ? updatedMessages : [msg, ...updatedMessages];
+            const finalMessages = exists
+              ? updatedMessages
+              : [msg, ...updatedMessages];
 
             const unreadInc =
               msg.senderId !== currentUser.id && !msg.isRead ? 1 : 0;
@@ -466,7 +468,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
 
     const socket = getSocket();
     if (socket.connected) {
-      socket.emit('send_message', { receiverId, content: content.trim(), tempId: tempMsgId });
+      socket.emit('send_message', {
+        receiverId,
+        content: content.trim(),
+        tempId: tempMsgId,
+      });
     } else {
       try {
         const res = await fetch(`${API_BASE}/chat/send`, {
@@ -487,12 +493,16 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
               if (existingIndex !== -1) {
                 const updated = [...prev];
                 const [chat] = updated.splice(existingIndex, 1);
-                const filteredMessages = chat.messages.filter((m) => m.id !== tempMsgId);
+                const filteredMessages = chat.messages.filter(
+                  (m) => m.id !== tempMsgId
+                );
                 const exists = filteredMessages.some((m) => m.id === msg.id);
                 return [
                   {
                     ...chat,
-                    messages: exists ? filteredMessages : [msg, ...filteredMessages],
+                    messages: exists
+                      ? filteredMessages
+                      : [msg, ...filteredMessages],
                     lastMessage: msg,
                   },
                   ...updated,

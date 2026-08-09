@@ -20,7 +20,11 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const validImages = (images || [])
-    .map((img) => (typeof img === 'string' ? img : (img as any)?.url || (img as any)?.imageUrl || ''))
+    .map((img) =>
+      typeof img === 'string'
+        ? img
+        : (img as any)?.url || (img as any)?.imageUrl || ''
+    )
     .filter(Boolean);
 
   const handleNext = useCallback(() => {
@@ -89,7 +93,9 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
               alt={`Gallery Image ${index + 1}`}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-105"
-              unoptimized={typeof src === 'string' && src.startsWith('data:image')}
+              unoptimized={
+                typeof src === 'string' && src.startsWith('data:image')
+              }
             />
           </div>
         ))}
@@ -122,7 +128,10 @@ export default function LightboxGallery({ images }: LightboxGalleryProps) {
                 fill
                 className="object-contain p-2"
                 priority
-                unoptimized={typeof validImages[selectedIndex] === 'string' && validImages[selectedIndex].startsWith('data:image')}
+                unoptimized={
+                  typeof validImages[selectedIndex] === 'string' &&
+                  validImages[selectedIndex].startsWith('data:image')
+                }
               />
             </div>
 

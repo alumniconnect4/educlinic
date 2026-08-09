@@ -1,26 +1,26 @@
-import React from "react"
-import { ImagePlus, Pencil, Trash2, Images, Tag } from "lucide-react"
-import type { AlbumItem } from "./CreateAlbumForm"
+import React from 'react';
+import { ImagePlus, Pencil, Trash2, Images, Tag } from 'lucide-react';
+import type { AlbumItem } from './CreateAlbumForm';
 
 interface AlbumCardProps {
-  album: AlbumItem
-  onAddImages: (album: AlbumItem) => void
-  onEdit: (album: AlbumItem) => void
-  onDelete: (album: AlbumItem) => void
-  onView: (album: AlbumItem) => void
+  album: AlbumItem;
+  onAddImages: (album: AlbumItem) => void;
+  onEdit: (album: AlbumItem) => void;
+  onDelete: (album: AlbumItem) => void;
+  onView: (album: AlbumItem) => void;
 }
 
 const DEFAULT_ALBUM_COVER =
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1170&auto=format&fit=crop"
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=1170&auto=format&fit=crop';
 
 export const AlbumCard: React.FC<AlbumCardProps> = ({
   album,
   onAddImages,
   onEdit,
   onDelete,
-  onView
+  onView,
 }) => {
-  const imageCount = album._count?.images ?? album.imageCount ?? 0
+  const imageCount = album._count?.images ?? album.imageCount ?? 0;
 
   return (
     <div className="flex flex-col sm:flex-row bg-white border border-gray-200 rounded-sm overflow-hidden shadow-2xs hover:shadow-sm transition-all group">
@@ -35,7 +35,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
           alt={album.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
-            ;(e.target as HTMLImageElement).src = DEFAULT_ALBUM_COVER
+            (e.target as HTMLImageElement).src = DEFAULT_ALBUM_COVER;
           }}
         />
         {/* Category badge */}
@@ -87,8 +87,8 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
             <Images className="w-4 h-4 text-gray-400 shrink-0" />
             <span>
               {imageCount > 0
-                ? `${imageCount} Photo${imageCount !== 1 ? "s" : ""} in this Album`
-                : "No photos yet"}
+                ? `${imageCount} Photo${imageCount !== 1 ? 's' : ''} in this Album`
+                : 'No photos yet'}
             </span>
           </div>
 
@@ -120,5 +120,5 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

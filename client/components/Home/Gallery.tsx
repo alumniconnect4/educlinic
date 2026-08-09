@@ -35,7 +35,9 @@ const Gallery = () => {
     const fetchLatestAlbums = async () => {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       try {
-        const res = await fetch(`${apiUrl}/gallery/all/3/0`, { cache: 'no-store' });
+        const res = await fetch(`${apiUrl}/gallery/all/3/0`, {
+          cache: 'no-store',
+        });
         if (res.ok) {
           const data = await res.json();
           if (data.albums && data.albums.length > 0) {
@@ -64,10 +66,13 @@ const Gallery = () => {
       <div className="w-full px-4 md:px-8 lg:px-16 xl:px-32">
         {/* Section Header */}
         <div
-          className={`flex justify-between items-center mb-8 transition-all duration-700 ease-out transform ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-            }`}
+          className={`flex justify-between items-center mb-8 transition-all duration-700 ease-out transform ${
+            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+          }`}
         >
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#1e293b]">Gallery</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[#1e293b]">
+            Gallery
+          </h2>
           <Link
             href="/gallery/events"
             className="px-5 py-1.5 border border-[#b91c1c] text-[#b91c1c] hover:bg-[#b91c1c] hover:text-white rounded text-sm font-semibold transition-all duration-300 shadow-2xs hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
@@ -82,10 +87,11 @@ const Gallery = () => {
             <Link
               key={item.id}
               href={`/gallery/events/${item.id}`}
-              className={`fgroup lex flex-col gap-3 group cursor-pointer transition-all duration-700 ease-out transform ${isVisible
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 translate-y-10'
-                }`}
+              className={`fgroup lex flex-col gap-3 group cursor-pointer transition-all duration-700 ease-out transform ${
+                isVisible
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 translate-y-10'
+              }`}
               style={{ transitionDelay: `${index * 150}ms` }}
             >
               {/* Image Container with rounded-xl */}

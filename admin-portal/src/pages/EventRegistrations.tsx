@@ -89,10 +89,9 @@ export default function EventRegistrations() {
   const executeUnregister = async (regId: number, regName: string) => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      await axios.delete(
-        `${apiUrl}/events/registrations/${regId}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`${apiUrl}/events/registrations/${regId}`, {
+        withCredentials: true,
+      });
       toast.success(`Successfully unregistered ${regName}`);
       fetchRegistrations();
     } catch (err: any) {
@@ -344,8 +343,13 @@ export default function EventRegistrations() {
             <tbody className="divide-y divide-gray-100 text-gray-600">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={`skeleton-${i}`} className="border-b border-gray-100">
-                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-4 w-6 mx-auto" /></td>
+                  <tr
+                    key={`skeleton-${i}`}
+                    className="border-b border-gray-100"
+                  >
+                    <td className="py-3.5 px-6 text-center">
+                      <Skeleton className="h-4 w-6 mx-auto" />
+                    </td>
                     <td className="py-3.5 px-6">
                       <div className="flex items-center gap-3">
                         <Skeleton className="w-9 h-9 rounded-full shrink-0" />
@@ -361,11 +365,21 @@ export default function EventRegistrations() {
                         <Skeleton className="h-3 w-24" />
                       </div>
                     </td>
-                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-32" /></td>
-                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-4 w-12 mx-auto" /></td>
-                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-4 w-8 mx-auto" /></td>
-                    <td className="py-3.5 px-6"><Skeleton className="h-4 w-24" /></td>
-                    <td className="py-3.5 px-6 text-center"><Skeleton className="h-6 w-16 mx-auto" /></td>
+                    <td className="py-3.5 px-6">
+                      <Skeleton className="h-4 w-32" />
+                    </td>
+                    <td className="py-3.5 px-6 text-center">
+                      <Skeleton className="h-4 w-12 mx-auto" />
+                    </td>
+                    <td className="py-3.5 px-6 text-center">
+                      <Skeleton className="h-4 w-8 mx-auto" />
+                    </td>
+                    <td className="py-3.5 px-6">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="py-3.5 px-6 text-center">
+                      <Skeleton className="h-6 w-16 mx-auto" />
+                    </td>
                   </tr>
                 ))
               ) : verifiedRegistrations.length === 0 ? (
