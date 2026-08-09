@@ -7,6 +7,13 @@ import {
   type UserRole as UserRoleEnum,
 } from '../../generated/prisma/enums.js';
 import cloudinary from '../config/cloudinary.js';
+import {
+  getCache,
+  setCache,
+  generateEventListCacheKey,
+  generateEventDetailCacheKey,
+  invalidateEventsCache,
+} from '../config/cache.js';
 
 const validEventTypes = new Set<string>(Object.values(EventType));
 const validEventVisibilities = new Set<string>(Object.values(EventVisibility));
@@ -142,6 +149,8 @@ export const createEvent = async (req: Request, res: Response) => {
       },
     });
 
+    await invalidateEventsCache();
+
     return res.status(201).json({
       message: 'Event created successfully',
       event,
@@ -158,6 +167,12 @@ export const getEventById = async (req: Request, res: Response) => {
 
     if (Number.isNaN(id)) {
       return res.status(400).json({ message: 'Invalid event id' });
+    }
+
+    const cacheKey = generateEventDetailCacheKey(id);
+    const cachedData = await getCache<{ event: any }>(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
     }
 
     const event = await prisma.event.findUnique({
@@ -179,7 +194,10 @@ export const getEventById = async (req: Request, res: Response) => {
       where: { eventId: id, user: { isVerified: true } },
     });
 
-    return res.json({ event: { ...event, verifiedRegistrationsCount } });
+    const responsePayload = { event: { ...event, verifiedRegistrationsCount } };
+    await setCache(cacheKey, responsePayload);
+
+    return res.json(responsePayload);
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
@@ -200,6 +218,17 @@ export const getAllEvents = async (_req: Request, res: Response) => {
 
     const take = limit ? parseInt(limit as string, 10) : 8;
     const skip = offset ? parseInt(offset as string, 10) : 0;
+
+    const cacheKey = generateEventListCacheKey(
+      take,
+      skip,
+      filter as string | undefined,
+      searchString
+    );
+    const cachedData = await getCache<{ events: any[]; total: number }>(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
 
     const now = new Date();
     const where: any =
@@ -256,12 +285,16 @@ export const getAllEvents = async (_req: Request, res: Response) => {
       verifiedRegistrationsCount: verifiedCountMap[e.id] ?? 0,
     }));
 
-    return res.json({ events: eventsWithVerified, total });
+    const responsePayload = { events: eventsWithVerified, total };
+    await setCache(cacheKey, responsePayload);
+
+    return res.json(responsePayload);
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
 
 export const updateEvent = async (req: Request, res: Response) => {
   try {
@@ -383,6 +416,8 @@ export const updateEvent = async (req: Request, res: Response) => {
       },
     });
 
+    await invalidateEventsCache();
+
     return res.json({
       message: 'Event updated successfully',
       event: updatedEvent,
@@ -429,7 +464,10 @@ export const deleteEvent = async (req: Request, res: Response) => {
       where: { id },
     });
 
+    await invalidateEventsCache();
+
     return res.json({ message: 'Event deleted successfully' });
+
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
@@ -504,10 +542,13 @@ export const registerEvent = async (req: Request, res: Response) => {
       },
     });
 
+    await invalidateEventsCache();
+
     return res.status(201).json({
       message: 'Successfully registered for the event',
       registration: newRegistration,
     });
+
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });
@@ -595,7 +636,10 @@ export const unregisterEventRegistration = async (
       where: { id: regId },
     });
 
+    await invalidateEventsCache();
+
     return res.json({ message: 'User unregistered successfully' });
+
   } catch (err) {
     console.log(err);
     return res.status(500).json({ message: 'Internal Server Error' });

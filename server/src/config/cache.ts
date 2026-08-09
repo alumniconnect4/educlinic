@@ -105,3 +105,143 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
     logger.error('Failed to delete session from Redis!');
   }
 };
+
+// --- Generic Cache Helpers ---
+export const getCache = async <T>(key: string): Promise<T | null> => {
+  try {
+    const data = await redis.get(key);
+    if (data) {
+      return JSON.parse(data) as T;
+    }
+  } catch (error) {
+    logger.error(`Redis getCache failed for key "${key}"`);
+  }
+  return null;
+};
+
+export const setCache = async <T>(
+  key: string,
+  value: T,
+  ttlSeconds: number = REDIS_TTL_SECONDS
+): Promise<void> => {
+  try {
+    await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
+  } catch (error) {
+    logger.error(`Redis setCache failed for key "${key}"`);
+  }
+};
+
+export const deleteCachePattern = async (pattern: string): Promise<void> => {
+  try {
+    const keys = await redis.keys(pattern);
+    if (keys && keys.length > 0) {
+      await redis.del(keys);
+    }
+  } catch (error) {
+    logger.error(`Redis deleteCachePattern failed for pattern "${pattern}"`);
+  }
+};
+
+// --- Event Cache Helpers ---
+export const generateEventListCacheKey = (
+  limit: number | string,
+  offset: number | string,
+  filter?: string,
+  search?: string
+) => `events:list:${limit}:${offset}:${filter || 'all'}:${search || ''}`;
+
+export const generateEventDetailCacheKey = (id: number | string) =>
+  `events:detail:${id}`;
+
+export const invalidateEventsCache = async (): Promise<void> => {
+  await deleteCachePattern('events:*');
+};
+
+// --- Gallery Cache Helpers ---
+export const generateGalleryListCacheKey = (
+  limit: number | string,
+  offset: number | string,
+  search?: string
+) => `gallery:albums:list:${limit}:${offset}:${search || ''}`;
+
+export const generateGalleryDetailCacheKey = (id: number | string) =>
+  `gallery:album:detail:${id}`;
+
+export const invalidateGalleryCache = async (): Promise<void> => {
+  await deleteCachePattern('gallery:*');
+};
+
+// --- Post Cache Helpers ---
+export const generatePostListCacheKey = (
+  userId: number | undefined,
+  page: number,
+  limit: number,
+  authorId?: number,
+  tag?: string,
+  search?: string,
+  sortBy?: string
+) =>
+  `posts:list:${userId || 'guest'}:${page}:${limit}:${authorId || ''}:${tag || ''}:${search || ''}:${sortBy || ''}`;
+
+export const generatePostDetailCacheKey = (
+  userId: number | undefined,
+  id: number | string | string[]
+) => `posts:detail:${userId || 'guest'}:${Array.isArray(id) ? id[0] : id}`;
+
+export const generatePostCommentsCacheKey = (
+  postId: number | string | string[],
+  page: number,
+  limit: number
+) => `posts:comments:${Array.isArray(postId) ? postId[0] : postId}:${page}:${limit}`;
+
+export const invalidatePostsCache = async (): Promise<void> => {
+  await deleteCachePattern('posts:*');
+};
+
+// --- User Cache Helpers ---
+export const generateUserListCacheKey = (
+  userId: number | undefined,
+  limit: number,
+  skip: number,
+  search?: string
+) => `users:list:${userId || 'guest'}:${limit}:${skip}:${search || ''}`;
+
+export const generateAdminUserListCacheKey = (
+  endpoint: string,
+  page: number,
+  limit: number,
+  role?: string,
+  search?: string
+) => `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}`;
+
+export const invalidateUsersCache = async (): Promise<void> => {
+  await deleteCachePattern('users:*');
+  await deleteCachePattern('admin:users:*');
+};
+
+// --- Chat Cache Helpers ---
+export const generateConversationsCacheKey = (userId: number) =>
+  `chat:conversations:${userId}`;
+
+export const generateMessagesCacheKey = (
+  userId: number,
+  partnerId: number,
+  cursor?: number,
+  limit = 30
+) => `chat:messages:${userId}:${partnerId}:${cursor || 'latest'}:${limit}`;
+
+export const invalidateChatCache = async (
+  userId1: number,
+  userId2: number
+): Promise<void> => {
+  await Promise.all([
+    deleteCachePattern(`chat:conversations:${userId1}`),
+    deleteCachePattern(`chat:conversations:${userId2}`),
+    deleteCachePattern(`chat:messages:${userId1}:${userId2}:*`),
+    deleteCachePattern(`chat:messages:${userId2}:${userId1}:*`),
+  ]);
+};
+
+
+
+

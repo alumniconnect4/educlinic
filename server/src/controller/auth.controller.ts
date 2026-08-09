@@ -7,6 +7,7 @@ import {
   getUserFromCache,
   storeSession,
   deleteSession,
+  invalidateUsersCache,
 } from '../config/cache.js';
 import type { User } from '../../generated/prisma/browser.js';
 import { prisma } from '../config/db.js';
@@ -90,6 +91,8 @@ export const register = async (req: Request, res: Response) => {
     await storeSession(sessionId, { id: newUser.id, role: newUser.role });
     res.cookie('sessionId', sessionId, { ...config.cookieOptions });
 
+    await invalidateUsersCache();
+
     res.json({
       message: 'User registered successfully',
       sessionId,
@@ -169,7 +172,8 @@ export const logout = async (req: Request, res: Response) => {
     if (sessionId) {
       await deleteSession(sessionId);
     }
-    res.clearCookie('sessionId');
+    res.clearCookie('sessionId', config.cookieOptions);
+    res.clearCookie('token', config.cookieOptions);
     res.json({ message: 'User logged out successfully' });
   } catch (err) {
     console.log(err);
