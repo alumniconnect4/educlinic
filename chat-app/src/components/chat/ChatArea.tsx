@@ -270,9 +270,9 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        {/* Message History Skeleton - 5 realistic chat message bubbles */}
+        {/* Message History Skeleton - 5 alternating chat message bubbles on both sides */}
         <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 bg-slate-50/50 flex flex-col justify-end space-y-4">
-          {/* Message 1: Incoming message */}
+          {/* Message 1: Incoming message (Left side) */}
           <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
             <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
             <div className="space-y-1">
@@ -281,13 +281,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             </div>
           </div>
 
-          {/* Message 2: Outgoing message */}
-          <div className="flex flex-col items-end gap-1 self-end max-w-[80%] sm:max-w-[70%]">
-            <Skeleton className="h-12 w-56 sm:w-72 rounded-2xl rounded-br-xs bg-[#3b82f6]/25 dark:bg-[#3b82f6]/30" />
-            <Skeleton className="h-2.5 w-10 mr-1" />
+          {/* Message 2: Outgoing message (Right side) */}
+          <div className="flex items-end justify-end gap-2 self-end max-w-[80%] sm:max-w-[70%]">
+            <div className="space-y-1 flex flex-col items-end">
+              <Skeleton className="h-12 w-56 sm:w-72 rounded-2xl rounded-br-xs bg-[#3b82f6]/25 dark:bg-[#3b82f6]/30" />
+              <Skeleton className="h-2.5 w-10 mr-1" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
           </div>
 
-          {/* Message 3: Incoming message (multi-line) */}
+          {/* Message 3: Incoming message (Left side - multi-line) */}
           <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
             <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
             <div className="space-y-1">
@@ -296,13 +299,16 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             </div>
           </div>
 
-          {/* Message 4: Outgoing message */}
-          <div className="flex flex-col items-end gap-1 self-end max-w-[80%] sm:max-w-[70%]">
-            <Skeleton className="h-10 w-40 sm:w-52 rounded-2xl rounded-br-xs bg-[#3b82f6]/25 dark:bg-[#3b82f6]/30" />
-            <Skeleton className="h-2.5 w-10 mr-1" />
+          {/* Message 4: Outgoing message (Right side) */}
+          <div className="flex items-end justify-end gap-2 self-end max-w-[80%] sm:max-w-[70%]">
+            <div className="space-y-1 flex flex-col items-end">
+              <Skeleton className="h-10 w-40 sm:w-52 rounded-2xl rounded-br-xs bg-[#3b82f6]/25 dark:bg-[#3b82f6]/30" />
+              <Skeleton className="h-2.5 w-10 mr-1" />
+            </div>
+            <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
           </div>
 
-          {/* Message 5: Incoming message */}
+          {/* Message 5: Incoming message (Left side) */}
           <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
             <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
             <div className="space-y-1">
@@ -312,10 +318,20 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           </div>
         </div>
 
-        {/* Chat Input Skeleton */}
-        <div className="p-4 pt-2 bg-slate-50/50 border-t border-border/20 shrink-0">
-          <div className="relative flex items-center">
-            <Skeleton className="h-12 w-full rounded-full bg-muted/40" />
+        {/* Static Input Bar (Always visible at bottom) */}
+        <div className="p-4 pt-2 bg-slate-50/50 flex flex-col gap-2 border-t border-border/20 shrink-0">
+          <div className="flex-1 relative flex items-center">
+            <button disabled className="absolute left-4 text-muted-foreground/40 z-10">
+              <Paperclip className="h-5 w-5" />
+            </button>
+            <Input
+              disabled
+              placeholder="Message"
+              className="h-12 pl-12 pr-12 text-sm bg-background border border-border/50 rounded-full shadow-sm w-full cursor-not-allowed opacity-70"
+            />
+            <button disabled className="absolute right-4 text-muted-foreground/40 z-10">
+              <Send className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>

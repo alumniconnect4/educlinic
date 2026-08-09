@@ -93,6 +93,17 @@ export default function PendingRequestsPage() {
   const handleApprove = async (id: number, name: string) => {
     setProcessingId(id);
     setProcessingAction('APPROVE');
+
+    // Optimistically update local state immediately
+    const previousRequests = [...pendingRequests];
+    const previousTotal = total;
+
+    setPendingRequests((prev) => prev.filter((item) => item.id !== id));
+    setTotal((prev) => Math.max(0, prev - 1));
+    if (selectedRequest?.id === id) {
+      setSelectedRequest(null);
+    }
+
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       await axios.put(
@@ -101,12 +112,18 @@ export default function PendingRequestsPage() {
         { withCredentials: true }
       );
       toast.success(`Request for "${name}" approved.`);
-      if (selectedRequest?.id === id) {
-        setSelectedRequest(null);
+
+      if (previousRequests.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => Math.max(1, prev - 1));
+      } else if (previousRequests.length === 1) {
+        fetchPendingRequests();
       }
-      fetchPendingRequests();
     } catch (err: unknown) {
       console.error('Failed to approve request', err);
+      // Revert optimistic state on failure
+      setPendingRequests(previousRequests);
+      setTotal(previousTotal);
+
       if (isAxiosError(err)) {
         toast.error(err.response?.data?.message || 'Failed to approve request');
       } else {
@@ -121,6 +138,17 @@ export default function PendingRequestsPage() {
   const handleDecline = async (id: number, name: string) => {
     setProcessingId(id);
     setProcessingAction('DECLINE');
+
+    // Optimistically update local state immediately
+    const previousRequests = [...pendingRequests];
+    const previousTotal = total;
+
+    setPendingRequests((prev) => prev.filter((item) => item.id !== id));
+    setTotal((prev) => Math.max(0, prev - 1));
+    if (selectedRequest?.id === id) {
+      setSelectedRequest(null);
+    }
+
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       await axios.delete(
@@ -128,12 +156,18 @@ export default function PendingRequestsPage() {
         { withCredentials: true }
       );
       toast.success(`Request for "${name}" declined.`);
-      if (selectedRequest?.id === id) {
-        setSelectedRequest(null);
+
+      if (previousRequests.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => Math.max(1, prev - 1));
+      } else if (previousRequests.length === 1) {
+        fetchPendingRequests();
       }
-      fetchPendingRequests();
     } catch (err: unknown) {
       console.error('Failed to decline request', err);
+      // Revert optimistic state on failure
+      setPendingRequests(previousRequests);
+      setTotal(previousTotal);
+
       if (isAxiosError(err)) {
         toast.error(err.response?.data?.message || 'Failed to decline request');
       } else {

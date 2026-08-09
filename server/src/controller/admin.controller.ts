@@ -336,10 +336,18 @@ export const deleteAdmin = async (req: Request, res: Response) => {
         .json({ message: 'You cannot delete your own account' });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true },
+    });
+
     await prisma.user.delete({
       where: { id },
     });
 
+    if (user?.email) {
+      await deleteUserCache(user.email);
+    }
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'Admin deleted successfully' });
@@ -573,10 +581,18 @@ export const deleteAlumniStudent = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid User ID' });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true },
+    });
+
     await prisma.user.delete({
       where: { id },
     });
 
+    if (user?.email) {
+      await deleteUserCache(user.email);
+    }
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'User deleted successfully' });
@@ -681,6 +697,7 @@ export const approvePendingRequest = async (req: Request, res: Response) => {
       },
     });
 
+    await deleteUserCache(approvedUser.email);
     await invalidateUsersCache();
 
     return res
@@ -699,10 +716,18 @@ export const declinePendingRequest = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid Request ID' });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true },
+    });
+
     await prisma.user.delete({
       where: { id },
     });
 
+    if (user?.email) {
+      await deleteUserCache(user.email);
+    }
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'Registration request declined' });
