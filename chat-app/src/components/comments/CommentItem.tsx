@@ -10,7 +10,7 @@ import {
 import { Toast } from '../ui/Toast';
 import { getAvatarUrl } from '../../lib/utils';
 import type { Comment } from '../../types';
-import { useStore } from '../../store/mockData';
+import { useStore, getAuthHeaders } from '../../store/mockData';
 
 interface CommentItemProps {
   comment: Comment;
@@ -137,6 +137,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     try {
       await fetch(`${API_BASE}/posts/comments/${comment.id}/like`, {
         method: 'POST',
+        headers: getAuthHeaders(),
         credentials: 'include',
       });
     } catch (error) {
@@ -151,7 +152,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       setLoadingReplies(true);
       const res = await fetch(
         `${API_BASE}/posts/comments/${comment.id}/replies?page=${pageToLoad}&limit=5`,
-        { credentials: 'include' }
+        {
+          headers: getAuthHeaders(),
+          credentials: 'include',
+        }
       );
       if (res.ok) {
         const data = await res.json();

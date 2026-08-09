@@ -24,11 +24,26 @@ export const adminMiddleware = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    const bearerToken = authHeader?.startsWith('Bearer ')
-      ? authHeader.slice(7)
+    const rawBearer = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice(7).trim()
       : undefined;
+    const bearerToken =
+      rawBearer &&
+      rawBearer !== 'undefined' &&
+      rawBearer !== 'null' &&
+      rawBearer !== '[object Object]'
+        ? rawBearer
+        : undefined;
 
-    const token = req.cookies?.token || bearerToken;
+    const cookieSessionId = req.cookies?.sessionId;
+    const cookieToken = req.cookies?.token;
+
+    const isJwt = (t?: string) =>
+      typeof t === 'string' && t.split('.').length === 3;
+
+    const token = cookieToken || (isJwt(bearerToken) ? bearerToken : undefined);
+    const sessionId =
+      cookieSessionId || (!isJwt(bearerToken) ? bearerToken : undefined);
 
     if (token) {
       try {
@@ -45,11 +60,10 @@ export const adminMiddleware = async (
           return;
         }
       } catch (err) {
-        console.error('JWT Verification failed in adminMiddleware:', err);
+        // Expected auth failure for invalid/expired JWT
       }
     }
 
-    const sessionId = req.cookies?.sessionId || bearerToken;
     if (sessionId) {
       const session = await getSession(sessionId);
       if (

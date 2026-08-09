@@ -54,7 +54,8 @@ interface StoreState {
     name: string,
     bio: string,
     gender: string,
-    socialLink: string
+    socialLink: string,
+    avatarUrl?: string
   ) => Promise<void>;
   editMessage: (messageId: number, content: string) => Promise<void>;
   deleteMessage: (messageId: number) => Promise<void>;
@@ -63,13 +64,17 @@ interface StoreState {
     followingId: number;
     isFollowing: boolean;
   } | null;
+  connectUsersCache: any[];
+  setConnectUsersCache: React.Dispatch<React.SetStateAction<any[]>>;
+  connectTotalCache: number;
+  setConnectTotalCache: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export const StoreContext = createContext<StoreState | undefined>(undefined);
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-const getAuthHeaders = (): Record<string, string> => {
+export const getAuthHeaders = (): Record<string, string> => {
   const session = localStorage.getItem('chatSessionId');
   return session ? { Authorization: `Bearer ${session}` } : {};
 };
@@ -87,6 +92,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     followingId: number;
     isFollowing: boolean;
   } | null>(null);
+  const [connectUsersCache, setConnectUsersCache] = useState<any[]>([]);
+  const [connectTotalCache, setConnectTotalCache] = useState<number>(0);
 
   useEffect(() => {
     const initStore = async () => {
@@ -843,7 +850,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     name: string,
     bio: string,
     gender: string,
-    socialLink: string
+    socialLink: string,
+    avatarUrl?: string
   ) => {
     try {
       const res = await fetch(`${API_BASE}/users/profile`, {
@@ -852,7 +860,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
         },
-        body: JSON.stringify({ name, bio, gender, socialLink }),
+        body: JSON.stringify({ name, bio, gender, socialLink, avatarUrl }),
         credentials: 'include',
       });
       if (res.ok) {
@@ -891,6 +899,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         editMessage,
         deleteMessage,
         latestFollowUpdate,
+        connectUsersCache,
+        setConnectUsersCache,
+        connectTotalCache,
+        setConnectTotalCache,
       }}
     >
       {isLoading ? (

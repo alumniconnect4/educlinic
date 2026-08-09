@@ -22,61 +22,24 @@ export const getConversations = async (
       return;
     }
 
-    const messages = await prisma.message.findMany({
-      where: {
-        OR: [{ senderId: currentUserId }, { receiverId: currentUserId }],
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            schoolCategory: true,
-            avatarUrl: true,
-          },
-        },
-        receiver: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            schoolCategory: true,
-            avatarUrl: true,
-          },
-        },
-      },
-    });
+    const partnersRaw = await prisma.$queryRaw<{ partner_id: number }[]>`
+      SELECT DISTINCT
+        CASE
+          WHEN "senderId" = ${currentUserId} THEN "receiverId"
+          ELSE "senderId"
+        END as partner_id
+      FROM "Message"
+      WHERE "senderId" = ${currentUserId} OR "receiverId" = ${currentUserId}
+    `;
 
-    const conversationMap = new Map<
-      number,
-      {
-        id: number;
-        participant: {
-          id: number;
-          name: string;
-          email: string;
-          role: string;
-          schoolCategory: string | null;
-          avatarUrl?: string | null;
-        };
-        lastMessage: {
-          id: number;
-          senderId: number;
-          receiverId: number;
-          content: string;
-          isRead: boolean;
-          isEdited: boolean;
-          createdAt: string;
-        };
-        unreadCount: number;
-        blockedByMe: boolean;
-        hasBlockedMe: boolean;
-      }
-    >();
+    const partnerIds = partnersRaw.map((p) => p.partner_id);
+
+    if (partnerIds.length === 0) {
+      const responsePayload = { conversations: [] };
+      await setCache(cacheKey, responsePayload, 300);
+      res.status(200).json(responsePayload);
+      return;
+    }
 
     const blocks = await prisma.block.findMany({
       where: {
@@ -97,43 +60,87 @@ export const getConversations = async (
     const clearedMap = new Map<number, Date>();
     clearedChats.forEach((c) => clearedMap.set(c.partnerId, c.clearedAt));
 
-    for (const msg of messages) {
-      const isSender = msg.senderId === currentUserId;
-      const partner = isSender ? msg.receiver : msg.sender;
+    const conversations = (
+      await Promise.all(
+        partnerIds.map(async (partnerId) => {
+          const clearedAt = clearedMap.get(partnerId);
 
-      const clearedAt = clearedMap.get(partner.id);
-      if (clearedAt && msg.createdAt <= clearedAt) {
-        continue;
-      }
+          const lastMsg = await prisma.message.findFirst({
+            where: {
+              OR: [
+                { senderId: currentUserId, receiverId: partnerId },
+                { senderId: partnerId, receiverId: currentUserId },
+              ],
+              ...(clearedAt ? { createdAt: { gt: clearedAt } } : {}),
+            },
+            orderBy: { createdAt: 'desc' },
+            include: {
+              sender: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                  schoolCategory: true,
+                  avatarUrl: true,
+                },
+              },
+              receiver: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true,
+                  schoolCategory: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          });
 
-      if (!conversationMap.has(partner.id)) {
-        conversationMap.set(partner.id, {
-          id: partner.id,
-          participant: partner,
-          lastMessage: {
-            id: msg.id,
-            senderId: msg.senderId,
-            receiverId: msg.receiverId,
-            content: msg.content,
-            isRead: msg.isRead,
-            isEdited: msg.isEdited,
-            createdAt: msg.createdAt.toISOString(),
-          },
-          unreadCount: 0,
-          blockedByMe: blockedByMeIds.has(partner.id),
-          hasBlockedMe: hasBlockedMeIds.has(partner.id),
-        });
-      }
+          if (!lastMsg) return null;
 
-      if (!isSender && !msg.isRead) {
-        const existing = conversationMap.get(partner.id)!;
-        existing.unreadCount += 1;
-      }
-    }
+          const unreadCount = await prisma.message.count({
+            where: {
+              senderId: partnerId,
+              receiverId: currentUserId,
+              isRead: false,
+              ...(clearedAt ? { createdAt: { gt: clearedAt } } : {}),
+            },
+          });
 
-    const responsePayload = {
-      conversations: Array.from(conversationMap.values()),
-    };
+          const participant =
+            lastMsg.senderId === currentUserId
+              ? lastMsg.receiver
+              : lastMsg.sender;
+
+          return {
+            id: partnerId,
+            participant,
+            lastMessage: {
+              id: lastMsg.id,
+              senderId: lastMsg.senderId,
+              receiverId: lastMsg.receiverId,
+              content: lastMsg.content,
+              isRead: lastMsg.isRead,
+              isEdited: lastMsg.isEdited,
+              createdAt: lastMsg.createdAt.toISOString(),
+            },
+            unreadCount,
+            blockedByMe: blockedByMeIds.has(partnerId),
+            hasBlockedMe: hasBlockedMeIds.has(partnerId),
+          };
+        })
+      )
+    ).filter(Boolean);
+
+    conversations.sort(
+      (a: any, b: any) =>
+        new Date(b.lastMessage.createdAt).getTime() -
+        new Date(a.lastMessage.createdAt).getTime()
+    );
+
+    const responsePayload = { conversations };
     await setCache(cacheKey, responsePayload, 300);
 
     res.status(200).json(responsePayload);

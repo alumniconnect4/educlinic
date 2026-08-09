@@ -11,7 +11,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useStore } from '../../store/mockData';
+import { useStore, getAuthHeaders } from '../../store/mockData';
 import { Toast } from '../ui/Toast';
 import { PostSkeleton } from '../feed/PostSkeleton';
 import { stripHtml } from '../../utils/text';
@@ -56,6 +56,7 @@ export const ProfilePostList: React.FC<ProfilePostListProps> = ({
         const apiUrl =
           import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
         const res = await fetch(`${apiUrl}/follow/${profileUserId}/${type}`, {
+          headers: getAuthHeaders(),
           credentials: 'include',
         });
         if (res.ok) {
