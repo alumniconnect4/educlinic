@@ -7,6 +7,7 @@ metadata:
   annotations:
     argocd-image-updater.argoproj.io/image-list: backend=ghcr.io/alumniconnect4/educlinic-backend:latest
     argocd-image-updater.argoproj.io/backend.update-strategy: digest
+    argocd-image-updater.argoproj.io/write-back-method: argocd
 spec:
   replicas: 3
   selector:
