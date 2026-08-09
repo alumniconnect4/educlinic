@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: 'git@github.com:alumniconnect4/educlinic.git'
     targetRevision: HEAD
-    path: educlinic/k8s
+    path: k8s
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: default
