@@ -82,6 +82,11 @@ model User {
   helpTickets      HelpTicket[]
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
+
+  @@index([role, isVerified])
+  @@index([isVerified])
+  @@index([createdAt])
+  @@index([schoolCategory])
 }
 
 model Event {

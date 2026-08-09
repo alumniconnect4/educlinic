@@ -7,6 +7,7 @@ import {
   getUserFromCache,
   storeSession,
   deleteSession,
+  invalidateUsersCache,
 } from '../config/cache.js';
 import type { User } from '../../generated/prisma/browser.js';
 import { prisma } from '../config/db.js';
@@ -89,6 +90,8 @@ export const register = async (req: Request, res: Response) => {
     const sessionId = crypto.randomUUID();
     await storeSession(sessionId, { id: newUser.id, role: newUser.role });
     res.cookie('sessionId', sessionId, { ...config.cookieOptions });
+
+    await invalidateUsersCache();
 
     res.json({
       message: 'User registered successfully',

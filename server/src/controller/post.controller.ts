@@ -1,6 +1,15 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../config/db.js';
 import cloudinary from '../config/cloudinary.js';
+import {
+  getCache,
+  setCache,
+  generatePostListCacheKey,
+  generatePostDetailCacheKey,
+  generatePostCommentsCacheKey,
+  invalidatePostsCache,
+} from '../config/cache.js';
+
 
 export const createPost = async (
   req: Request,
@@ -65,6 +74,8 @@ export const createPost = async (
       },
     });
 
+    await invalidatePostsCache();
+
     res.status(201).json({ ...post, comments: [], isLiked: false });
   } catch (error) {
     console.error('Error creating post:', error);
@@ -87,6 +98,21 @@ export const getAllPosts = async (
     const tag = req.query.tag as string | undefined;
     const search = req.query.search as string | undefined;
     const sortBy = req.query.sortBy as string | undefined;
+
+    const cacheKey = generatePostListCacheKey(
+      userId,
+      page,
+      limit,
+      authorId,
+      tag,
+      search,
+      sortBy
+    );
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
 
     const AND: any[] = [];
     if (authorId) AND.push({ createdById: authorId });
@@ -149,13 +175,16 @@ export const getAllPosts = async (
       comments: [],
     }));
 
-    res.status(200).json({
+    const responsePayload = {
       posts: formattedPosts,
       page,
       limit,
       total,
       hasMore: skip + posts.length < total,
-    });
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    res.status(200).json(responsePayload);
   } catch (error) {
     console.error('Error fetching posts:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -172,6 +201,13 @@ export const getPostById = async (
 
     if (!id) {
       res.status(400).json({ message: 'Post ID is required' });
+      return;
+    }
+
+    const cacheKey = generatePostDetailCacheKey(userId, id);
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      res.status(200).json(cachedData);
       return;
     }
 
@@ -210,6 +246,8 @@ export const getPostById = async (
       likes: undefined,
       comments: [],
     };
+
+    await setCache(cacheKey, formattedPost, 300);
 
     res.status(200).json(formattedPost);
   } catch (error) {
@@ -256,6 +294,7 @@ export const togglePostLike = async (
           },
         },
       });
+      await invalidatePostsCache();
       res.status(200).json({ message: 'Post unliked' });
     } else {
       await prisma.postLike.create({
@@ -264,6 +303,7 @@ export const togglePostLike = async (
           postId,
         },
       });
+      await invalidatePostsCache();
       res.status(201).json({ message: 'Post liked' });
     }
   } catch (error) {
@@ -305,6 +345,8 @@ export const createComment = async (
       },
     });
 
+    await invalidatePostsCache();
+
     res.status(201).json(comment);
   } catch (error) {
     console.error('Error creating comment:', error);
@@ -325,6 +367,13 @@ export const getPostComments = async (
 
     if (!id) {
       res.status(400).json({ message: 'Post ID is required' });
+      return;
+    }
+
+    const cacheKey = generatePostCommentsCacheKey(id, page, limit);
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      res.status(200).json(cachedData);
       return;
     }
 
@@ -356,13 +405,16 @@ export const getPostComments = async (
       replyCount: c._count.replies,
     }));
 
-    res.status(200).json({
+    const responsePayload = {
       comments: formattedComments,
       page,
       limit,
       total,
       hasMore: skip + comments.length < total,
-    });
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    res.status(200).json(responsePayload);
   } catch (error) {
     console.error('Error fetching post comments:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -464,6 +516,7 @@ export const toggleCommentLike = async (
           },
         },
       });
+      await invalidatePostsCache();
       res.status(200).json({ message: 'Comment unliked' });
     } else {
       await prisma.commentLike.create({
@@ -472,6 +525,7 @@ export const toggleCommentLike = async (
           commentId: parsedCommentId,
         },
       });
+      await invalidatePostsCache();
       res.status(201).json({ message: 'Comment liked' });
     }
   } catch (error) {
@@ -549,6 +603,8 @@ export const deleteComment = async (
       where: { id: parsedCommentId },
     });
 
+    await invalidatePostsCache();
+
     res.status(200).json({ message: 'Comment deleted successfully' });
   } catch (error) {
     console.error('Error deleting comment:', error);
@@ -595,6 +651,8 @@ export const deletePost = async (
     await prisma.post.delete({
       where: { id: parsedPostId },
     });
+
+    await invalidatePostsCache();
 
     res.status(200).json({ message: 'Post deleted successfully' });
   } catch (error) {

@@ -21,7 +21,7 @@ interface StoreState {
     content: string,
     coverImage: string,
     tags: string[]
-  ) => Promise<void>;
+  ) => Promise<Post | undefined>;
   toggleLike: (postId: number) => Promise<void>;
   addComment: (
     postId: number,
@@ -592,7 +592,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     content: string,
     coverImage: string,
     tags: string[]
-  ) => {
+  ): Promise<Post | undefined> => {
     try {
       const res = await fetch(`${API_BASE}/posts`, {
         method: 'POST',
@@ -604,14 +604,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         credentials: 'include',
       });
       if (res.ok) {
-        const postsRes = await fetch(`${API_BASE}/posts`, {
-          credentials: 'include',
-          headers: getAuthHeaders(),
-        });
-        if (postsRes.ok) {
-          const postsData = await postsRes.json();
-          setPosts(postsData.posts || postsData);
-        }
+        const newPost = await res.json();
+        setPosts((prev) => [newPost, ...prev]);
+        return newPost;
       }
     } catch (err) {
       console.error(err);
@@ -676,7 +671,22 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         credentials: 'include',
       });
       if (res.ok) {
-        return await res.json();
+        const createdComment = await res.json();
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  _count: {
+                    ...p._count,
+                    comments: (p._count?.comments ?? 0) + 1,
+                    likes: p._count?.likes ?? 0,
+                  },
+                }
+              : p
+          )
+        );
+        return createdComment;
       }
     } catch (err) {
       console.error(err);
@@ -690,7 +700,20 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         credentials: 'include',
         headers: getAuthHeaders(),
       });
-      return res.ok;
+      if (res.ok) {
+        setPosts((prev) =>
+          prev.map((p) => ({
+            ...p,
+            _count: {
+              ...p._count,
+              comments: Math.max(0, (p._count?.comments ?? 1) - 1),
+              likes: p._count?.likes ?? 0,
+            },
+          }))
+        );
+        return true;
+      }
+      return false;
     } catch (err) {
       console.error('deleteComment error', err);
       return false;

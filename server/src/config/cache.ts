@@ -171,3 +171,53 @@ export const invalidateGalleryCache = async (): Promise<void> => {
   await deleteCachePattern('gallery:*');
 };
 
+// --- Post Cache Helpers ---
+export const generatePostListCacheKey = (
+  userId: number | undefined,
+  page: number,
+  limit: number,
+  authorId?: number,
+  tag?: string,
+  search?: string,
+  sortBy?: string
+) =>
+  `posts:list:${userId || 'guest'}:${page}:${limit}:${authorId || ''}:${tag || ''}:${search || ''}:${sortBy || ''}`;
+
+export const generatePostDetailCacheKey = (
+  userId: number | undefined,
+  id: number | string | string[]
+) => `posts:detail:${userId || 'guest'}:${Array.isArray(id) ? id[0] : id}`;
+
+export const generatePostCommentsCacheKey = (
+  postId: number | string | string[],
+  page: number,
+  limit: number
+) => `posts:comments:${Array.isArray(postId) ? postId[0] : postId}:${page}:${limit}`;
+
+export const invalidatePostsCache = async (): Promise<void> => {
+  await deleteCachePattern('posts:*');
+};
+
+// --- User Cache Helpers ---
+export const generateUserListCacheKey = (
+  userId: number | undefined,
+  limit: number,
+  skip: number,
+  search?: string
+) => `users:list:${userId || 'guest'}:${limit}:${skip}:${search || ''}`;
+
+export const generateAdminUserListCacheKey = (
+  endpoint: string,
+  page: number,
+  limit: number,
+  role?: string,
+  search?: string
+) => `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}`;
+
+export const invalidateUsersCache = async (): Promise<void> => {
+  await deleteCachePattern('users:*');
+  await deleteCachePattern('admin:users:*');
+};
+
+
+

@@ -58,15 +58,17 @@ export const CreatePostPage: React.FC = () => {
     }
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (title.trim() && content.trim()) {
       setIsPublishing(true);
-      // Simulate network request
-      setTimeout(() => {
-        addPost(title, content, coverImage, selectedTags);
-        setIsPublishing(false);
+      try {
+        await addPost(title, content, coverImage, selectedTags);
         navigate('/');
-      }, 600);
+      } catch (err) {
+        console.error('Failed to create post:', err);
+      } finally {
+        setIsPublishing(false);
+      }
     }
   };
 

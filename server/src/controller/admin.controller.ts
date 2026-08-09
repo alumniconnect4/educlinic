@@ -4,7 +4,14 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from '../utils/token.js';
 import { config } from '../config/index.js';
 import cloudinary from '../config/cloudinary.js';
-import { deleteUserCache, deleteSession } from '../config/cache.js';
+import {
+  deleteUserCache,
+  deleteSession,
+  getCache,
+  setCache,
+  generateAdminUserListCacheKey,
+  invalidateUsersCache,
+} from '../config/cache.js';
 
 
 export const loginAdmin = async (req: Request, res: Response) => {
@@ -87,6 +94,12 @@ export const getAdmins = async (req: Request, res: Response) => {
     const search = (req.query.search as string) || '';
     const skip = (page - 1) * limit;
 
+    const cacheKey = generateAdminUserListCacheKey('admins', page, limit, undefined, search);
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
+
     // @ts-ignore - Prisma mode typing
     const whereClause: any = {
       role: {
@@ -128,12 +141,15 @@ export const getAdmins = async (req: Request, res: Response) => {
       prisma.user.count({ where: whereClause }),
     ]);
 
-    return res.status(200).json({
+    const responsePayload = {
       data: admins,
       total,
       page,
       totalPages: Math.ceil(total / limit),
-    });
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    return res.status(200).json(responsePayload);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
@@ -212,6 +228,8 @@ export const createAdmin = async (req: Request, res: Response) => {
       },
     });
 
+    await invalidateUsersCache();
+
     return res
       .status(201)
       .json({ message: 'Admin created successfully', user: newAdmin });
@@ -288,8 +306,7 @@ export const updateAdmin = async (req: Request, res: Response) => {
     });
     
     await deleteUserCache(updatedAdmin.email);
-
-    await deleteUserCache(updatedAdmin.email);
+    await invalidateUsersCache();
 
     return res
       .status(200)
@@ -323,6 +340,8 @@ export const deleteAdmin = async (req: Request, res: Response) => {
       where: { id },
     });
 
+    await invalidateUsersCache();
+
     return res.status(200).json({ message: 'Admin deleted successfully' });
   } catch (err) {
     console.error(err);
@@ -340,6 +359,12 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
     const roleFilter = (req.query.role as string) || 'ALL';
 
     const skip = (page - 1) * limit;
+
+    const cacheKey = generateAdminUserListCacheKey('alumnistudents', page, limit, roleFilter, search);
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
 
     const roleCondition =
       roleFilter === 'USER'
@@ -389,12 +414,15 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
       prisma.user.count({ where: whereClause }),
     ]);
 
-    return res.status(200).json({
+    const responsePayload = {
       data: users,
       total,
       page,
       totalPages: Math.ceil(total / limit),
-    });
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    return res.status(200).json(responsePayload);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
@@ -451,6 +479,8 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         createdAt: true,
       },
     });
+
+    await invalidateUsersCache();
 
     return res
       .status(201)
@@ -525,8 +555,7 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
       },
     });
     await deleteUserCache(updatedUser.email);
-
-    await deleteUserCache(updatedUser.email);
+    await invalidateUsersCache();
 
     return res
       .status(200)
@@ -548,6 +577,8 @@ export const deleteAlumniStudent = async (req: Request, res: Response) => {
       where: { id },
     });
 
+    await invalidateUsersCache();
+
     return res.status(200).json({ message: 'User deleted successfully' });
   } catch (err) {
     console.error(err);
@@ -565,6 +596,12 @@ export const getPendingRequests = async (req: Request, res: Response) => {
     const roleFilter = (req.query.role as string) || 'ALL';
 
     const skip = (page - 1) * limit;
+
+    const cacheKey = generateAdminUserListCacheKey('pending', page, limit, roleFilter, search);
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
 
     const roleCondition =
       roleFilter === 'USER'
@@ -609,12 +646,15 @@ export const getPendingRequests = async (req: Request, res: Response) => {
       prisma.user.count({ where: whereClause }),
     ]);
 
-    return res.status(200).json({
+    const responsePayload = {
       data: pendingUsers,
       total,
       page,
       totalPages: Math.ceil(total / limit),
-    });
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    return res.status(200).json(responsePayload);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
@@ -641,6 +681,8 @@ export const approvePendingRequest = async (req: Request, res: Response) => {
       },
     });
 
+    await invalidateUsersCache();
+
     return res
       .status(200)
       .json({ message: 'Registration request approved', user: approvedUser });
@@ -660,6 +702,8 @@ export const declinePendingRequest = async (req: Request, res: Response) => {
     await prisma.user.delete({
       where: { id },
     });
+
+    await invalidateUsersCache();
 
     return res.status(200).json({ message: 'Registration request declined' });
   } catch (err) {
