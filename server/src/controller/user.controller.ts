@@ -6,13 +6,20 @@ import {
   generateUserListCacheKey,
   invalidateUsersCache,
 } from '../config/cache.js';
+import { parsePgInt } from '../utils/validation.js';
+
+const sanitizeAvatarUrl = (url?: string | null): string | null => {
+  if (!url) return null;
+  if (url.startsWith('data:') && url.length > 2000) return null;
+  return url;
+};
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const search = (req.query.search as string) || '';
-    const limit = Math.min(parseInt(req.query.limit as string) || 16, 50);
-    const skip = parseInt(req.query.skip as string) || 0;
+    const search = ((req.query.search as string) || '').trim();
+    const limit = Math.min(parsePgInt(req.query.limit, 16) || 16, 50);
+    const skip = parsePgInt(req.query.skip, 0) || 0;
 
     const cacheKey = generateUserListCacheKey(userId, limit, skip, search);
     const cachedData = await getCache<any>(cacheKey);
@@ -50,30 +57,35 @@ export const getAllUsers = async (req: Request, res: Response) => {
       whereClause.name = { contains: search, mode: 'insensitive' };
     }
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where: whereClause,
-        take: limit,
-        skip: skip,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          schoolCategory: true,
-          avatarUrl: true,
-          bio: true,
-          gender: true,
-          socialLink: true,
-          createdAt: true,
-        },
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.user.count({ where: whereClause }),
-    ]);
+    const users = await prisma.user.findMany({
+      where: whereClause,
+      take: limit,
+      skip: skip,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        bio: true,
+        gender: true,
+        socialLink: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    let total = 0;
+    if (skip === 0 && users.length < limit) {
+      total = users.length;
+    } else {
+      total = await prisma.user.count({ where: whereClause });
+    }
 
     const formattedUsers = users.map((u) => ({
       ...u,
+      avatarUrl: sanitizeAvatarUrl(u.avatarUrl),
       isFollowed: followingIdsSet.has(u.id),
     }));
 
@@ -81,16 +93,19 @@ export const getAllUsers = async (req: Request, res: Response) => {
     await setCache(cacheKey, responsePayload, 300);
 
     res.json(responsePayload);
-  } catch (err) {
-    console.log(err);
+  } catch (err: any) {
+    if (err?.code === 'P2020') {
+      return res.status(400).json({ message: 'Value out of range for integer type' });
+    }
+    console.error('Error fetching users:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 export const getUserById = async (req: Request, res: Response) => {
   try {
-    const userId = parseInt(req.params.id as string);
-    if (isNaN(userId)) {
+    const userId = parsePgInt(req.params.id);
+    if (!userId) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
@@ -126,9 +141,17 @@ export const getUserById = async (req: Request, res: Response) => {
       }
     }
 
-    res.json({ user });
-  } catch (err) {
-    console.log(err);
+    res.json({
+      user: {
+        ...user,
+        avatarUrl: sanitizeAvatarUrl(user.avatarUrl),
+      },
+    });
+  } catch (err: any) {
+    if (err?.code === 'P2020') {
+      return res.status(400).json({ message: 'Value out of range for integer type' });
+    }
+    console.error('Error getting user by ID:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

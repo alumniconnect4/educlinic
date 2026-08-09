@@ -34,7 +34,7 @@ import { initChatWorker } from './src/services/queue.service.js';
 
 const startAllServices: () => Promise<void> = async () => {
   await Promise.all([connectRedis()]);
-  initChatWorker();
+  initChatWorker(io);
   await startKafkaConsumer(io);
 };
 

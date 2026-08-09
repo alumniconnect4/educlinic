@@ -109,9 +109,15 @@ export const deleteSession = async (sessionId: string): Promise<void> => {
 // --- Generic Cache Helpers ---
 export const getCache = async <T>(key: string): Promise<T | null> => {
   try {
+    const memoryData = lru.get(key) as T | undefined;
+    if (memoryData !== undefined) {
+      return memoryData;
+    }
     const data = await redis.get(key);
     if (data) {
-      return JSON.parse(data) as T;
+      const parsed = JSON.parse(data) as T;
+      lru.set(key, parsed, { ttl: 60 * 1000 });
+      return parsed;
     }
   } catch (error) {
     logger.error(`Redis getCache failed for key "${key}"`);
@@ -125,6 +131,7 @@ export const setCache = async <T>(
   ttlSeconds: number = REDIS_TTL_SECONDS
 ): Promise<void> => {
   try {
+    lru.set(key, value, { ttl: Math.min(ttlSeconds * 1000, 5 * 60 * 1000) });
     await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
   } catch (error) {
     logger.error(`Redis setCache failed for key "${key}"`);
@@ -133,6 +140,7 @@ export const setCache = async <T>(
 
 export const deleteCachePattern = async (pattern: string): Promise<void> => {
   try {
+    lru.clear();
     const keys = await redis.keys(pattern);
     if (keys && keys.length > 0) {
       await redis.del(keys);
