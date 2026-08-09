@@ -81,7 +81,13 @@ export const ConnectPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, skip, connectUsersCache.length, setConnectUsersCache, setConnectTotalCache]);
+  }, [
+    debouncedSearch,
+    skip,
+    connectUsersCache.length,
+    setConnectUsersCache,
+    setConnectTotalCache,
+  ]);
 
   useEffect(() => {
     fetchUsers();
@@ -206,7 +212,9 @@ export const ConnectPage: React.FC = () => {
                       )}
                     />
                     <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xl font-bold">
-                      {user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
+                      {user.name
+                        ? user.name.substring(0, 2).toUpperCase()
+                        : 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </div>

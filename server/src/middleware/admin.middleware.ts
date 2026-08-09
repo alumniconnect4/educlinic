@@ -41,8 +41,7 @@ export const adminMiddleware = async (
     const isJwt = (t?: string) =>
       typeof t === 'string' && t.split('.').length === 3;
 
-    const token =
-      cookieToken || (isJwt(bearerToken) ? bearerToken : undefined);
+    const token = cookieToken || (isJwt(bearerToken) ? bearerToken : undefined);
     const sessionId =
       cookieSessionId || (!isJwt(bearerToken) ? bearerToken : undefined);
 

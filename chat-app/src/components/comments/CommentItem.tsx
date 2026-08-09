@@ -152,9 +152,9 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       setLoadingReplies(true);
       const res = await fetch(
         `${API_BASE}/posts/comments/${comment.id}/replies?page=${pageToLoad}&limit=5`,
-        { 
+        {
           headers: getAuthHeaders(),
-          credentials: 'include' 
+          credentials: 'include',
         }
       );
       if (res.ok) {
