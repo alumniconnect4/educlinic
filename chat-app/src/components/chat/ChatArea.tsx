@@ -177,6 +177,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
       setNewMessage('');
     } else {
       handleSend();
+      scrollToBottom();
     }
   };
 
@@ -235,6 +236,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   }
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const previousChatIdRef = useRef<number | null>(null);
 
   const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
@@ -243,8 +245,11 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [activeChat?.id, activeChat?.messages?.length, scrollToBottom]);
+    if (activeChat?.id && activeChat.id !== previousChatIdRef.current) {
+      scrollToBottom();
+      previousChatIdRef.current = activeChat.id;
+    }
+  }, [activeChat?.id, scrollToBottom]);
 
   if (isLoading) {
     return (

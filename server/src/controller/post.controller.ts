@@ -339,7 +339,7 @@ export const createComment = async (
       },
       include: {
         author: {
-          select: { id: true, name: true },
+          select: { id: true, name: true, avatarUrl: true },
         },
       },
     });
@@ -385,7 +385,7 @@ export const getPostComments = async (
         skip,
         take: limit,
         include: {
-          author: { select: { id: true, name: true } },
+          author: { select: { id: true, name: true, avatarUrl: true } },
           _count: { select: { likes: true, replies: true } },
           ...(userId && {
             likes: { where: { userId } },
@@ -445,7 +445,7 @@ export const getCommentReplies = async (
         skip,
         take: limit,
         include: {
-          author: { select: { id: true, name: true } },
+          author: { select: { id: true, name: true, avatarUrl: true } },
           _count: { select: { likes: true, replies: true } },
           ...(userId && {
             likes: { where: { userId } },

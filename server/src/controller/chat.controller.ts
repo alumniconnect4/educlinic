@@ -7,6 +7,7 @@ import {
   generateMessagesCacheKey,
   invalidateChatCache,
 } from '../config/cache.js';
+import { parsePgInt } from '../utils/validation.js';
 
 export const getConversations = async (
   req: Request,
@@ -156,15 +157,15 @@ export const getMessagesWithUser = async (
 ): Promise<void> => {
   try {
     const currentUserId = req.user!.id;
-    const partnerId = parseInt(req.params.partnerId as string, 10);
+    const partnerId = parsePgInt(req.params.partnerId);
     const cursor = req.query.cursor
-      ? parseInt(req.query.cursor as string, 10)
+      ? parsePgInt(req.query.cursor)
       : undefined;
     const limit = req.query.limit
-      ? parseInt(req.query.limit as string, 10)
+      ? parsePgInt(req.query.limit, 30) || 30
       : 30;
 
-    if (isNaN(partnerId)) {
+    if (!partnerId) {
       res.status(400).json({ message: 'Invalid partner user ID' });
       return;
     }
@@ -201,7 +202,7 @@ export const getMessagesWithUser = async (
       },
       orderBy: { id: 'desc' },
       take: limit + 1,
-      ...(cursor && !isNaN(cursor) ? { cursor: { id: cursor }, skip: 1 } : {}),
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: {
         sender: { select: { id: true, name: true, avatarUrl: true } },
         receiver: { select: { id: true, name: true, avatarUrl: true } },
@@ -242,7 +243,11 @@ export const getMessagesWithUser = async (
     await setCache(cacheKey, responsePayload, 300);
 
     res.status(200).json(responsePayload);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2020') {
+      res.status(400).json({ message: 'Value out of range for integer type' });
+      return;
+    }
     console.error('Error fetching messages:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -254,9 +259,9 @@ export const markMessagesAsRead = async (
 ): Promise<void> => {
   try {
     const currentUserId = req.user!.id;
-    const partnerId = parseInt(req.params.partnerId as string, 10);
+    const partnerId = parsePgInt(req.params.partnerId);
 
-    if (isNaN(partnerId)) {
+    if (!partnerId) {
       res.status(400).json({ message: 'Invalid partner user ID' });
       return;
     }
@@ -273,7 +278,11 @@ export const markMessagesAsRead = async (
     await invalidateChatCache(currentUserId, partnerId);
 
     res.status(200).json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2020') {
+      res.status(400).json({ message: 'Value out of range for integer type' });
+      return;
+    }
     console.error('Error marking messages as read:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -285,15 +294,16 @@ export const sendMessageHttp = async (
 ): Promise<void> => {
   try {
     const currentUserId = req.user!.id;
-    const { receiverId, content } = req.body;
+    const receiverId = parsePgInt(req.body.receiverId);
+    const content = req.body.content;
 
     if (!receiverId || !content?.trim()) {
-      res.status(400).json({ message: 'Receiver ID and content are required' });
+      res.status(400).json({ message: 'Valid receiver ID and content are required' });
       return;
     }
 
     const receiverExists = await prisma.user.findUnique({
-      where: { id: Number(receiverId) },
+      where: { id: receiverId },
     });
 
     if (!receiverExists) {
@@ -304,8 +314,8 @@ export const sendMessageHttp = async (
     const existingBlock = await prisma.block.findFirst({
       where: {
         OR: [
-          { blockerId: currentUserId, blockedId: Number(receiverId) },
-          { blockerId: Number(receiverId), blockedId: currentUserId },
+          { blockerId: currentUserId, blockedId: receiverId },
+          { blockerId: receiverId, blockedId: currentUserId },
         ],
       },
     });
@@ -320,12 +330,12 @@ export const sendMessageHttp = async (
     const message = await prisma.message.create({
       data: {
         senderId: currentUserId,
-        receiverId: Number(receiverId),
+        receiverId: receiverId,
         content: content.trim(),
       },
       include: {
-        sender: { select: { id: true, name: true } },
-        receiver: { select: { id: true, name: true } },
+        sender: { select: { id: true, name: true, avatarUrl: true } },
+        receiver: { select: { id: true, name: true, avatarUrl: true } },
       },
     });
 
@@ -347,12 +357,16 @@ export const sendMessageHttp = async (
       io.to(`user:${currentUserId}`).emit('receive_message', formattedMessage);
     }
 
-    await invalidateChatCache(currentUserId, Number(receiverId));
+    await invalidateChatCache(currentUserId, receiverId);
 
     res.status(201).json({
       message: formattedMessage,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2020') {
+      res.status(400).json({ message: 'Value out of range for integer type' });
+      return;
+    }
     console.error('Error sending message:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -364,11 +378,11 @@ export const editMessageHttp = async (
 ): Promise<void> => {
   try {
     const currentUserId = req.user!.id;
-    const messageId = parseInt(req.params.messageId as string, 10);
+    const messageId = parsePgInt(req.params.messageId);
     const { content } = req.body;
 
-    if (isNaN(messageId) || !content?.trim()) {
-      res.status(400).json({ message: 'Message ID and content are required' });
+    if (!messageId || !content?.trim()) {
+      res.status(400).json({ message: 'Valid message ID and content are required' });
       return;
     }
 
@@ -390,8 +404,8 @@ export const editMessageHttp = async (
       where: { id: messageId },
       data: { content: content.trim(), isEdited: true },
       include: {
-        sender: { select: { id: true, name: true } },
-        receiver: { select: { id: true, name: true } },
+        sender: { select: { id: true, name: true, avatarUrl: true } },
+        receiver: { select: { id: true, name: true, avatarUrl: true } },
       },
     });
 
@@ -419,7 +433,11 @@ export const editMessageHttp = async (
     await invalidateChatCache(currentUserId, updatedMessage.receiverId);
 
     res.status(200).json({ message: formattedMessage });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2020') {
+      res.status(400).json({ message: 'Value out of range for integer type' });
+      return;
+    }
     console.error('Error editing message:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -431,9 +449,9 @@ export const deleteMessageHttp = async (
 ): Promise<void> => {
   try {
     const currentUserId = req.user!.id;
-    const messageId = parseInt(req.params.messageId as string, 10);
+    const messageId = parsePgInt(req.params.messageId);
 
-    if (isNaN(messageId)) {
+    if (!messageId) {
       res.status(400).json({ message: 'Invalid message ID' });
       return;
     }
@@ -475,7 +493,11 @@ export const deleteMessageHttp = async (
     await invalidateChatCache(currentUserId, message.receiverId);
 
     res.status(200).json({ success: true, messageId });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2020') {
+      res.status(400).json({ message: 'Value out of range for integer type' });
+      return;
+    }
     console.error('Error deleting message:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -487,9 +509,9 @@ export const clearChatHttp = async (
 ): Promise<void> => {
   try {
     const currentUserId = req.user!.id;
-    const partnerId = parseInt(req.params.partnerId as string, 10);
+    const partnerId = parsePgInt(req.params.partnerId);
 
-    if (isNaN(partnerId)) {
+    if (!partnerId) {
       res.status(400).json({ message: 'Invalid partner user ID' });
       return;
     }
@@ -518,7 +540,11 @@ export const clearChatHttp = async (
     await invalidateChatCache(currentUserId, partnerId);
 
     res.status(200).json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'P2020') {
+      res.status(400).json({ message: 'Value out of range for integer type' });
+      return;
+    }
     console.error('Error clearing chat:', error);
     res.status(500).json({ message: 'Internal server error' });
   }

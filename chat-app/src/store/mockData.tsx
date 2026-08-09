@@ -540,6 +540,32 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const editMessage = async (messageId: number, content: string) => {
+    if (messageId > 2147483647) {
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          if (chat.messages.some((m) => m.id === messageId)) {
+            return {
+              ...chat,
+              messages: chat.messages.map((m) =>
+                m.id === messageId
+                  ? { ...m, content: content.trim(), isEdited: true }
+                  : m
+              ),
+              lastMessage:
+                chat.lastMessage?.id === messageId
+                  ? {
+                      ...chat.lastMessage,
+                      content: content.trim(),
+                      isEdited: true,
+                    }
+                  : chat.lastMessage,
+            };
+          }
+          return chat;
+        })
+      );
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE}/chat/messages/${messageId}`, {
         method: 'PUT',
@@ -573,6 +599,27 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const deleteMessage = async (messageId: number) => {
+    if (messageId > 2147483647) {
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          const updatedMessages = chat.messages.filter(
+            (m) => m.id !== messageId
+          );
+          if (chat.messages.length !== updatedMessages.length) {
+            return {
+              ...chat,
+              messages: updatedMessages,
+              lastMessage:
+                chat.lastMessage?.id === messageId
+                  ? updatedMessages[0]
+                  : chat.lastMessage,
+            };
+          }
+          return chat;
+        })
+      );
+      return;
+    }
     try {
       const res = await fetch(`${API_BASE}/chat/messages/${messageId}`, {
         method: 'DELETE',
