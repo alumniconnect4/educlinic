@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: ghcr.io/alumniconnect4/educlinic-backend:latest
+        image: ghcr.io/ikeshav26/educlinic-backend:sha-fc885c8
         imagePullPolicy: Always
         ports:
         - containerPort: 4000
