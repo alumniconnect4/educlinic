@@ -79,6 +79,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     setShowOptions(false);
   };
 
+  const isImageUrl = (text: string) => {
+    return (
+      typeof text === 'string' &&
+      (text.startsWith('http://') ||
+        text.startsWith('https://') ||
+        text.startsWith('data:image/')) &&
+      (text.match(/\.(jpeg|jpg|gif|png|webp)/i) != null ||
+        text.includes('/upload/') ||
+        text.includes('cloudinary'))
+    );
+  };
+
   return (
     <div
       className={`w-full flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2 group relative`}
@@ -99,7 +111,15 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               : 'bg-muted text-foreground rounded-2xl rounded-tl-sm'
           }`}
         >
-          {message.content}
+          {isImageUrl(message.content) ? (
+            <img
+              src={message.content}
+              alt="Shared image"
+              className="max-w-[240px] sm:max-w-xs max-h-60 rounded-lg object-cover my-1"
+            />
+          ) : (
+            message.content
+          )}
         </div>
 
         <div className="opacity-100 group-hover:opacity-100 transition-opacity relative">

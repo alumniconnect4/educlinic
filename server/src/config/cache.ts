@@ -219,5 +219,29 @@ export const invalidateUsersCache = async (): Promise<void> => {
   await deleteCachePattern('admin:users:*');
 };
 
+// --- Chat Cache Helpers ---
+export const generateConversationsCacheKey = (userId: number) =>
+  `chat:conversations:${userId}`;
+
+export const generateMessagesCacheKey = (
+  userId: number,
+  partnerId: number,
+  cursor?: number,
+  limit = 30
+) => `chat:messages:${userId}:${partnerId}:${cursor || 'latest'}:${limit}`;
+
+export const invalidateChatCache = async (
+  userId1: number,
+  userId2: number
+): Promise<void> => {
+  await Promise.all([
+    deleteCachePattern(`chat:conversations:${userId1}`),
+    deleteCachePattern(`chat:conversations:${userId2}`),
+    deleteCachePattern(`chat:messages:${userId1}:${userId2}:*`),
+    deleteCachePattern(`chat:messages:${userId2}:${userId1}:*`),
+  ]);
+};
+
+
 
 

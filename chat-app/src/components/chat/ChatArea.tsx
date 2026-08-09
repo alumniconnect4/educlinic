@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
@@ -234,6 +234,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
     });
   }
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [activeChat?.id, activeChat?.messages?.length, scrollToBottom]);
+
   if (isLoading) {
     return (
       <div
@@ -242,30 +254,69 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
           'flex-1 flex flex-col h-full bg-background overflow-hidden relative'
         }
       >
-        <div className="p-4 border-b border-border/40 flex items-center justify-between">
+        {/* Chat Header Skeleton */}
+        <div className="px-6 py-4 border-b border-border/30 flex items-center justify-between bg-background shrink-0 z-10">
           <div className="flex items-center gap-3">
             <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-8 w-20 rounded-full hidden sm:block" />
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-8 w-8 rounded-full" />
+          </div>
+        </div>
+
+        {/* Message History Skeleton - 5 realistic chat message bubbles */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 bg-slate-50/50 flex flex-col justify-end space-y-4">
+          {/* Message 1: Incoming message */}
+          <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
+            <div className="space-y-1">
+              <Skeleton className="h-10 w-48 sm:w-56 rounded-2xl rounded-bl-xs bg-muted/60" />
+              <Skeleton className="h-2.5 w-12 ml-1" />
+            </div>
+          </div>
+
+          {/* Message 2: Outgoing message */}
+          <div className="flex flex-col items-end gap-1 self-end max-w-[80%] sm:max-w-[70%]">
+            <Skeleton className="h-12 w-56 sm:w-72 rounded-2xl rounded-br-xs bg-[#3b82f6]/25 dark:bg-[#3b82f6]/30" />
+            <Skeleton className="h-2.5 w-10 mr-1" />
+          </div>
+
+          {/* Message 3: Incoming message (multi-line) */}
+          <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
+            <div className="space-y-1">
+              <Skeleton className="h-16 w-64 sm:w-80 rounded-2xl rounded-bl-xs bg-muted/60" />
+              <Skeleton className="h-2.5 w-12 ml-1" />
+            </div>
+          </div>
+
+          {/* Message 4: Outgoing message */}
+          <div className="flex flex-col items-end gap-1 self-end max-w-[80%] sm:max-w-[70%]">
+            <Skeleton className="h-10 w-40 sm:w-52 rounded-2xl rounded-br-xs bg-[#3b82f6]/25 dark:bg-[#3b82f6]/30" />
+            <Skeleton className="h-2.5 w-10 mr-1" />
+          </div>
+
+          {/* Message 5: Incoming message */}
+          <div className="flex items-end gap-2 max-w-[80%] sm:max-w-[70%]">
+            <Skeleton className="h-8 w-8 rounded-full shrink-0 mb-1" />
+            <div className="space-y-1">
+              <Skeleton className="h-12 w-52 sm:w-64 rounded-2xl rounded-bl-xs bg-muted/60" />
+              <Skeleton className="h-2.5 w-12 ml-1" />
             </div>
           </div>
         </div>
-        <ScrollArea className="flex-1 p-6">
-          <div className="space-y-8 flex flex-col justify-end h-full pt-10">
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-12 w-64 rounded-[20px] rounded-bl-sm bg-muted/50" />
-              <Skeleton className="h-16 w-80 rounded-[20px] rounded-bl-sm bg-muted/50" />
-            </div>
-            <div className="flex flex-col gap-2 items-end">
-              <Skeleton className="h-12 w-72 rounded-[20px] rounded-br-sm bg-[#3b82f6]/20" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-12 w-48 rounded-[20px] rounded-bl-sm bg-muted/50" />
-            </div>
+
+        {/* Chat Input Skeleton */}
+        <div className="p-4 pt-2 bg-slate-50/50 border-t border-border/20 shrink-0">
+          <div className="relative flex items-center">
+            <Skeleton className="h-12 w-full rounded-full bg-muted/40" />
           </div>
-        </ScrollArea>
-        <div className="p-4 pt-2 border-none">
-          <Skeleton className="h-12 w-full rounded-full bg-muted/30" />
         </div>
       </div>
     );
@@ -401,7 +452,10 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4 bg-slate-50/50 flex flex-col-reverse gap-6">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 min-h-0 overflow-y-auto px-6 py-4 bg-slate-50/50 flex flex-col-reverse gap-6 scroll-smooth"
+          >
             {activeChat.messages.length === 0 ? (
               <div className="text-center text-xs text-muted-foreground my-8">
                 No previous messages. Say hi to {activeChat.participant.name}!
@@ -436,7 +490,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
             )}
           </div>
 
-          <div className="p-4 pt-2 bg-slate-50/50 flex flex-col gap-2">
+          <div className="p-4 pt-2 bg-slate-50/50 flex flex-col gap-2 border-t border-border/20">
             {activeChat.blockedByMe ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-2 h-20 bg-muted/20 border border-border/50 rounded-lg text-sm text-muted-foreground p-4">
                 <span>You have blocked this user.</span>
@@ -452,8 +506,18 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 You cannot send or receive messages anymore due to a block.
               </div>
             ) : !followStatus ? (
-              <div className="flex-1 flex items-center justify-center h-12">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              <div className="flex-1 relative flex items-center">
+                <button disabled className="absolute left-4 text-muted-foreground/40 z-10">
+                  <Paperclip className="h-5 w-5" />
+                </button>
+                <Input
+                  disabled
+                  placeholder="Checking permissions..."
+                  className="h-12 pl-12 pr-12 text-sm bg-muted/30 border border-border/40 rounded-full w-full cursor-not-allowed opacity-70"
+                />
+                <button disabled className="absolute right-4 text-muted-foreground/40 z-10">
+                  <Send className="h-5 w-5" />
+                </button>
               </div>
             ) : !followStatus.isFollowing || !followStatus.isFollowingMe ? (
               <div className="flex-1 flex items-center justify-center h-12 bg-muted/30 border border-border/50 rounded-full text-sm font-medium text-muted-foreground">

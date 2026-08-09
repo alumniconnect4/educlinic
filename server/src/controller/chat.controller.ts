@@ -1,5 +1,13 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../config/db.js';
+import {
+  getCache,
+  setCache,
+  generateConversationsCacheKey,
+  generateMessagesCacheKey,
+  invalidateChatCache,
+} from '../config/cache.js';
+
 
 export const getConversations = async (
   req: Request,
@@ -7,6 +15,13 @@ export const getConversations = async (
 ): Promise<void> => {
   try {
     const currentUserId = req.user!.id;
+
+    const cacheKey = generateConversationsCacheKey(currentUserId);
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
 
     const messages = await prisma.message.findMany({
       where: {
@@ -117,9 +132,12 @@ export const getConversations = async (
       }
     }
 
-    res
-      .status(200)
-      .json({ conversations: Array.from(conversationMap.values()) });
+    const responsePayload = {
+      conversations: Array.from(conversationMap.values()),
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    res.status(200).json(responsePayload);
   } catch (error) {
     console.error('Error fetching conversations:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -142,6 +160,18 @@ export const getMessagesWithUser = async (
 
     if (isNaN(partnerId)) {
       res.status(400).json({ message: 'Invalid partner user ID' });
+      return;
+    }
+
+    const cacheKey = generateMessagesCacheKey(
+      currentUserId,
+      partnerId,
+      cursor,
+      limit
+    );
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      res.status(200).json(cachedData);
       return;
     }
 
@@ -187,6 +217,7 @@ export const getMessagesWithUser = async (
         where: { id: { in: unreadMessageIds } },
         data: { isRead: true },
       });
+      await invalidateChatCache(currentUserId, partnerId);
     }
 
     const formattedMessages = messages.map((msg) => ({
@@ -201,7 +232,10 @@ export const getMessagesWithUser = async (
       receiver: msg.receiver,
     }));
 
-    res.status(200).json({ messages: formattedMessages, nextCursor });
+    const responsePayload = { messages: formattedMessages, nextCursor };
+    await setCache(cacheKey, responsePayload, 300);
+
+    res.status(200).json(responsePayload);
   } catch (error) {
     console.error('Error fetching messages:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -229,6 +263,8 @@ export const markMessagesAsRead = async (
       },
       data: { isRead: true },
     });
+
+    await invalidateChatCache(currentUserId, partnerId);
 
     res.status(200).json({ success: true });
   } catch (error) {
@@ -305,6 +341,8 @@ export const sendMessageHttp = async (
       io.to(`user:${currentUserId}`).emit('receive_message', formattedMessage);
     }
 
+    await invalidateChatCache(currentUserId, Number(receiverId));
+
     res.status(201).json({
       message: formattedMessage,
     });
@@ -372,6 +410,8 @@ export const editMessageHttp = async (
       io.to(`user:${currentUserId}`).emit('message_edited', formattedMessage);
     }
 
+    await invalidateChatCache(currentUserId, updatedMessage.receiverId);
+
     res.status(200).json({ message: formattedMessage });
   } catch (error) {
     console.error('Error editing message:', error);
@@ -426,6 +466,8 @@ export const deleteMessageHttp = async (
       });
     }
 
+    await invalidateChatCache(currentUserId, message.receiverId);
+
     res.status(200).json({ success: true, messageId });
   } catch (error) {
     console.error('Error deleting message:', error);
@@ -466,6 +508,8 @@ export const clearChatHttp = async (
     if (io) {
       io.to(`user:${currentUserId}`).emit('chat_cleared', { partnerId });
     }
+
+    await invalidateChatCache(currentUserId, partnerId);
 
     res.status(200).json({ success: true });
   } catch (error) {
