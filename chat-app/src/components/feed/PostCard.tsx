@@ -45,6 +45,12 @@ export const PostCard: React.FC<PostCardProps> = ({
     navigator.clipboard.writeText(url).then(() => setToastVisible(true));
   }, [post.id]);
 
+  const rawAuthor = authorUser || post.author || post.createdBy;
+  const effectiveAuthor =
+    rawAuthor?.id && currentUser?.id && rawAuthor.id === currentUser.id
+      ? { ...rawAuthor, ...currentUser }
+      : rawAuthor;
+
   const formattedDate = new Date(post.createdAt).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -72,18 +78,19 @@ export const PostCard: React.FC<PostCardProps> = ({
                 className="h-10 w-10 border border-border/50 cursor-pointer transition-transform hover:scale-105"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (authorUser?.id) navigate(`/profile?id=${authorUser.id}`);
+                  if (effectiveAuthor?.id)
+                    navigate(`/profile?id=${effectiveAuthor.id}`);
                   else navigate('/profile');
                 }}
               >
                 <AvatarImage
                   src={getAvatarUrl(
-                    authorUser?.name,
-                    authorUser?.avatarUrl || authorUser?.avatar
+                    effectiveAuthor?.name,
+                    effectiveAuthor?.avatarUrl || effectiveAuthor?.avatar
                   )}
                 />
                 <AvatarFallback>
-                  {authorUser?.name?.substring(0, 2) || 'DE'}
+                  {effectiveAuthor?.name?.substring(0, 2) || 'DE'}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -94,12 +101,12 @@ export const PostCard: React.FC<PostCardProps> = ({
                   className="font-semibold text-sm text-foreground hover:text-[#3b49df] cursor-pointer transition-colors leading-tight"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (authorUser?.id)
-                      navigate(`/profile?id=${authorUser.id}`);
+                    if (effectiveAuthor?.id)
+                      navigate(`/profile?id=${effectiveAuthor.id}`);
                     else navigate('/profile');
                   }}
                 >
-                  {authorUser?.name || 'DEV Contributor'}
+                  {effectiveAuthor?.name || 'DEV Contributor'}
                 </span>
               </div>
               <div className="text-xs text-muted-foreground mt-0.5">
@@ -208,32 +215,40 @@ export const PostCard: React.FC<PostCardProps> = ({
                   </div>
                 </div>
                 <div className="space-y-3 pt-2">
-                  {post.comments.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="flex gap-2 text-xs sm:text-sm"
-                    >
-                      <Avatar className="h-7 w-7 shrink-0 border border-border/50">
-                        <AvatarImage
-                          src={getAvatarUrl(
-                            comment.author.name,
-                            comment.author.avatarUrl || comment.author.avatar
-                          )}
-                        />
-                        <AvatarFallback className="text-[10px]">
-                          {comment.author.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 bg-muted/50 p-3 rounded-md border border-border/60">
-                        <div className="font-semibold text-xs mb-1 text-foreground">
-                          {comment.author.name}
-                        </div>
-                        <div className="text-foreground/90 leading-relaxed">
-                          {comment.content}
+                  {post.comments.map((comment) => {
+                    const commentAuthor =
+                      comment.author?.id && currentUser?.id && comment.author.id === currentUser.id
+                        ? { ...comment.author, ...currentUser }
+                        : comment.author;
+                    return (
+                      <div
+                        key={comment.id}
+                        className="flex gap-2 text-xs sm:text-sm"
+                      >
+                        <Avatar className="h-7 w-7 shrink-0 border border-border/50">
+                          <AvatarImage
+                            src={getAvatarUrl(
+                              commentAuthor.name,
+                              commentAuthor.avatarUrl || commentAuthor.avatar
+                            )}
+                          />
+                          <AvatarFallback className="text-[10px]">
+                            {commentAuthor.name
+                              ? commentAuthor.name.substring(0, 2).toUpperCase()
+                              : 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 bg-muted/50 p-3 rounded-md border border-border/60">
+                          <div className="font-semibold text-xs mb-1 text-foreground">
+                            {commentAuthor.name}
+                          </div>
+                          <div className="text-foreground/90 leading-relaxed">
+                            {comment.content}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

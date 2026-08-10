@@ -37,9 +37,11 @@ export const PostDetailPage: React.FC = () => {
 
   const post = posts.find((p) => p.id === postId);
 
-  const authorUser = post?.author
-    ? users.find((u) => u.id === post.author?.id) || post.author
-    : post?.createdBy;
+  const rawAuthor = post?.author || post?.createdBy;
+  const authorUser =
+    rawAuthor?.id && currentUser?.id && rawAuthor.id === currentUser.id
+      ? { ...rawAuthor, ...currentUser }
+      : users.find((u) => u.id === rawAuthor?.id) || rawAuthor;
 
   const authorId = authorUser?.id;
   const isMe = authorId === currentUser?.id;

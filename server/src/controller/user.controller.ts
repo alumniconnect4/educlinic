@@ -5,12 +5,12 @@ import {
   setCache,
   generateUserListCacheKey,
   invalidateUsersCache,
+  invalidatePostsCache,
 } from '../config/cache.js';
 import { parsePgInt } from '../utils/validation.js';
 
 const sanitizeAvatarUrl = (url?: string | null): string | null => {
   if (!url) return null;
-  if (url.startsWith('data:') && url.length > 2000) return null;
   return url;
 };
 
@@ -308,7 +308,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       },
     });
 
-    await invalidateUsersCache();
+    await Promise.all([invalidateUsersCache(), invalidatePostsCache()]);
 
     return res
       .status(200)
