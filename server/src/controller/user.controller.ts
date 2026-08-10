@@ -8,9 +8,27 @@ import {
   invalidatePostsCache,
 } from '../config/cache.js';
 import { parsePgInt } from '../utils/validation.js';
+import cloudinary from '../config/cloudinary.js';
 
-const sanitizeAvatarUrl = (url?: string | null): string | null => {
+const formatCloudinaryAvatar = (url?: string | null, size = 160): string | null => {
   if (!url) return null;
+  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex !== -1) {
+      const prefix = url.substring(0, uploadIndex + 8);
+      const rest = url.substring(uploadIndex + 8);
+      const transform = `c_fill,g_face,w_${size},h_${size},q_auto,f_auto/`;
+      if (
+        rest.startsWith('c_fill') ||
+        rest.startsWith('w_') ||
+        rest.startsWith('c_scale') ||
+        rest.startsWith('c_crop')
+      ) {
+        return prefix + transform + rest.replace(/^[^/]+\//, '');
+      }
+      return prefix + transform + rest;
+    }
+  }
   return url;
 };
 
@@ -64,16 +82,12 @@ export const getAllUsers = async (req: Request, res: Response) => {
       select: {
         id: true,
         name: true,
-        email: true,
         role: true,
         schoolCategory: true,
         avatarUrl: true,
         bio: true,
-        gender: true,
-        socialLink: true,
-        createdAt: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { id: 'desc' },
     });
 
     let total = 0;
@@ -85,7 +99,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
     const formattedUsers = users.map((u) => ({
       ...u,
-      avatarUrl: sanitizeAvatarUrl(u.avatarUrl),
+      avatarUrl: formatCloudinaryAvatar(u.avatarUrl, 160),
       isFollowed: followingIdsSet.has(u.id),
     }));
 
@@ -137,14 +151,14 @@ export const getUserById = async (req: Request, res: Response) => {
         },
       });
       if (hasBlockedMe) {
-        return res.status(404).json({ message: 'User not found' }); // Hide profile completely
+        return res.status(404).json({ message: 'User not found' });
       }
     }
 
     res.json({
       user: {
         ...user,
-        avatarUrl: sanitizeAvatarUrl(user.avatarUrl),
+        avatarUrl: formatCloudinaryAvatar(user.avatarUrl, 400),
       },
     });
   } catch (err: any) {
@@ -159,113 +173,59 @@ export const getUserById = async (req: Request, res: Response) => {
 export const blockUser = async (req: Request, res: Response) => {
   try {
     const currentUserId = req.user?.id;
-    const targetUserId = parseInt(req.params.id as string, 10);
+    const targetUserId = parsePgInt(req.params.id);
 
-    if (!currentUserId || isNaN(targetUserId)) {
-      return res.status(400).json({ message: 'Invalid request parameters' });
+    if (!currentUserId || !targetUserId) {
+      return res.status(400).json({ message: 'Invalid user IDs' });
     }
 
     if (currentUserId === targetUserId) {
       return res.status(400).json({ message: 'You cannot block yourself' });
     }
 
-    const targetUser = await prisma.user.findUnique({
-      where: { id: targetUserId },
-    });
-    if (!targetUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const existingBlock = await prisma.block.findUnique({
-      where: {
-        blockerId_blockedId: {
-          blockerId: currentUserId,
-          blockedId: targetUserId,
-        },
+    await prisma.block.create({
+      data: {
+        blockerId: currentUserId,
+        blockedId: targetUserId,
       },
     });
 
-    if (existingBlock) {
-      return res.status(400).json({ message: 'User is already blocked' });
-    }
-
-    await prisma.$transaction([
-      prisma.block.create({
-        data: { blockerId: currentUserId, blockedId: targetUserId },
-      }),
-      prisma.follow.deleteMany({
-        where: {
-          OR: [
-            { followerId: currentUserId, followingId: targetUserId },
-            { followerId: targetUserId, followingId: currentUserId },
-          ],
-        },
-      }),
-    ]);
-
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`user:${currentUserId}`).emit('chat_blocked', {
-        blockerId: currentUserId,
-        blockedId: targetUserId,
-      });
-      io.to(`user:${targetUserId}`).emit('chat_blocked', {
-        blockerId: currentUserId,
-        blockedId: targetUserId,
-      });
-    }
+    await prisma.follow.deleteMany({
+      where: {
+        OR: [
+          { followerId: currentUserId, followingId: targetUserId },
+          { followerId: targetUserId, followingId: currentUserId },
+        ],
+      },
+    });
 
     await invalidateUsersCache();
 
     return res.status(200).json({ message: 'User blocked successfully' });
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.code === 'P2002') {
+      return res.status(400).json({ message: 'User is already blocked' });
+    }
     console.error('Error blocking user:', err);
-    return res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
 export const unblockUser = async (req: Request, res: Response) => {
   try {
     const currentUserId = req.user?.id;
-    const targetUserId = parseInt(req.params.id as string, 10);
+    const targetUserId = parsePgInt(req.params.id);
 
-    if (!currentUserId || isNaN(targetUserId)) {
-      return res.status(400).json({ message: 'Invalid request parameters' });
+    if (!currentUserId || !targetUserId) {
+      return res.status(400).json({ message: 'Invalid user IDs' });
     }
 
-    const existingBlock = await prisma.block.findUnique({
+    await prisma.block.deleteMany({
       where: {
-        blockerId_blockedId: {
-          blockerId: currentUserId,
-          blockedId: targetUserId,
-        },
-      },
-    });
-
-    if (!existingBlock) {
-      return res.status(400).json({ message: 'User is not blocked' });
-    }
-
-    await prisma.block.delete({
-      where: {
-        blockerId_blockedId: {
-          blockerId: currentUserId,
-          blockedId: targetUserId,
-        },
-      },
-    });
-
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`user:${currentUserId}`).emit('chat_unblocked', {
         blockerId: currentUserId,
         blockedId: targetUserId,
-      });
-      io.to(`user:${targetUserId}`).emit('chat_unblocked', {
-        blockerId: currentUserId,
-        blockedId: targetUserId,
-      });
-    }
+      },
+    });
 
     await invalidateUsersCache();
 
@@ -285,11 +245,23 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     const { name, bio, gender, socialLink, avatarUrl } = req.body;
 
+    let finalAvatarUrl = avatarUrl;
+    if (avatarUrl && avatarUrl.startsWith('data:image')) {
+      try {
+        const uploadRes = await cloudinary.uploader.upload(avatarUrl, {
+          folder: 'avatars',
+        });
+        finalAvatarUrl = uploadRes.secure_url;
+      } catch (cErr) {
+        console.error('Cloudinary upload error in updateProfile:', cErr);
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: currentUserId },
       data: {
         ...(name && { name }),
-        ...(avatarUrl !== undefined && { avatarUrl }),
+        ...(finalAvatarUrl !== undefined && { avatarUrl: finalAvatarUrl }),
         bio,
         gender,
         socialLink,
