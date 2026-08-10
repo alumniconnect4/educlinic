@@ -191,9 +191,10 @@ export const ConnectPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {users.map((user) => {
+          {users.map((user, index) => {
             const isFollowing = user.isFollowed;
             const isFollowLoading = loadingIds.has(user.id);
+            const isAboveTheFold = index < 4;
 
             return (
               <div
@@ -208,8 +209,14 @@ export const ConnectPage: React.FC = () => {
                     <AvatarImage
                       src={getAvatarUrl(
                         user.name,
-                        user.avatarUrl || user.avatar
+                        user.avatarUrl || user.avatar,
+                        160
                       )}
+                      loading={isAboveTheFold ? 'eager' : 'lazy'}
+                      fetchPriority={isAboveTheFold ? 'high' : 'auto'}
+                      decoding="async"
+                      width={80}
+                      height={80}
                     />
                     <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xl font-bold">
                       {user.name
