@@ -177,9 +177,11 @@ export const FeedPage: React.FC = () => {
       ) : (
         <>
           {feedPosts.map((post) => {
-            const authorUser = post.author
-              ? users.find((u) => u.id === post.author?.id) || post.author
-              : post.createdBy;
+            const rawAuthor = post.author || post.createdBy;
+            const authorUser =
+              rawAuthor?.id && currentUser?.id && rawAuthor.id === currentUser.id
+                ? { ...rawAuthor, ...currentUser }
+                : users.find((u) => u.id === rawAuthor?.id) || rawAuthor;
             return (
               <PostCard
                 key={post.id}

@@ -11,16 +11,11 @@ export function getAvatarUrl(
     | { name?: string; avatar?: string; avatarUrl?: string }
     | null,
   avatarParam?: string | null
-) {
-  let name: string | undefined = undefined;
+): string {
   let url: string | undefined | null = null;
 
   if (typeof userOrName === 'object' && userOrName !== null) {
-    name = userOrName.name;
     url = userOrName.avatarUrl || userOrName.avatar || avatarParam;
-  } else if (typeof userOrName === 'string') {
-    name = userOrName;
-    url = avatarParam;
   } else {
     url = avatarParam;
   }

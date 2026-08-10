@@ -913,6 +913,23 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       if (res.ok) {
         const data = await res.json();
         setCurrentUser(data.user);
+        if (data.user) {
+          setConnectUsersCache((prev) =>
+            prev.map((u) => (u.id === data.user.id ? { ...u, ...data.user } : u))
+          );
+          setPosts((prev) =>
+            prev.map((post) => {
+              const isAuthor =
+                post.author?.id === data.user.id || post.createdBy?.id === data.user.id;
+              if (!isAuthor) return post;
+              return {
+                ...post,
+                author: post.author ? { ...post.author, ...data.user } : undefined,
+                createdBy: post.createdBy ? { ...post.createdBy, ...data.user } : undefined,
+              };
+            })
+          );
+        }
       }
     } catch (err) {
       console.error('Failed to update profile', err);
