@@ -8,6 +8,9 @@ import { getKafkaProducer } from './kafka.service.js';
 const connection = {
   host: config.redisQueue.host,
   port: config.redisQueue.port,
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+  retryStrategy: (times: number) => Math.min(times * 200, 3000),
 };
 
 export const chatQueue = new Queue('chat-queue', { connection });

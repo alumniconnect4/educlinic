@@ -21,7 +21,7 @@ spec:
       containers:
       - name: backend
         image: ghcr.io/alumniconnect4/educlinic-backend:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4000
         env:
@@ -32,10 +32,31 @@ spec:
         - name: REDIS_HOST
           value: "host.minikube.internal"
         - name: KAFKA_BROKERS
-          value: "kafka-svc:9092"
+          value: "kafka-svc.default.svc.cluster.local:9092"
         envFrom:
         - secretRef:
             name: backend-secrets
+        startupProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 2
+          periodSeconds: 3
+          failureThreshold: 20
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 2
+          periodSeconds: 5
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          failureThreshold: 3
         resources:
           requests:
             cpu: "100m"
@@ -43,6 +64,10 @@ spec:
           limits:
             cpu: "500m"
             memory: "512Mi"
+      hostAliases:
+      - ip: "192.168.49.1"
+        hostnames:
+        - "host.minikube.internal"
 ---
 apiVersion: v1
 kind: Service
