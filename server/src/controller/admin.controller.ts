@@ -12,6 +12,8 @@ import {
   generateAdminUserListCacheKey,
   invalidateUsersCache,
 } from '../config/cache.js';
+import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
+import { enqueueUserImageUpload } from '../services/queue.service.js';
 
 export const loginAdmin = async (req: Request, res: Response) => {
   try {
@@ -161,8 +163,6 @@ export const getAdmins = async (req: Request, res: Response) => {
   }
 };
 
-const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
-
 export const createAdmin = async (req: Request, res: Response) => {
   try {
     if (req.user?.role !== 'SUPER_ADMIN') {
@@ -199,10 +199,10 @@ export const createAdmin = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const finalAvatarUrl =
-      avatarUrl && avatarUrl.trim() !== ''
-        ? avatarUrl.trim()
-        : DEFAULT_USER_AVATAR;
+    const isAvatarBase64 = isBase64Image(avatarUrl);
+    const finalAvatarUrl = isAvatarBase64
+      ? DEFAULT_AVATAR_URL
+      : (avatarUrl?.trim() || DEFAULT_AVATAR_URL);
 
     const newAdmin = await prisma.user.create({
       data: {
@@ -232,6 +232,15 @@ export const createAdmin = async (req: Request, res: Response) => {
         updatedAt: true,
       },
     });
+
+    if (isAvatarBase64) {
+      await enqueueUserImageUpload(
+        newAdmin.id,
+        avatarUrl,
+        'avatarUrl',
+        'admin_avatars'
+      );
+    }
 
     await invalidateUsersCache();
 
@@ -277,15 +286,19 @@ export const updateAdmin = async (req: Request, res: Response) => {
       updateData.role = role;
     if (schoolCategory !== undefined)
       updateData.schoolCategory = schoolCategory || null;
+
     if (avatarUrl !== undefined) {
-      updateData.avatarUrl =
-        avatarUrl.trim() !== '' ? avatarUrl.trim() : DEFAULT_USER_AVATAR;
+      if (isBase64Image(avatarUrl)) {
+        await enqueueUserImageUpload(id, avatarUrl, 'avatarUrl', 'admin_avatars');
+      } else {
+        updateData.avatarUrl =
+          avatarUrl.trim() !== '' ? avatarUrl.trim() : DEFAULT_AVATAR_URL;
+      }
     }
+
     if (bio !== undefined) updateData.bio = bio || null;
     if (gender !== undefined) updateData.gender = gender || null;
     if (socialLink !== undefined) updateData.socialLink = socialLink || null;
-    // Only SUPER_ADMIN reaches here; allow explicit isVerified override.
-    // If not passed, admins remain verified by default.
     if (isVerified !== undefined) updateData.isVerified = Boolean(isVerified);
     if (password && password.trim() !== '') {
       updateData.password = await bcrypt.hash(password.trim(), 10);
@@ -472,10 +485,10 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const finalAvatarUrl =
-      avatarUrl && avatarUrl.trim() !== ''
-        ? avatarUrl.trim()
-        : DEFAULT_USER_AVATAR;
+    const isAvatarBase64 = isBase64Image(avatarUrl);
+    const finalAvatarUrl = isAvatarBase64
+      ? DEFAULT_AVATAR_URL
+      : (avatarUrl?.trim() || DEFAULT_AVATAR_URL);
 
     const newUser = await prisma.user.create({
       data: {
@@ -498,6 +511,15 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         createdAt: true,
       },
     });
+
+    if (isAvatarBase64) {
+      await enqueueUserImageUpload(
+        newUser.id,
+        avatarUrl,
+        'avatarUrl',
+        'avatars'
+      );
+    }
 
     await invalidateUsersCache();
 
@@ -538,12 +560,32 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
     if (role && (role === 'USER' || role === 'ALUMNI')) updateData.role = role;
     if (schoolCategory !== undefined)
       updateData.schoolCategory = schoolCategory || null;
+
     if (avatarUrl !== undefined) {
-      updateData.avatarUrl =
-        avatarUrl.trim() !== '' ? avatarUrl.trim() : DEFAULT_USER_AVATAR;
+      if (isBase64Image(avatarUrl)) {
+        await enqueueUserImageUpload(id, avatarUrl, 'avatarUrl', 'avatars');
+      } else {
+        updateData.avatarUrl =
+          avatarUrl.trim() !== '' ? avatarUrl.trim() : DEFAULT_AVATAR_URL;
+      }
     }
-    if (idCardUrl !== undefined) updateData.idCardUrl = idCardUrl || null;
-    if (degreeUrl !== undefined) updateData.degreeUrl = degreeUrl || null;
+
+    if (idCardUrl !== undefined) {
+      if (isBase64Image(idCardUrl)) {
+        await enqueueUserImageUpload(id, idCardUrl, 'idCardUrl', 'id_cards');
+      } else {
+        updateData.idCardUrl = idCardUrl || null;
+      }
+    }
+
+    if (degreeUrl !== undefined) {
+      if (isBase64Image(degreeUrl)) {
+        await enqueueUserImageUpload(id, degreeUrl, 'degreeUrl', 'degrees');
+      } else {
+        updateData.degreeUrl = degreeUrl || null;
+      }
+    }
+
     if (bio !== undefined) updateData.bio = bio || null;
     if (gender !== undefined) updateData.gender = gender || null;
     if (socialLink !== undefined) updateData.socialLink = socialLink || null;
@@ -814,7 +856,13 @@ export const updateAdminProfile = async (req: Request, res: Response) => {
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
-    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
+    if (avatarUrl !== undefined) {
+      if (isBase64Image(avatarUrl)) {
+        await enqueueUserImageUpload(id, avatarUrl, 'avatarUrl', 'admin_avatars');
+      } else {
+        updateData.avatarUrl = avatarUrl;
+      }
+    }
     if (bio !== undefined) updateData.bio = bio;
     if (gender !== undefined) updateData.gender = gender;
     if (socialLink !== undefined) updateData.socialLink = socialLink;
@@ -838,8 +886,7 @@ export const updateAdminProfile = async (req: Request, res: Response) => {
       },
     });
     await deleteUserCache(updatedUser.email);
-
-    await deleteUserCache(updatedUser.email);
+    await invalidateUsersCache();
 
     return res
       .status(200)
@@ -886,8 +933,7 @@ export const changeAdminPassword = async (req: Request, res: Response) => {
       data: { password: hashedPassword },
     });
     await deleteUserCache(user.email);
-
-    await deleteUserCache(user.email);
+    await invalidateUsersCache();
 
     return res.status(200).json({ message: 'Password updated successfully' });
   } catch (err) {
@@ -914,14 +960,9 @@ export const uploadAdminImage = async (req: Request, res: Response) => {
       });
       return res.status(200).json({ url: cloudinaryUpload.secure_url });
     } catch (cloudinaryErr) {
-      console.warn(
-        'Cloudinary upload failed, falling back to base64 URL storage:',
-        cloudinaryErr
-      );
-      // Return base64 directly so that the frontend works even with dummy Cloudinary credentials
-      return res.status(200).json({
-        url: image,
-        warning: 'Cloudinary upload failed, fell back to base64 storage',
+      console.error('Cloudinary upload error in uploadAdminImage:', cloudinaryErr);
+      return res.status(500).json({
+        message: 'Cloudinary image upload failed',
       });
     }
   } catch (err) {

@@ -9,6 +9,8 @@ import {
 } from '../config/cache.js';
 import { parsePgInt } from '../utils/validation.js';
 import cloudinary from '../config/cloudinary.js';
+import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
+import { enqueueUserImageUpload } from '../services/queue.service.js';
 
 const formatCloudinaryAvatar = (url?: string | null, size = 160): string | null => {
   if (!url) return null;
@@ -245,16 +247,16 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     const { name, bio, gender, socialLink, avatarUrl } = req.body;
 
-    let finalAvatarUrl = avatarUrl;
-    if (avatarUrl && avatarUrl.startsWith('data:image')) {
-      try {
-        const uploadRes = await cloudinary.uploader.upload(avatarUrl, {
-          folder: 'avatars',
-        });
-        finalAvatarUrl = uploadRes.secure_url;
-      } catch (cErr) {
-        console.error('Cloudinary upload error in updateProfile:', cErr);
-      }
+    const isAvatarBase64 = isBase64Image(avatarUrl);
+    let finalAvatarUrl = isAvatarBase64 ? undefined : avatarUrl;
+
+    if (isAvatarBase64) {
+      await enqueueUserImageUpload(
+        currentUserId,
+        avatarUrl,
+        'avatarUrl',
+        'avatars'
+      );
     }
 
     const updatedUser = await prisma.user.update({
@@ -282,9 +284,16 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     await Promise.all([invalidateUsersCache(), invalidatePostsCache()]);
 
-    return res
-      .status(200)
-      .json({ message: 'Profile updated successfully', user: updatedUser });
+    return res.status(200).json({
+      message: 'Profile updated successfully',
+      user: {
+        ...updatedUser,
+        avatarUrl: formatCloudinaryAvatar(
+          updatedUser.avatarUrl || DEFAULT_AVATAR_URL,
+          400
+        ),
+      },
+    });
   } catch (err) {
     console.error('Error updating profile:', err);
     return res.status(500).json({ message: 'Internal server error' });
