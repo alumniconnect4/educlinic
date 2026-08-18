@@ -5,12 +5,16 @@ import { logger } from './logger.js';
 import type { User } from '../../generated/prisma/browser.js';
 
 const lru = new LRUCache<string, any>({
-  max: 100,
+  max: 500,
   ttl: 5 * 60 * 1000,
 });
 
 const redis = redisClient as ReturnType<typeof createClient>;
 const REDIS_TTL_SECONDS = 60 * 60;
+
+const isRedisAvailable = (): boolean => {
+  return Boolean(redis?.isOpen && redis?.isReady);
+};
 
 //function to generate a key to store user in cache
 export const generateUserCacheKey = (email: string) => `user:${email}`;
@@ -20,7 +24,9 @@ export const cacheUser = async (user: User): Promise<void> => {
   const key = generateUserCacheKey(user.email);
   try {
     lru.set(key, user);
-    await redis.set(key, JSON.stringify(user), { EX: REDIS_TTL_SECONDS });
+    if (isRedisAvailable()) {
+      await redis.set(key, JSON.stringify(user), { EX: REDIS_TTL_SECONDS });
+    }
   } catch (error) {
     logger.error('Failed to cache user!');
   }
@@ -34,11 +40,13 @@ export const getUserFromCache = async (email: string): Promise<User | null> => {
     if (value !== undefined) {
       return value;
     }
-    const redisValue = await redis.get(key);
-    if (redisValue) {
-      const parsed = JSON.parse(redisValue) as User;
-      lru.set(key, parsed);
-      return parsed;
+    if (isRedisAvailable()) {
+      const redisValue = await redis.get(key);
+      if (redisValue) {
+        const parsed = JSON.parse(redisValue) as User;
+        lru.set(key, parsed);
+        return parsed;
+      }
     }
   } catch (error) {
     logger.error('Failed to get user from cache!');
@@ -56,7 +64,9 @@ export const deleteUserCache = async (email: string): Promise<void> => {
   const key = generateUserCacheKey(email);
   try {
     lru.delete(key);
-    await redis.del(key);
+    if (isRedisAvailable()) {
+      await redis.del(key);
+    }
   } catch (error) {
     logger.error('Failed to delete user cache!');
   }
@@ -76,7 +86,10 @@ export const storeSession = async (
 ): Promise<void> => {
   const key = generateSessionKey(sessionId);
   try {
-    await redis.set(key, JSON.stringify(data), { EX: SESSION_TTL_SECONDS });
+    lru.set(key, data, { ttl: SESSION_TTL_SECONDS * 1000 });
+    if (isRedisAvailable()) {
+      await redis.set(key, JSON.stringify(data), { EX: SESSION_TTL_SECONDS });
+    }
   } catch (error) {
     logger.error('Failed to store session in Redis!');
   }
@@ -87,9 +100,17 @@ export const getSession = async (
 ): Promise<SessionData | null> => {
   const key = generateSessionKey(sessionId);
   try {
-    const redisValue = await redis.get(key);
-    if (redisValue) {
-      return JSON.parse(redisValue) as SessionData;
+    const memoryData = lru.get(key) as SessionData | undefined;
+    if (memoryData !== undefined) {
+      return memoryData;
+    }
+    if (isRedisAvailable()) {
+      const redisValue = await redis.get(key);
+      if (redisValue) {
+        const parsed = JSON.parse(redisValue) as SessionData;
+        lru.set(key, parsed, { ttl: 5 * 60 * 1000 });
+        return parsed;
+      }
     }
   } catch (error) {
     logger.error('Failed to get session from Redis!');
@@ -100,7 +121,10 @@ export const getSession = async (
 export const deleteSession = async (sessionId: string): Promise<void> => {
   const key = generateSessionKey(sessionId);
   try {
-    await redis.del(key);
+    lru.delete(key);
+    if (isRedisAvailable()) {
+      await redis.del(key);
+    }
   } catch (error) {
     logger.error('Failed to delete session from Redis!');
   }
@@ -113,11 +137,13 @@ export const getCache = async <T>(key: string): Promise<T | null> => {
     if (memoryData !== undefined) {
       return memoryData;
     }
-    const data = await redis.get(key);
-    if (data) {
-      const parsed = JSON.parse(data) as T;
-      lru.set(key, parsed, { ttl: 60 * 1000 });
-      return parsed;
+    if (isRedisAvailable()) {
+      const data = await redis.get(key);
+      if (data) {
+        const parsed = JSON.parse(data) as T;
+        lru.set(key, parsed, { ttl: 60 * 1000 });
+        return parsed;
+      }
     }
   } catch (error) {
     logger.error(`Redis getCache failed for key "${key}"`);
@@ -132,7 +158,9 @@ export const setCache = async <T>(
 ): Promise<void> => {
   try {
     lru.set(key, value, { ttl: Math.min(ttlSeconds * 1000, 5 * 60 * 1000) });
-    await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
+    if (isRedisAvailable()) {
+      await redis.set(key, JSON.stringify(value), { EX: ttlSeconds });
+    }
   } catch (error) {
     logger.error(`Redis setCache failed for key "${key}"`);
   }
@@ -141,9 +169,11 @@ export const setCache = async <T>(
 export const deleteCachePattern = async (pattern: string): Promise<void> => {
   try {
     lru.clear();
-    const keys = await redis.keys(pattern);
-    if (keys && keys.length > 0) {
-      await redis.del(keys);
+    if (isRedisAvailable()) {
+      const keys = await redis.keys(pattern);
+      if (keys && keys.length > 0) {
+        await redis.del(keys);
+      }
     }
   } catch (error) {
     logger.error(`Redis deleteCachePattern failed for pattern "${pattern}"`);
