@@ -30,11 +30,15 @@ setupChatSocket(io);
 app.set('io', io);
 
 import { startKafkaConsumer } from './src/services/kafka.service.js';
-import { initChatWorker } from './src/services/queue.service.js';
+import {
+  initChatWorker,
+  initImageUploadWorker,
+} from './src/services/queue.service.js';
 
 const startAllServices: () => Promise<void> = async () => {
   await Promise.all([connectRedis()]);
   initChatWorker(io);
+  initImageUploadWorker();
   await startKafkaConsumer(io);
 };
 

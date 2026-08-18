@@ -11,8 +11,8 @@ import {
 } from '../config/cache.js';
 import type { User } from '../../generated/prisma/browser.js';
 import { prisma } from '../config/db.js';
-
-const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
+import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
+import { enqueueUserImageUpload } from '../services/queue.service.js';
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -30,11 +30,6 @@ export const register = async (req: Request, res: Response) => {
     if (!name || !email || !password || !role || !schoolCategory) {
       return res.status(400).json({ message: 'All text fields are required' });
     }
-
-    const finalAvatarUrl =
-      avatarUrl && avatarUrl.trim() !== ''
-        ? avatarUrl.trim()
-        : DEFAULT_USER_AVATAR;
 
     if (role === 'USER' && !idCardUrl) {
       return res.status(400).json({
@@ -59,6 +54,17 @@ export const register = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const isAvatarBase64 = isBase64Image(avatarUrl);
+    const isIdCardBase64 = isBase64Image(idCardUrl);
+    const isDegreeBase64 = isBase64Image(degreeUrl);
+
+    const initialAvatarUrl = isAvatarBase64
+      ? DEFAULT_AVATAR_URL
+      : (avatarUrl?.trim() || DEFAULT_AVATAR_URL);
+
+    const initialIdCardUrl = isIdCardBase64 ? null : (idCardUrl || null);
+    const initialDegreeUrl = isDegreeBase64 ? null : (degreeUrl || null);
+
     const newUser = await prisma.user.create({
       data: {
         name,
@@ -66,11 +72,22 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         role,
         schoolCategory,
-        avatarUrl: finalAvatarUrl,
-        idCardUrl: idCardUrl || null,
-        degreeUrl: degreeUrl || null,
+        avatarUrl: initialAvatarUrl,
+        idCardUrl: initialIdCardUrl,
+        degreeUrl: initialDegreeUrl,
       },
     });
+
+    // Enqueue background uploads to Cloudinary for any base64 images
+    if (isAvatarBase64) {
+      await enqueueUserImageUpload(newUser.id, avatarUrl, 'avatarUrl', 'avatars');
+    }
+    if (isIdCardBase64) {
+      await enqueueUserImageUpload(newUser.id, idCardUrl, 'idCardUrl', 'id_cards');
+    }
+    if (isDegreeBase64) {
+      await enqueueUserImageUpload(newUser.id, degreeUrl, 'degreeUrl', 'degrees');
+    }
 
     await invalidateUsersCache();
 
@@ -103,6 +120,7 @@ export const register = async (req: Request, res: Response) => {
         email: newUser.email,
         role: newUser.role,
         schoolCategory: newUser.schoolCategory,
+        avatarUrl: newUser.avatarUrl,
         isVerified: true,
       },
     });
@@ -168,6 +186,7 @@ export const login = async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
         schoolCategory: user.schoolCategory,
+        avatarUrl: user.avatarUrl || DEFAULT_AVATAR_URL,
       },
     });
   } catch (err) {
