@@ -172,7 +172,10 @@ export const initChatWorker = (io?: SocketIOServer) => {
             kafkaErr
           );
           if (io) {
-            io.to(`user:${receiverId}`).emit('receive_message', formattedMessage);
+            io.to(`user:${receiverId}`).emit(
+              'receive_message',
+              formattedMessage
+            );
             io.to(`user:${senderId}`).emit('receive_message', formattedMessage);
           }
         }
@@ -192,4 +195,3 @@ export const initChatWorker = (io?: SocketIOServer) => {
 
   logger.info('BullMQ Chat Worker initialized');
 };
-

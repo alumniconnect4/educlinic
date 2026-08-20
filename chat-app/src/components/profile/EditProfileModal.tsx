@@ -74,7 +74,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   const [bio, setBio] = useState(user.bio || '');
   const [gender, setGender] = useState(user.gender || '');
   const [socialLink, setSocialLink] = useState(user.socialLink || '');
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl || user.avatar || '');
+  const [avatarUrl, setAvatarUrl] = useState(
+    user.avatarUrl || user.avatar || ''
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

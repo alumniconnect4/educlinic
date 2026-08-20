@@ -16,7 +16,10 @@ export const Chat: React.FC = () => {
   } = useStore();
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const userIdParam = searchParams.get('userId') || searchParams.get('channelId') || searchParams.get('id');
+  const userIdParam =
+    searchParams.get('userId') ||
+    searchParams.get('channelId') ||
+    searchParams.get('id');
 
   const [activeChatId, setActiveChatId] = useState<number | null>(null);
   const [showMobileChatView, setShowMobileChatView] = useState(false);

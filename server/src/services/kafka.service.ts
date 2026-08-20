@@ -49,7 +49,10 @@ export const getKafkaProducer = async (): Promise<Producer> => {
   }
 };
 
-const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => {
+const ensureTopicsExist = async (
+  retries = 5,
+  delayMs = 2000
+): Promise<void> => {
   const admin = kafka.admin();
   let attempt = 0;
   while (attempt < retries) {
@@ -76,7 +79,10 @@ const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => 
       try {
         await admin.disconnect();
       } catch {}
-      if (err?.name === 'TopicExistsError' || err?.message?.includes('exists')) {
+      if (
+        err?.name === 'TopicExistsError' ||
+        err?.message?.includes('exists')
+      ) {
         logger.info('Kafka topic "chat-messages" already exists');
         return;
       }
@@ -88,7 +94,9 @@ const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => 
       }
     }
   }
-  logger.warn('Kafka admin topic creation bypassed; continuing with consumer subscription.');
+  logger.warn(
+    'Kafka admin topic creation bypassed; continuing with consumer subscription.'
+  );
 };
 
 export const startKafkaConsumer = async (io: SocketIOServer) => {
@@ -148,7 +156,9 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
       });
 
       consumer = currentConsumer;
-      logger.info(`Kafka Consumer connected and subscribed to chat-messages (groupId: ${groupId})`);
+      logger.info(
+        `Kafka Consumer connected and subscribed to chat-messages (groupId: ${groupId})`
+      );
 
       await currentConsumer.run({
         eachMessage: async ({
@@ -163,7 +173,10 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
           if (!message.value) return;
           try {
             const payload = JSON.parse(message.value.toString());
-            io.to(`user:${payload.receiverId}`).emit('receive_message', payload);
+            io.to(`user:${payload.receiverId}`).emit(
+              'receive_message',
+              payload
+            );
             io.to(`user:${payload.senderId}`).emit('receive_message', payload);
           } catch (err) {
             logger.error('Error processing Kafka message:', err);

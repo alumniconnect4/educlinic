@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, HelpCircle, Flame, Sparkles, X, TrendingUp } from 'lucide-react';
+import {
+  MessageSquare,
+  HelpCircle,
+  Flame,
+  Sparkles,
+  X,
+  TrendingUp,
+} from 'lucide-react';
 import { stripHtml } from '../../utils/text';
 import type { Post } from '../../types';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -22,9 +29,9 @@ export const RightSidebar: React.FC = () => {
 
   const isProfileIncomplete = Boolean(
     currentUser &&
-      (!currentUser.bio ||
-        !currentUser.socialLink ||
-        (!currentUser.avatarUrl && !currentUser.avatar))
+    (!currentUser.bio ||
+      !currentUser.socialLink ||
+      (!currentUser.avatarUrl && !currentUser.avatar))
   );
 
   const handleOpenDrawer = () => {
@@ -45,7 +52,8 @@ export const RightSidebar: React.FC = () => {
   useEffect(() => {
     const listener = () => handleOpenDrawer();
     window.addEventListener('open-mobile-sidebar-drawer', listener);
-    return () => window.removeEventListener('open-mobile-sidebar-drawer', listener);
+    return () =>
+      window.removeEventListener('open-mobile-sidebar-drawer', listener);
   }, []);
 
   useEffect(() => {
@@ -167,7 +175,8 @@ export const RightSidebar: React.FC = () => {
               </div>
 
               <p className="text-[11px] text-slate-500 leading-snug mb-3">
-                Add your bio, avatar & social links for a better experience across the community.
+                Add your bio, avatar & social links for a better experience
+                across the community.
               </p>
 
               <Button
@@ -204,7 +213,10 @@ export const RightSidebar: React.FC = () => {
               <span className="text-xs text-muted-foreground">Interact</span>
             </div>
             <div className="divide-y divide-border/40">
-              {renderPostList(discussionPosts, 'No discussions active right now.')}
+              {renderPostList(
+                discussionPosts,
+                'No discussions active right now.'
+              )}
             </div>
           </div>
 
@@ -244,13 +256,17 @@ export const RightSidebar: React.FC = () => {
       {isMobileDrawerOpen && (
         <div
           className={`lg:hidden fixed inset-0 z-[99999] bg-black/60 backdrop-blur-xs flex flex-col justify-end transition-opacity duration-300 ${
-            isDrawerClosing ? 'opacity-0 pointer-events-none' : 'opacity-100 animate-in fade-in duration-200'
+            isDrawerClosing
+              ? 'opacity-0 pointer-events-none'
+              : 'opacity-100 animate-in fade-in duration-200'
           }`}
           onClick={() => handleCloseDrawer()}
         >
           <div
             className={`bg-card border-t border-border rounded-t-2xl max-h-[85vh] w-full flex flex-col shadow-2xl overflow-hidden transition-transform duration-300 ease-out transform text-foreground relative z-[100000] ${
-              isDrawerClosing ? 'translate-y-full' : 'translate-y-0 animate-in slide-in-from-bottom duration-300'
+              isDrawerClosing
+                ? 'translate-y-full'
+                : 'translate-y-0 animate-in slide-in-from-bottom duration-300'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -288,7 +304,8 @@ export const RightSidebar: React.FC = () => {
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed mb-3">
-                    Add your bio, avatar & social links so fellow students and alumni can discover and connect with you.
+                    Add your bio, avatar & social links so fellow students and
+                    alumni can discover and connect with you.
                   </p>
                   <Button
                     onClick={() => {
@@ -313,7 +330,10 @@ export const RightSidebar: React.FC = () => {
                   <span className="text-xs text-muted-foreground">Hot</span>
                 </div>
                 <div className="divide-y divide-border/40">
-                  {renderPostList(trendingPosts, 'No trending posts right now.')}
+                  {renderPostList(
+                    trendingPosts,
+                    'No trending posts right now.'
+                  )}
                 </div>
               </div>
 
@@ -331,10 +351,15 @@ export const RightSidebar: React.FC = () => {
                     <MessageSquare className="h-4 w-4 text-[#3b49df]" />
                     <span>#discussions</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">Interact</span>
+                  <span className="text-xs text-muted-foreground">
+                    Interact
+                  </span>
                 </div>
                 <div className="divide-y divide-border/40">
-                  {renderPostList(discussionPosts, 'No discussions active right now.')}
+                  {renderPostList(
+                    discussionPosts,
+                    'No discussions active right now.'
+                  )}
                 </div>
               </div>
 

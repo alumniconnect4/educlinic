@@ -1,73 +1,46 @@
-# React + TypeScript + Vite
+# BFGI Community & Real-Time Chat Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
 
-Currently, two official plugins are available:
+The BFGI Community & Chat Application is a real-time social platform built for Baba Farid Group of Institutions students, alumni, and engineering teams. It facilitates discussions, knowledge sharing, networking, and direct messaging.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Algorithmic Feed**: Community discussions, announcements, and hashtag-based topic navigation.
+- **Threaded Comments & Reactions**: Multi-level reply threads, likes, and engagement tracking.
+- **Real-Time Direct Messaging**: Instant chat with typing indicators, delivery statuses, read receipts, and chat clearing powered by Socket.io.
+- **Connect & Developers Showcase**: Department-filtered directory with a dedicated responsive showcase for the platform's core developer team.
+- **Rich Profiles**: Follow graph, role indicators, verified badges, and customizable bios.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Technical Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Framework**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS, Lucide Icons, Radix UI Primitives
+- **Real-Time Engine**: Socket.io Client
+- **State Management**: Zustand
+- **Routing**: React Router DOM v6
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+## Development Setup
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development server on port 5173
+pnpm dev
+
+# Build production bundle
+pnpm build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
+## Documentation
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+For full architectural workflows, WebSocket event schemas, and component trees, see [Community Chat App Documentation](file:///home/keshav/Desktop/JourneyTOBMW/educlinic/docs/community-chat-app.md).

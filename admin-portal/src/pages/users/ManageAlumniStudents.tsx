@@ -1577,7 +1577,8 @@ export default function ManageAlumniStudents() {
                       Developer / Builder Status 💻
                     </label>
                     <span className="text-[11px] text-gray-500 block mt-0.5">
-                      Grant core developer tag & feature in Connect tab builders showcase.
+                      Grant core developer tag & feature in Connect tab builders
+                      showcase.
                     </span>
                   </div>
 
@@ -1602,7 +1603,9 @@ export default function ManageAlumniStudents() {
                         })
                       }
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        editFormData.isDeveloper ? 'bg-indigo-600' : 'bg-gray-300'
+                        editFormData.isDeveloper
+                          ? 'bg-indigo-600'
+                          : 'bg-gray-300'
                       }`}
                     >
                       <span

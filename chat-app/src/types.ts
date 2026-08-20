@@ -52,8 +52,20 @@ export interface Message {
   isRead?: boolean;
   isEdited?: boolean;
   createdAt: string;
-  sender?: { id: number; name: string; avatarUrl?: string; isDeveloper?: boolean; role?: string };
-  receiver?: { id: number; name: string; avatarUrl?: string; isDeveloper?: boolean; role?: string };
+  sender?: {
+    id: number;
+    name: string;
+    avatarUrl?: string;
+    isDeveloper?: boolean;
+    role?: string;
+  };
+  receiver?: {
+    id: number;
+    name: string;
+    avatarUrl?: string;
+    isDeveloper?: boolean;
+    role?: string;
+  };
   tempId?: number;
 }
 

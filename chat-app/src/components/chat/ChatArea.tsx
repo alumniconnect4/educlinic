@@ -533,7 +533,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <div className="flex-1 flex items-center justify-center h-12 bg-muted/30 border border-border/50 rounded-full text-sm text-muted-foreground">
                 You cannot send or receive messages anymore due to a block.
               </div>
-            ) : (!followStatus && !canChatWithoutFollow) ? (
+            ) : !followStatus && !canChatWithoutFollow ? (
               <div className="flex-1 relative flex items-center">
                 <button
                   disabled
@@ -553,7 +553,8 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   <Send className="h-5 w-5" />
                 </button>
               </div>
-            ) : (!canChatWithoutFollow && (!followStatus?.isFollowing || !followStatus?.isFollowingMe)) ? (
+            ) : !canChatWithoutFollow &&
+              (!followStatus?.isFollowing || !followStatus?.isFollowingMe) ? (
               <div className="flex-1 flex items-center justify-center h-12 bg-muted/30 border border-border/50 rounded-full text-sm font-medium text-muted-foreground">
                 Both users must follow each other to chat.
               </div>
