@@ -66,6 +66,8 @@ model User {
   idCardUrl        String?
   degreeUrl        String?
   isVerified       Boolean         @default(false)
+  isDeveloper      Boolean         @default(false)
+  developerTitle   String?
   createdEvents    Event[]
   registrations    Registration[]
   posts            Post[]
@@ -85,6 +87,7 @@ model User {
 
   @@index([role, isVerified])
   @@index([isVerified])
+  @@index([isDeveloper])
   @@index([createdAt])
   @@index([schoolCategory])
 }

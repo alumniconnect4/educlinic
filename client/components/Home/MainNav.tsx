@@ -284,17 +284,18 @@ const MainNav = () => {
                 )}
               </button>
             ) : (
-              <Link href="/auth">
-                <button className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition">
-                  <span>Login</span>
-                  <ArrowRight size={18} />
-                </button>
+              <Link
+                href="/auth"
+                className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition"
+              >
+                <span>Login</span>
+                <ArrowRight size={18} />
               </Link>
             )}
           </div>
 
           <button
-            className="xl:hidden text-gray-700 hover:text-[#d60000] focus:outline-none"
+            className="xl:hidden text-gray-700 hover:text-[#d60000] focus:outline-none cursor-pointer"
             onClick={() => setIsMenuOpen(true)}
           >
             <Menu size={28} />
@@ -413,42 +414,45 @@ const MainNav = () => {
               </div>
             );
           })}
+        </div>
 
-          <div className="pt-4 border-t border-gray-100 mt-2 pb-6">
-            {isAuthenticated ? (
-              <button
-                onClick={async () => {
-                  await handleLogout();
-                  setIsMenuOpen(false);
-                }}
-                disabled={isLoggingOut}
-                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded flex items-center justify-center space-x-2 font-medium w-full transition ${
-                  isLoggingOut
-                    ? 'opacity-75 cursor-not-allowed'
-                    : 'cursor-pointer'
-                }`}
-              >
-                {isLoggingOut ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>Logging out...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Logout</span>
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-            ) : (
-              <Link href="/auth" onClick={() => setIsMenuOpen(false)}>
-                <button className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded flex items-center justify-center space-x-2 font-medium w-full transition">
-                  <span>Join Network</span>
+        {/* Pinned Bottom CTA Section */}
+        <div className="p-4 border-t border-gray-100 bg-white shrink-0 shadow-md sticky bottom-0 z-[80]">
+          {isAuthenticated ? (
+            <button
+              onClick={async () => {
+                await handleLogout();
+                setIsMenuOpen(false);
+              }}
+              disabled={isLoggingOut}
+              className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm ${
+                isLoggingOut
+                  ? 'opacity-75 cursor-not-allowed'
+                  : 'cursor-pointer'
+              }`}
+            >
+              {isLoggingOut ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>Logging out...</span>
+                </>
+              ) : (
+                <>
+                  <span>Logout</span>
                   <ArrowRight size={18} />
-                </button>
-              </Link>
-            )}
-          </div>
+                </>
+              )}
+            </button>
+          ) : (
+            <Link
+              href="/auth"
+              onClick={() => setIsMenuOpen(false)}
+              className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm cursor-pointer text-center"
+            >
+              <span>Join Network</span>
+              <ArrowRight size={18} />
+            </Link>
+          )}
         </div>
       </div>
     </div>

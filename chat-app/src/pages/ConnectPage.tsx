@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore, getAuthHeaders } from '../store/mockData';
 import { getAvatarUrl } from '../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
@@ -10,8 +11,17 @@ import {
   UserPlus,
   RefreshCw,
   MessageSquare,
+  Sparkles,
+  Code2,
+  ChevronRight,
+  X,
+  ExternalLink,
+  ShieldCheck,
+  Terminal,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+import { MdVerified } from 'react-icons/md';
 
 interface ConnectUser {
   id: number;
@@ -23,7 +33,39 @@ interface ConnectUser {
   avatar?: string;
   avatarUrl?: string;
   bio?: string;
+  socialLink?: string;
+  isVerified?: boolean;
+  isDeveloper?: boolean;
+  developerTitle?: string;
 }
+
+// Filled Blue Tick Verified Badge Component using react-icons/md (MdVerified)
+export const VerifiedBadge: React.FC<{ size?: number; className?: string }> = ({
+  size = 18,
+  className = '',
+}) => (
+  <span
+    className={`inline-flex items-center justify-center text-[#0095f6] shrink-0 ${className}`}
+    title="Verified Profile"
+  >
+    <MdVerified size={size} />
+  </span>
+);
+
+// Developer Tag Badge Component
+export const DeveloperBadge: React.FC<{
+  title?: string;
+  className?: string;
+}> = ({ title = 'DEVELOPER', className = '' }) => (
+  <span
+    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-200 bg-indigo-50/80 text-indigo-600 uppercase tracking-wider shrink-0 ${className}`}
+  >
+    <Sparkles className="w-3 h-3 text-indigo-600" />
+    {title ? title.toUpperCase() : 'DEVELOPER'}
+  </span>
+);
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export const ConnectPage: React.FC = () => {
   const {
@@ -37,68 +79,103 @@ export const ConnectPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [users, setUsers] = useState<ConnectUser[]>(connectUsersCache);
+  const [developers, setDevelopers] = useState<ConnectUser[]>([]);
+  const [shuffledDevelopers, setShuffledDevelopers] = useState<ConnectUser[]>([]);
   const [loading, setLoading] = useState(connectUsersCache.length === 0);
-  const [skip, setSkip] = useState(0);
-  const [total, setTotal] = useState(connectTotalCache);
+  const [loadingDevs, setLoadingDevs] = useState(true);
   const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
+  const [showDevModal, setShowDevModal] = useState(false);
+  const [devModalSearch, setDevModalSearch] = useState('');
   const navigate = useNavigate();
 
+  // Fetch developers list and shuffle for random single row display
+  const fetchDevelopers = useCallback(async () => {
+    try {
+      setLoadingDevs(true);
+      const res = await fetch(`${API_BASE}/users/developers`, {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const list: ConnectUser[] = data.developers || (Array.isArray(data) ? data : []);
+        setDevelopers(list);
+        const shuffled = [...list].sort(() => Math.random() - 0.5);
+        setShuffledDevelopers(shuffled);
+      }
+    } catch (err) {
+      console.error('Failed to fetch developers', err);
+    } finally {
+      setLoadingDevs(false);
+    }
+  }, []);
+
+  // Debounce search query
   useEffect(() => {
-    const handler = setTimeout(() => {
+    const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
-      setSkip(0);
-    }, 500);
-    return () => clearTimeout(handler);
+    }, 300);
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const fetchUsers = useCallback(async () => {
-    if (connectUsersCache.length === 0 || skip > 0 || debouncedSearch !== '') {
-      setLoading(true);
-    }
-    try {
-      const apiUrl =
-        import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-      const res = await fetch(
-        `${apiUrl}/users?limit=16&skip=${skip}&search=${encodeURIComponent(debouncedSearch)}`,
-        {
+  // Fetch user directory
+  const fetchUsers = useCallback(
+    async (search: string) => {
+      try {
+        setLoading(true);
+        const queryParams = new URLSearchParams({
+          limit: '16',
+          skip: '0',
+          ...(search ? { search } : {}),
+        });
+
+        const res = await fetch(`${API_BASE}/users?${queryParams}`, {
           headers: getAuthHeaders(),
-          credentials: 'include',
-        }
-      );
-      if (res.ok) {
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch users');
+
         const data = await res.json();
         const fetchedUsers = data.users || [];
         const fetchedTotal = data.total || 0;
+
         setUsers(fetchedUsers);
-        setTotal(fetchedTotal);
-        if (!debouncedSearch && skip === 0) {
+        if (!search) {
           setConnectUsersCache(fetchedUsers);
           setConnectTotalCache(fetchedTotal);
         }
+      } catch (err) {
+        console.error('Error fetching connect users:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Failed to fetch users', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    debouncedSearch,
-    skip,
-    connectUsersCache.length,
-    setConnectUsersCache,
-    setConnectTotalCache,
-  ]);
+    },
+    [setConnectUsersCache, setConnectTotalCache]
+  );
 
+  // Fetch developers once on mount
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    fetchDevelopers();
+  }, [fetchDevelopers]);
+
+  // Fetch users when search query changes
+  useEffect(() => {
+    fetchUsers(debouncedSearch);
+  }, [fetchUsers, debouncedSearch]);
+
+  // Lock body scroll when developer directory modal is open
+  useEffect(() => {
+    if (showDevModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showDevModal]);
 
   const handleRefreshPeople = () => {
-    if (skip + 16 >= total && total > 0) {
-      setSkip(0);
-    } else {
-      setSkip((prev) => prev + 16);
-    }
+    fetchUsers(debouncedSearch);
   };
 
   const handleFollowToggle = async (
@@ -115,7 +192,12 @@ export const ConnectPage: React.FC = () => {
           u.id === userId ? { ...u, isFollowed: !isFollowing } : u
         )
       );
-      setConnectUsersCache((prev) =>
+      setDevelopers((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, isFollowed: !isFollowing } : u
+        )
+      );
+      setShuffledDevelopers((prev) =>
         prev.map((u) =>
           u.id === userId ? { ...u, isFollowed: !isFollowing } : u
         )
@@ -129,13 +211,45 @@ export const ConnectPage: React.FC = () => {
     }
   };
 
+  const handleDirectMessage = async (e: React.MouseEvent, user: ConnectUser) => {
+    e.stopPropagation();
+    try {
+      const chat = startDirectMessage({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatarUrl: user.avatarUrl || user.avatar || undefined,
+        avatar: user.avatarUrl || user.avatar || undefined,
+        isDeveloper: user.isDeveloper,
+        developerTitle: user.developerTitle,
+        schoolCategory: user.schoolCategory,
+      });
+      navigate(`/chat?userId=${chat.id}`);
+    } catch (err) {
+      console.error('Failed to start chat', err);
+    }
+  };
+
+  const displayedDevelopers = (shuffledDevelopers.length > 0 ? shuffledDevelopers : developers).slice(0, 4);
+  const filteredDevModalList = developers.filter((d) =>
+    d.name.toLowerCase().includes(devModalSearch.toLowerCase()) ||
+    (d.developerTitle && d.developerTitle.toLowerCase().includes(devModalSearch.toLowerCase()))
+  );
+
+  // Exclude developers from the general users grid unless searching
+  const displayedGeneralUsers = debouncedSearch.trim() !== ''
+    ? users
+    : users.filter((u) => !u.isDeveloper);
+
   return (
-    <div className="space-y-6 pb-8">
-      <div className="bg-card border border-border/80 rounded-md p-6 shadow-2xs">
+    <div className="space-y-8 pb-8">
+      {/* 🔍 SEARCH AND REFRESH BAR AT TOP */}
+      <div className="bg-card border border-border/80 rounded-lg p-6 shadow-2xs">
         <div className="mb-6">
-          <h1 className="text-2xl font-extrabold mb-1">
-            Connect with Students
-          </h1>
+          <h2 className="text-2xl font-extrabold mb-1">
+            Connect with Students & Alumni
+          </h2>
           <p className="text-muted-foreground text-sm">
             Discover and follow peers from various schools and departments.
           </p>
@@ -162,36 +276,301 @@ export const ConnectPage: React.FC = () => {
         </div>
       </div>
 
-      {loading && users.length === 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      {/* 🚀 CORE BUILDERS SECTION (MINIMALIST & SLEEK) */}
+      <div className="bg-card border border-border/80 rounded-lg p-5 sm:p-6 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Code2 className="w-5 h-5 text-[#3b49df]" />
+            <h2 className="text-lg font-bold text-foreground tracking-tight">
+              Developers Team
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 uppercase">
+              Tech Team
+            </span>
+          </div>
+
+          {developers.length > 0 && (
+            <Button
+              onClick={() => setShowDevModal(true)}
+              variant="ghost"
+              className="text-xs font-semibold text-[#3b49df] hover:bg-indigo-50 px-3 py-1 h-8 rounded-md flex items-center gap-1"
+            >
+              <span>View All ({developers.length})</span>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Developers Cards Grid - Single Row of 4 Cards */}
+        {loadingDevs ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[1, 2, 3, 4].map((n) => (
+              <div
+                key={n}
+                className="bg-card border border-border/80 rounded-lg overflow-hidden relative flex flex-col h-[260px]"
+              >
+                <div className="h-20 bg-muted/60 animate-pulse w-full shrink-0" />
+                <div className="absolute top-10 left-4">
+                  <div className="h-20 w-20 rounded-full border-4 border-card bg-muted/60 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : displayedDevelopers.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {displayedDevelopers.map((dev) => {
+              return (
+                <div
+                  key={dev.id}
+                  className="bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
+                  onClick={() => navigate(`/profile?id=${dev.id}`)}
+                >
+                  <div className="h-20 bg-[#1a1a1a] w-full" />
+
+                  <div className="absolute top-10 left-4">
+                    <Avatar className="h-20 w-20 border-4 border-card bg-card">
+                      <AvatarImage
+                        src={getAvatarUrl(
+                          dev.name,
+                          dev.avatarUrl || dev.avatar,
+                          160
+                        )}
+                        loading="eager"
+                        decoding="async"
+                        width={80}
+                        height={80}
+                      />
+                      <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xl font-bold">
+                        {dev.name ? dev.name.substring(0, 2).toUpperCase() : 'DEV'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+
+                  <div className="pt-12 px-5 pb-5 flex-1 flex flex-col">
+                    <div className="flex items-center gap-1.5 min-w-0 mb-1">
+                      <h3 className="font-bold text-base text-foreground hover:text-[#3b49df] truncate transition-colors">
+                        {dev.name}
+                      </h3>
+                      <VerifiedBadge size={18} />
+                    </div>
+
+                    <div className="mb-2">
+                      <DeveloperBadge title={dev.developerTitle || 'DEVELOPER'} />
+                    </div>
+
+                    <p className="text-xs text-muted-foreground truncate mb-3">
+                      {dev.schoolCategory
+                        ? dev.schoolCategory.replace(/_/g, ' ')
+                        : 'EduClinic Tech Team'}
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-auto">
+                      <Button
+                        onClick={(e) => handleDirectMessage(e, dev)}
+                        variant="outline"
+                        className="border-border/80 hover:bg-muted text-foreground rounded-full h-9 w-9 p-0 flex items-center justify-center shrink-0"
+                        title="Message Developer"
+                      >
+                        <MessageSquare className="h-4 w-4 text-[#3b49df]" />
+                      </Button>
+
+                      <Button
+                        onClick={(e) => handleFollowToggle(e, dev.id, dev.isFollowed)}
+                        disabled={loadingIds.has(dev.id)}
+                        className={
+                          dev.isFollowed
+                            ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9'
+                            : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9'
+                        }
+                      >
+                        {dev.isFollowed ? (
+                          <>
+                            <UserCheck className="h-4 w-4 mr-1" /> Following
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-4 w-4 mr-1" /> Follow
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="py-6 text-center text-muted-foreground border border-dashed border-border/80 rounded-md bg-muted/20">
+            <p className="font-semibold text-xs text-foreground">No Core Builders designated yet</p>
+          </div>
+        )}
+      </div>
+
+      {/* CORE BUILDERS FULL MODAL (MOUNTED TO BODY VIA PORTAL FOR 100% SCREEN COVERAGE) */}
+      {showDevModal && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-hidden animate-in fade-in duration-200"
+          onClick={() => setShowDevModal(false)}
+        >
+          <div
+            className="bg-card border border-border/80 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-foreground relative z-[100000]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 border-b border-border flex items-center justify-between bg-muted/20">
+              <div className="flex items-center gap-3">
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+                    Developers Team
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Complete team directory ({developers.length} members)
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDevModal(false)}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Search Filter */}
+            <div className="px-5 py-3 border-b border-border bg-card">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search builders by name..."
+                  value={devModalSearch}
+                  onChange={(e) => setDevModalSearch(e.target.value)}
+                  className="pl-9 h-9 bg-muted/40 border-border/60 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-[#3b49df] text-xs sm:text-sm rounded-lg"
+                />
+              </div>
+            </div>
+
+            {/* Modal Content Grid */}
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-muted/10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredDevModalList.map((dev) => {
+                  const isFollowing = dev.isFollowed;
+                  const isFollowLoading = loadingIds.has(dev.id);
+
+                  return (
+                    <div
+                      key={dev.id}
+                      className="bg-card border border-border/80 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
+                      onClick={() => {
+                        setShowDevModal(false);
+                        navigate(`/profile?id=${dev.id}`);
+                      }}
+                    >
+                      <div className="h-16 bg-[#1a1a1a] w-full" />
+
+                      <div className="absolute top-8 left-4">
+                        <Avatar className="h-16 w-16 border-4 border-card bg-card">
+                          <AvatarImage
+                            src={getAvatarUrl(
+                              dev.name,
+                              dev.avatarUrl || dev.avatar,
+                              160
+                            )}
+                          />
+                          <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-base font-bold">
+                            {dev.name ? dev.name.substring(0, 2).toUpperCase() : 'DEV'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+
+                      <div className="pt-10 px-4 pb-4 flex-1 flex flex-col">
+                        <div className="flex items-center gap-1.5 min-w-0 mb-1">
+                          <h3 className="font-bold text-sm text-foreground hover:text-[#3b49df] truncate transition-colors">
+                            {dev.name}
+                          </h3>
+                          <VerifiedBadge size={16} />
+                        </div>
+
+                        <div className="mb-2">
+                          <DeveloperBadge title={dev.developerTitle || 'DEVELOPER'} />
+                        </div>
+
+                        <p className="text-[11px] text-muted-foreground truncate mb-3">
+                          {dev.schoolCategory?.replace(/_/g, ' ') || 'EduClinic Tech Team'}
+                        </p>
+
+                        <div className="flex items-center gap-2 mt-auto">
+                          <Button
+                            onClick={(e) => {
+                              setShowDevModal(false);
+                              handleDirectMessage(e, dev);
+                            }}
+                            variant="outline"
+                            className="border-border/80 hover:bg-muted text-foreground rounded-full h-8 w-8 p-0 flex items-center justify-center shrink-0"
+                            title="Message Developer"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5 text-[#3b49df]" />
+                          </Button>
+
+                          <Button
+                            onClick={(e) => handleFollowToggle(e, dev.id, isFollowing)}
+                            disabled={isFollowLoading}
+                            className={
+                              isFollowing
+                                ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-8'
+                                : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-8'
+                            }
+                          >
+                            {isFollowing ? (
+                              <>
+                                <UserCheck className="h-3.5 w-3.5 mr-1" /> Following
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-3.5 w-3.5 mr-1" /> Follow
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredDevModalList.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-xs text-muted-foreground border border-dashed border-border/80 rounded-xl bg-card">
+                    No builders found matching "{devModalSearch}".
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* GENERAL USERS GRID WITH VERIFIED BLUE TICKS & DEVELOPER BADGES */}
+      {loading && displayedGeneralUsers.length === 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
-              className="bg-card border border-border/80 rounded-md overflow-hidden relative flex flex-col h-[280px]"
+              className="bg-card border border-border/80 rounded-lg overflow-hidden relative flex flex-col h-[260px]"
             >
               <div className="h-20 bg-muted/60 animate-pulse w-full shrink-0" />
-
               <div className="absolute top-10 left-4">
                 <div className="h-20 w-20 rounded-full border-4 border-card bg-muted/60 animate-pulse" />
               </div>
-
               <div className="pt-12 px-5 pb-5 flex-1 flex flex-col">
                 <div className="h-6 bg-muted/60 rounded animate-pulse w-1/2 mb-1" />
                 <div className="h-4 bg-muted/60 rounded animate-pulse w-1/3 mb-4" />
-
-                <div className="space-y-2 mb-4 flex-1 mt-1">
-                  <div className="h-4 bg-muted/60 rounded animate-pulse w-full" />
-                  <div className="h-4 bg-muted/60 rounded animate-pulse w-4/5" />
-                </div>
-
                 <div className="h-10 bg-muted/60 rounded-full animate-pulse w-full shrink-0 mt-auto" />
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-          {users.map((user, index) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {displayedGeneralUsers.map((user, index) => {
             const isFollowing = user.isFollowed;
             const isFollowLoading = loadingIds.has(user.id);
             const isAboveTheFold = index < 4;
@@ -199,7 +578,7 @@ export const ConnectPage: React.FC = () => {
             return (
               <div
                 key={user.id}
-                className="bg-card border border-border/80 rounded-md overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
+                className="bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
                 onClick={() => navigate(`/profile?id=${user.id}`)}
               >
                 <div className="h-20 bg-[#1a1a1a] w-full" />
@@ -227,28 +606,37 @@ export const ConnectPage: React.FC = () => {
                 </div>
 
                 <div className="pt-12 px-5 pb-5 flex-1 flex flex-col">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <h3 className="font-bold text-base text-foreground hover:text-[#3b49df] truncate transition-colors">
-                      {user.name}
-                    </h3>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded border border-gray-300 bg-white text-gray-700 shadow-2xs uppercase tracking-wider shrink-0">
-                      {user.role === 'USER'
-                        ? 'Student'
-                        : user.role === 'ALUMNI'
-                          ? 'Alumni'
-                          : user.role === 'SUPER_ADMIN'
-                            ? 'Super Admin'
-                            : user.role || 'Student'}
-                    </span>
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <h3 className="font-bold text-base text-foreground hover:text-[#3b49df] truncate transition-colors">
+                        {user.name}
+                      </h3>
+                      {user.isDeveloper && <VerifiedBadge size={18} />}
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {user.isDeveloper ? (
+                        <DeveloperBadge
+                          title={user.developerTitle || 'DEVELOPER'}
+                        />
+                      ) : (
+                        <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 uppercase tracking-wider shrink-0">
+                          {user.role === 'USER'
+                            ? 'STUDENT'
+                            : user.role === 'ALUMNI'
+                              ? 'ALUMNI'
+                              : user.role === 'SUPER_ADMIN'
+                                ? 'SUPER ADMIN'
+                                : user.role?.toUpperCase() || 'STUDENT'}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-1">
-                    {user.schoolCategory?.replace(/_/g, ' ')}
-                  </p>
-                  <p className="hidden sm:block text-sm text-muted-foreground line-clamp-2 mt-2 mb-4 flex-1">
-                    {user.bio || ''}
+                  <p className="text-xs text-muted-foreground truncate mb-3">
+                    {user.schoolCategory?.replace(/_/g, ' ') || 'EduClinic Member'}
                   </p>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mt-auto">
                     <Button
                       onClick={(e) =>
                         handleFollowToggle(e, user.id, isFollowing)
@@ -256,8 +644,8 @@ export const ConnectPage: React.FC = () => {
                       disabled={isFollowLoading}
                       className={
                         isFollowing
-                          ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full'
-                          : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full'
+                          ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9'
+                          : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9'
                       }
                     >
                       {isFollowing ? (
@@ -276,7 +664,7 @@ export const ConnectPage: React.FC = () => {
             );
           })}
 
-          {!loading && users.length === 0 && (
+          {!loading && displayedGeneralUsers.length === 0 && (
             <div className="col-span-full py-16 text-center text-muted-foreground bg-card border border-dashed border-border/80 rounded-md">
               No users found matching "{searchQuery}".
             </div>

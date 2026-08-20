@@ -88,6 +88,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
         schoolCategory: true,
         avatarUrl: true,
         bio: true,
+        isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
       },
       orderBy: { id: 'desc' },
     });
@@ -103,6 +106,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
       ...u,
       avatarUrl: formatCloudinaryAvatar(u.avatarUrl, 160),
       isFollowed: followingIdsSet.has(u.id),
+      isVerified: Boolean(u.isDeveloper || u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'),
     }));
 
     const responsePayload = { users: formattedUsers, total };
@@ -114,6 +118,55 @@ export const getAllUsers = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Value out of range for integer type' });
     }
     console.error('Error fetching users:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getDevelopers = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    let followingIdsSet = new Set<number>();
+    if (userId) {
+      const following = await prisma.follow.findMany({
+        where: { followerId: userId },
+        select: { followingId: true },
+      });
+      followingIdsSet = new Set(following.map((f) => f.followingId));
+    }
+
+    const developers = await prisma.user.findMany({
+      where: {
+        isDeveloper: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        bio: true,
+        socialLink: true,
+        isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
+      },
+      orderBy: [
+        { id: 'asc' },
+      ],
+    });
+
+    const formattedDevelopers = developers.map((d) => ({
+      ...d,
+      avatarUrl: formatCloudinaryAvatar(d.avatarUrl, 160),
+      isFollowed: followingIdsSet.has(d.id),
+      developerTitle: d.developerTitle || 'Core Developer',
+      isDeveloper: true,
+    }));
+
+    res.json({ developers: formattedDevelopers });
+  } catch (err: any) {
+    console.error('Error fetching developers:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -137,6 +190,9 @@ export const getUserById = async (req: Request, res: Response) => {
         bio: true,
         gender: true,
         socialLink: true,
+        isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
         createdAt: true,
       },
     });
@@ -161,6 +217,7 @@ export const getUserById = async (req: Request, res: Response) => {
       user: {
         ...user,
         avatarUrl: formatCloudinaryAvatar(user.avatarUrl, 400),
+        isVerified: Boolean(user.isDeveloper || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
       },
     });
   } catch (err: any) {

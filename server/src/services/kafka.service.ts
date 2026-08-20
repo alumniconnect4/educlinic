@@ -86,34 +86,52 @@ const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => 
 export const startKafkaConsumer = async (io: SocketIOServer) => {
   await ensureTopicsExist();
 
-  consumer = kafka.consumer({
-    groupId: `chat-backend-${Date.now()}`,
-    retry: {
-      initialRetryTime: 1000,
-      retries: 10,
-      maxRetryTime: 60000,
-    },
-  });
+  const groupId = process.env.KAFKA_GROUP_ID || 'chat-backend-group';
+  let retries = 15;
+  let isConnected = false;
 
-  consumer.on(consumer.events.DISCONNECT, () => {
-    logger.warn('Kafka Consumer disconnected');
-  });
+  while (retries > 0 && !isConnected) {
+    if (consumer) {
+      try {
+        await consumer.disconnect();
+      } catch {}
+      consumer = null;
+    }
 
-  consumer.on(consumer.events.CRASH, (event) => {
-    logger.error('Kafka Consumer crashed:', event.payload.error);
-  });
+    const currentConsumer = kafka.consumer({
+      groupId,
+      retry: {
+        initialRetryTime: 1000,
+        retries: 10,
+        maxRetryTime: 30000,
+      },
+    });
 
-  let retries = 10;
-  while (retries > 0) {
+    currentConsumer.on(currentConsumer.events.DISCONNECT, () => {
+      logger.warn('Kafka Consumer disconnected');
+    });
+
+    currentConsumer.on(currentConsumer.events.CRASH, (event) => {
+      logger.error('Kafka Consumer crashed:', event.payload.error);
+      setTimeout(() => {
+        logger.info('Attempting to restart crashed Kafka Consumer...');
+        startKafkaConsumer(io).catch((err) =>
+          logger.error('Failed to restart Kafka Consumer:', err)
+        );
+      }, 5000);
+    });
+
     try {
-      await consumer.connect();
-      await consumer.subscribe({
+      await currentConsumer.connect();
+      await currentConsumer.subscribe({
         topic: 'chat-messages',
         fromBeginning: false,
       });
-      logger.info('Kafka Consumer connected and subscribed to chat-messages');
 
-      await consumer.run({
+      consumer = currentConsumer;
+      logger.info(`Kafka Consumer connected and subscribed to chat-messages (groupId: ${groupId})`);
+
+      await currentConsumer.run({
         eachMessage: async ({
           topic,
           partition,
@@ -126,24 +144,19 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
           if (!message.value) return;
           try {
             const payload = JSON.parse(message.value.toString());
-            // Payload should be the formattedMessage
-            // Emit to the receiver's room and the sender's room
-            io.to(`user:${payload.receiverId}`).emit(
-              'receive_message',
-              payload
-            );
+            io.to(`user:${payload.receiverId}`).emit('receive_message', payload);
             io.to(`user:${payload.senderId}`).emit('receive_message', payload);
           } catch (err) {
             logger.error('Error processing Kafka message:', err);
           }
         },
       });
-      break;
-    } catch (error) {
+
+      isConnected = true;
+    } catch (error: any) {
       retries--;
       logger.error(
-        `Failed to start Kafka Consumer (${retries} retries left):`,
-        error
+        `Failed to start Kafka Consumer (${retries} retries left): ${error?.message || error}`
       );
       if (retries === 0) {
         logger.error('Exhausted all retries for Kafka Consumer.');
@@ -153,4 +166,3 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
     }
   }
 };
-

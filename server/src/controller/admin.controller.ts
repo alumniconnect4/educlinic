@@ -434,6 +434,8 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
           gender: true,
           socialLink: true,
           isVerified: true,
+          isDeveloper: true,
+          developerTitle: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -552,6 +554,8 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
       gender,
       socialLink,
       isVerified,
+      isDeveloper,
+      developerTitle,
     } = req.body;
 
     const updateData: any = {};
@@ -590,6 +594,8 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
     if (gender !== undefined) updateData.gender = gender || null;
     if (socialLink !== undefined) updateData.socialLink = socialLink || null;
     if (isVerified !== undefined) updateData.isVerified = Boolean(isVerified);
+    if (isDeveloper !== undefined) updateData.isDeveloper = Boolean(isDeveloper);
+    if (developerTitle !== undefined) updateData.developerTitle = developerTitle || null;
 
     if (password && password.trim() !== '') {
       updateData.password = await bcrypt.hash(password.trim(), 10);
@@ -611,6 +617,8 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
         gender: true,
         socialLink: true,
         isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
         createdAt: true,
         updatedAt: true,
       },

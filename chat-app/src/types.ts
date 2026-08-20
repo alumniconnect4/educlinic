@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   name: string;
+  email?: string;
   role?: string;
   avatar?: string;
   avatarUrl?: string;
@@ -11,7 +12,10 @@ export interface User {
   followingCount?: number;
   gender?: string | null;
   socialLink?: string | null;
-  schoolCategory?: string;
+  schoolCategory?: string | null;
+  isVerified?: boolean;
+  isDeveloper?: boolean;
+  developerTitle?: string;
   createdAt?: string;
 }
 
@@ -48,8 +52,8 @@ export interface Message {
   isRead?: boolean;
   isEdited?: boolean;
   createdAt: string;
-  sender?: { id: number; name: string };
-  receiver?: { id: number; name: string };
+  sender?: { id: number; name: string; avatarUrl?: string; isDeveloper?: boolean; role?: string };
+  receiver?: { id: number; name: string; avatarUrl?: string; isDeveloper?: boolean; role?: string };
   tempId?: number;
 }
 
