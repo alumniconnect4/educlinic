@@ -41,6 +41,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
     const roleQuery = ((req.query.role as string) || '').trim();
     const excludeDevs =
       req.query.excludeDevs === 'true' || req.query.excludeDevs === '1';
+    const refresh =
+      req.query.refresh === 'true' || req.query.refresh === '1';
     const limit = Math.min(parsePgInt(req.query.limit, 16) || 16, 50);
     const skip = parsePgInt(req.query.skip, 0) || 0;
 
@@ -52,15 +54,17 @@ export const getAllUsers = async (req: Request, res: Response) => {
       excludeDevs,
       roleQuery
     );
-    const cachedData = await getCache<any>(cacheKey);
-    if (cachedData) {
-      return res.json(cachedData);
+    if (!refresh) {
+      const cachedData = await getCache<any>(cacheKey);
+      if (cachedData) {
+        return res.json(cachedData);
+      }
     }
 
     const whereClause: any = {};
     let followingIdsSet = new Set<number>();
 
-    if (excludeDevs) {
+    if (excludeDevs && !search) {
       whereClause.isDeveloper = false;
     }
 
@@ -95,7 +99,11 @@ export const getAllUsers = async (req: Request, res: Response) => {
     }
 
     if (search) {
-      whereClause.name = { contains: search, mode: 'insensitive' };
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { developerTitle: { contains: search, mode: 'insensitive' } },
+        { bio: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
     const users = await prisma.user.findMany({
@@ -181,7 +189,7 @@ export const getDevelopers = async (req: Request, res: Response) => {
       ...d,
       avatarUrl: formatCloudinaryAvatar(d.avatarUrl, 160),
       isFollowed: followingIdsSet.has(d.id),
-      developerTitle: d.developerTitle || 'Core Developer',
+      developerTitle: d.developerTitle || 'Developer',
       isDeveloper: true,
     }));
 

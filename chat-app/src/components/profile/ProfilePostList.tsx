@@ -365,7 +365,7 @@ const FollowUserItem: React.FC<{ user: any }> = ({ user }) => {
           {user.name}
         </h3>
         <p className="text-xs text-muted-foreground truncate">
-          {user.schoolCategory?.replace(/_/g, ' ') || 'Student at EduClinic'}
+          {user.schoolCategory?.replace(/_/g, ' ') || 'Student at BFGI Alumni Portal'}
         </p>
       </div>
 

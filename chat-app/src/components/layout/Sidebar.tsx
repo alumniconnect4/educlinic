@@ -30,9 +30,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const isProfileIncomplete = Boolean(
     currentUser &&
-      (!currentUser.bio ||
-        !currentUser.socialLink ||
-        (!currentUser.avatarUrl && !currentUser.avatar))
+    (!currentUser.bio ||
+      !currentUser.socialLink ||
+      (!currentUser.avatarUrl && !currentUser.avatar))
   );
 
   const mainNavItems = [
@@ -79,11 +79,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Mobile overlay */}
       <div
-        className={`fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden transition-opacity duration-300 ${
-          isOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden transition-opacity duration-300 ${isOpen
+          ? 'opacity-100 pointer-events-auto'
+          : 'opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
       />
 
@@ -115,34 +114,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </Button>
         </div>
 
-        {/* Profile Completion Alert Card in Mobile Menu */}
-        {currentUser && isProfileIncomplete && (
-          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 space-y-2 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#3b49df]" />
-                Complete Your Profile
-              </span>
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              Add your bio, avatar & social links to get noticed across the community.
-            </p>
-            <Button
-              size="sm"
-              onClick={() => {
-                navigate(`/profile?id=${currentUser.id}`);
-                onClose?.();
-              }}
-              className="w-full h-7 text-xs bg-[#3b49df] hover:bg-[#2f3ab2] text-white font-semibold rounded-lg cursor-pointer"
-            >
-              Complete Profile Now
-            </Button>
-          </div>
-        )}
 
         {!currentUser && (
           <div className="bg-card border border-border/80 rounded-md p-4 space-y-3 shadow-2xs">
@@ -188,11 +159,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Button
                 key={item.name}
                 variant="ghost"
-                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${
-                  isActive
-                    ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
-                    : 'text-foreground/90'
-                }`}
+                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${isActive
+                  ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
+                  : 'text-foreground/90'
+                  }`}
                 onClick={() => {
                   navigate(item.path);
                   onClose?.();
@@ -204,7 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
                 <span className="truncate flex-1 text-left">{item.name}</span>
                 {item.name === 'My Profile' && isProfileIncomplete && (
-                  <span className="ml-auto px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                  <span className="ml-auto px-1.5 py-0.5 text-[10px] font-bold rounded-full  text-blue-800 border-blue-800 border-1">
                     Incomplete
                   </span>
                 )}

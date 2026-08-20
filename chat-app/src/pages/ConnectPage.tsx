@@ -18,6 +18,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Terminal,
+  Code,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -60,7 +61,7 @@ export const DeveloperBadge: React.FC<{
   <span
     className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded border border-indigo-200 bg-indigo-50/80 text-indigo-600 uppercase tracking-wider shrink-0 ${className}`}
   >
-    <Sparkles className="w-3 h-3 text-indigo-600" />
+    <Code className="w-3 h-3 text-indigo-600" />
     {title ? title.toUpperCase() : 'DEVELOPER'}
   </span>
 );
@@ -122,15 +123,16 @@ export const ConnectPage: React.FC = () => {
 
   // Fetch user directory
   const fetchUsers = useCallback(
-    async (search: string, role: string) => {
+    async (search: string, role: string, refresh = false) => {
       try {
         setLoading(true);
         const queryParams = new URLSearchParams({
           limit: '16',
           skip: '0',
-          excludeDevs: 'true',
+          ...(!search ? { excludeDevs: 'true' } : {}),
           ...(role !== 'ALL' ? { role } : {}),
           ...(search ? { search } : {}),
+          ...(refresh ? { refresh: 'true', _t: String(Date.now()) } : {}),
         });
 
         const res = await fetch(`${API_BASE}/users?${queryParams}`, {
@@ -141,12 +143,17 @@ export const ConnectPage: React.FC = () => {
         if (!res.ok) throw new Error('Failed to fetch users');
 
         const data = await res.json();
-        const fetchedUsers = data.users || [];
+        const fetchedUsers: ConnectUser[] = data.users || [];
         const fetchedTotal = data.total || 0;
 
-        setUsers(fetchedUsers);
+        // When refreshing without an active search term, randomize the display order to show fresh discovery
+        const finalUsers = (!search && refresh)
+          ? [...fetchedUsers].sort(() => Math.random() - 0.5)
+          : fetchedUsers;
+
+        setUsers(finalUsers);
         if (!search && role === 'ALL') {
-          setConnectUsersCache(fetchedUsers);
+          setConnectUsersCache(finalUsers);
           setConnectTotalCache(fetchedTotal);
         }
       } catch (err) {
@@ -181,7 +188,7 @@ export const ConnectPage: React.FC = () => {
   }, [showDevModal]);
 
   const handleRefreshPeople = () => {
-    fetchUsers(debouncedSearch, roleFilter);
+    fetchUsers(debouncedSearch, roleFilter, true);
   };
 
   const handleFollowToggle = async (
@@ -237,7 +244,7 @@ export const ConnectPage: React.FC = () => {
     }
   };
 
-  const displayedDevelopers = (shuffledDevelopers.length > 0 ? shuffledDevelopers : developers).slice(0, 2);
+  const displayedDevelopers = (shuffledDevelopers.length > 0 ? shuffledDevelopers : developers).slice(0, 4);
   const filteredDevModalList = developers.filter((d) =>
     d.name.toLowerCase().includes(devModalSearch.toLowerCase()) ||
     (d.developerTitle && d.developerTitle.toLowerCase().includes(devModalSearch.toLowerCase()))
@@ -321,13 +328,14 @@ export const ConnectPage: React.FC = () => {
           )}
         </div>
 
-        {/* Developers Cards Grid - Single Row of 2 Cards */}
+        {/* Developers Cards Grid - Single Row Responsive */}
         {loadingDevs ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {[1, 2].map((n) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {[0, 1, 2, 3].map((idx) => (
               <div
-                key={n}
-                className="bg-card border border-border/80 rounded-lg overflow-hidden relative flex flex-col h-[200px] sm:h-[260px]"
+                key={idx}
+                className={`bg-card border border-border/80 rounded-lg overflow-hidden relative flex-col h-[200px] sm:h-[260px] ${idx === 2 ? 'hidden md:flex' : idx === 3 ? 'hidden lg:flex' : 'flex'
+                  }`}
               >
                 <div className="h-14 sm:h-20 bg-muted/60 animate-pulse w-full shrink-0" />
                 <div className="absolute top-7 sm:top-10 left-3 sm:left-4">
@@ -337,12 +345,13 @@ export const ConnectPage: React.FC = () => {
             ))}
           </div>
         ) : displayedDevelopers.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-            {displayedDevelopers.map((dev) => {
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {displayedDevelopers.map((dev, idx) => {
               return (
                 <div
                   key={dev.id}
-                  className="bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
+                  className={`bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex-col relative ${idx === 2 ? 'hidden md:flex' : idx === 3 ? 'hidden lg:flex' : 'flex'
+                    }`}
                   onClick={() => navigate(`/profile?id=${dev.id}`)}
                 >
                   <div className="h-14 sm:h-20 bg-[#1a1a1a] w-full" />
@@ -381,7 +390,7 @@ export const ConnectPage: React.FC = () => {
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-2 sm:mb-3">
                       {dev.schoolCategory
                         ? dev.schoolCategory.replace(/_/g, ' ')
-                        : 'EduClinic Tech Team'}
+                        : 'BFGI Alumni Portal Tech Team'}
                     </p>
 
                     <div className="flex items-center gap-1.5 sm:gap-2 mt-auto">
@@ -529,7 +538,7 @@ export const ConnectPage: React.FC = () => {
                         </div>
 
                         <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate mb-2 sm:mb-3">
-                          {dev.schoolCategory?.replace(/_/g, ' ') || 'EduClinic Tech Team'}
+                          {dev.schoolCategory?.replace(/_/g, ' ') || 'BFGI Alumni Portal Tech Team'}
                         </p>
 
                         <div className="flex items-center gap-1.5 sm:gap-2 mt-auto">
@@ -683,7 +692,7 @@ export const ConnectPage: React.FC = () => {
                   </div>
 
                   <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-2 sm:mb-3">
-                    {user.schoolCategory?.replace(/_/g, ' ') || 'EduClinic Member'}
+                    {user.schoolCategory?.replace(/_/g, ' ') || 'BFGI Alumni Portal Member'}
                   </p>
 
                   <div className="flex gap-2 mt-auto">
