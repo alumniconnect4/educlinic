@@ -37,7 +37,7 @@ const Layout = () => {
         >
           <Outlet />
         </main>
-        {location.pathname === '/' && !isPostDetail && <RightSidebar />}
+        <RightSidebar />
       </div>
     </div>
   );

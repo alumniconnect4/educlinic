@@ -237,7 +237,7 @@ export const ConnectPage: React.FC = () => {
     }
   };
 
-  const displayedDevelopers = (shuffledDevelopers.length > 0 ? shuffledDevelopers : developers).slice(0, 4);
+  const displayedDevelopers = (shuffledDevelopers.length > 0 ? shuffledDevelopers : developers).slice(0, 2);
   const filteredDevModalList = developers.filter((d) =>
     d.name.toLowerCase().includes(devModalSearch.toLowerCase()) ||
     (d.developerTitle && d.developerTitle.toLowerCase().includes(devModalSearch.toLowerCase()))
@@ -287,11 +287,10 @@ export const ConnectPage: React.FC = () => {
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                  roleFilter === r
-                    ? 'bg-card text-foreground shadow-2xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${roleFilter === r
+                  ? 'bg-card text-foreground shadow-2xs'
+                  : 'text-muted-foreground hover:text-foreground'
+                  }`}
               >
                 {r === 'ALL' ? 'All' : r === 'USER' ? 'Students' : 'Alumni'}
               </button>
@@ -308,9 +307,6 @@ export const ConnectPage: React.FC = () => {
             <h2 className="text-lg font-bold text-foreground tracking-tight">
               Developers Team
             </h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 uppercase">
-              Tech Team
-            </span>
           </div>
 
           {developers.length > 0 && (
@@ -325,23 +321,23 @@ export const ConnectPage: React.FC = () => {
           )}
         </div>
 
-        {/* Developers Cards Grid - Single Row of 4 Cards */}
+        {/* Developers Cards Grid - Single Row of 2 Cards */}
         {loadingDevs ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {[1, 2, 3, 4].map((n) => (
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            {[1, 2].map((n) => (
               <div
                 key={n}
-                className="bg-card border border-border/80 rounded-lg overflow-hidden relative flex flex-col h-[260px]"
+                className="bg-card border border-border/80 rounded-lg overflow-hidden relative flex flex-col h-[200px] sm:h-[260px]"
               >
-                <div className="h-20 bg-muted/60 animate-pulse w-full shrink-0" />
-                <div className="absolute top-10 left-4">
-                  <div className="h-20 w-20 rounded-full border-4 border-card bg-muted/60 animate-pulse" />
+                <div className="h-14 sm:h-20 bg-muted/60 animate-pulse w-full shrink-0" />
+                <div className="absolute top-7 sm:top-10 left-3 sm:left-4">
+                  <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-full border-4 border-card bg-muted/60 animate-pulse" />
                 </div>
               </div>
             ))}
           </div>
         ) : displayedDevelopers.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {displayedDevelopers.map((dev) => {
               return (
                 <div
@@ -349,10 +345,10 @@ export const ConnectPage: React.FC = () => {
                   className="bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
                   onClick={() => navigate(`/profile?id=${dev.id}`)}
                 >
-                  <div className="h-20 bg-[#1a1a1a] w-full" />
+                  <div className="h-14 sm:h-20 bg-[#1a1a1a] w-full" />
 
-                  <div className="absolute top-10 left-4">
-                    <Avatar className="h-20 w-20 border-4 border-card bg-card">
+                  <div className="absolute top-7 sm:top-10 left-3 sm:left-4">
+                    <Avatar className="h-14 w-14 sm:h-20 sm:w-20 border-4 border-card bg-card">
                       <AvatarImage
                         src={getAvatarUrl(
                           dev.name,
@@ -364,36 +360,36 @@ export const ConnectPage: React.FC = () => {
                         width={80}
                         height={80}
                       />
-                      <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xl font-bold">
+                      <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-base sm:text-xl font-bold">
                         {dev.name ? dev.name.substring(0, 2).toUpperCase() : 'DEV'}
                       </AvatarFallback>
                     </Avatar>
                   </div>
 
-                  <div className="pt-12 px-5 pb-5 flex-1 flex flex-col">
-                    <div className="flex items-center gap-1.5 min-w-0 mb-1">
-                      <h3 className="font-bold text-base text-foreground hover:text-[#3b49df] truncate transition-colors">
+                  <div className="pt-9 sm:pt-12 px-3 sm:px-5 pb-3 sm:pb-5 flex-1 flex flex-col">
+                    <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 mb-1">
+                      <h3 className="font-bold text-xs sm:text-base text-foreground hover:text-[#3b49df] truncate transition-colors">
                         {dev.name}
                       </h3>
-                      <VerifiedBadge size={18} />
+                      <VerifiedBadge size={16} />
                     </div>
 
-                    <div className="mb-2">
+                    <div className="mb-1.5 sm:mb-2">
                       <DeveloperBadge title={dev.developerTitle || 'DEVELOPER'} />
                     </div>
 
-                    <p className="text-xs text-muted-foreground truncate mb-3">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-2 sm:mb-3">
                       {dev.schoolCategory
                         ? dev.schoolCategory.replace(/_/g, ' ')
                         : 'EduClinic Tech Team'}
                     </p>
 
-                    <div className="flex items-center gap-2 mt-auto">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mt-auto">
                       {currentUser?.id === dev.id ? (
                         <Button
                           onClick={() => navigate(`/profile?id=${dev.id}`)}
                           variant="outline"
-                          className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-xs font-semibold h-9 cursor-pointer"
+                          className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-9 cursor-pointer px-1 sm:px-3"
                         >
                           View Profile
                         </Button>
@@ -402,10 +398,10 @@ export const ConnectPage: React.FC = () => {
                           <Button
                             onClick={(e) => handleDirectMessage(e, dev)}
                             variant="outline"
-                            className="border-border/80 hover:bg-muted text-foreground rounded-full h-9 w-9 p-0 flex items-center justify-center shrink-0 cursor-pointer"
+                            className="border-border/80 hover:bg-muted text-foreground rounded-full h-7 w-7 sm:h-9 sm:w-9 p-0 flex items-center justify-center shrink-0 cursor-pointer"
                             title="Message Developer"
                           >
-                            <MessageSquare className="h-4 w-4 text-[#3b49df]" />
+                            <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#3b49df]" />
                           </Button>
 
                           <Button
@@ -413,17 +409,19 @@ export const ConnectPage: React.FC = () => {
                             disabled={loadingIds.has(dev.id)}
                             className={
                               dev.isFollowed
-                                ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
-                                : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
+                                ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-9 cursor-pointer px-1 sm:px-3'
+                                : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-9 cursor-pointer px-1 sm:px-3'
                             }
                           >
                             {dev.isFollowed ? (
                               <>
-                                <UserCheck className="h-4 w-4 mr-1" /> Following
+                                <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1 shrink-0" />
+                                <span className="truncate">Following</span>
                               </>
                             ) : (
                               <>
-                                <UserPlus className="h-4 w-4 mr-1" /> Follow
+                                <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1 shrink-0" />
+                                <span className="truncate">Follow</span>
                               </>
                             )}
                           </Button>
@@ -445,7 +443,7 @@ export const ConnectPage: React.FC = () => {
       {/* CORE BUILDERS FULL MODAL (MOUNTED TO BODY VIA PORTAL FOR 100% SCREEN COVERAGE) */}
       {showDevModal && createPortal(
         <div
-          className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-hidden animate-in fade-in duration-200"
           onClick={() => setShowDevModal(false)}
         >
           <div
@@ -453,10 +451,10 @@ export const ConnectPage: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 border-b border-border flex items-center justify-between bg-muted/20">
+            <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between bg-muted/20">
               <div className="flex items-center gap-3">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
+                  <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight">
                     Developers Team
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
@@ -473,7 +471,7 @@ export const ConnectPage: React.FC = () => {
             </div>
 
             {/* Search Filter */}
-            <div className="px-5 py-3 border-b border-border bg-card">
+            <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-border bg-card">
               <div className="relative">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -486,8 +484,8 @@ export const ConnectPage: React.FC = () => {
             </div>
 
             {/* Modal Content Grid */}
-            <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-muted/10">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="p-3 sm:p-6 overflow-y-auto flex-1 bg-muted/10">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
                 {filteredDevModalList.map((dev) => {
                   const isFollowing = dev.isFollowed;
                   const isFollowLoading = loadingIds.has(dev.id);
@@ -501,10 +499,10 @@ export const ConnectPage: React.FC = () => {
                         navigate(`/profile?id=${dev.id}`);
                       }}
                     >
-                      <div className="h-16 bg-[#1a1a1a] w-full" />
+                      <div className="h-12 sm:h-16 bg-[#1a1a1a] w-full" />
 
-                      <div className="absolute top-8 left-4">
-                        <Avatar className="h-16 w-16 border-4 border-card bg-card">
+                      <div className="absolute top-6 sm:top-8 left-2.5 sm:left-4">
+                        <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border-4 border-card bg-card">
                           <AvatarImage
                             src={getAvatarUrl(
                               dev.name,
@@ -512,29 +510,29 @@ export const ConnectPage: React.FC = () => {
                               160
                             )}
                           />
-                          <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-base font-bold">
+                          <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xs sm:text-base font-bold">
                             {dev.name ? dev.name.substring(0, 2).toUpperCase() : 'DEV'}
                           </AvatarFallback>
                         </Avatar>
                       </div>
 
-                      <div className="pt-10 px-4 pb-4 flex-1 flex flex-col">
-                        <div className="flex items-center gap-1.5 min-w-0 mb-1">
-                          <h3 className="font-bold text-sm text-foreground hover:text-[#3b49df] truncate transition-colors">
+                      <div className="pt-7 sm:pt-10 px-2.5 sm:px-4 pb-2.5 sm:pb-4 flex-1 flex flex-col">
+                        <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 mb-1">
+                          <h3 className="font-bold text-xs sm:text-sm text-foreground hover:text-[#3b49df] truncate transition-colors">
                             {dev.name}
                           </h3>
-                          <VerifiedBadge size={16} />
+                          <VerifiedBadge size={14} />
                         </div>
 
-                        <div className="mb-2">
+                        <div className="mb-1.5">
                           <DeveloperBadge title={dev.developerTitle || 'DEVELOPER'} />
                         </div>
 
-                        <p className="text-[11px] text-muted-foreground truncate mb-3">
+                        <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate mb-2 sm:mb-3">
                           {dev.schoolCategory?.replace(/_/g, ' ') || 'EduClinic Tech Team'}
                         </p>
 
-                        <div className="flex items-center gap-2 mt-auto">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mt-auto">
                           {currentUser?.id === dev.id ? (
                             <Button
                               onClick={() => {
@@ -542,7 +540,7 @@ export const ConnectPage: React.FC = () => {
                                 navigate(`/profile?id=${dev.id}`);
                               }}
                               variant="outline"
-                              className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-xs font-semibold h-8 cursor-pointer"
+                              className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3"
                             >
                               View Profile
                             </Button>
@@ -554,7 +552,7 @@ export const ConnectPage: React.FC = () => {
                                   handleDirectMessage(e, dev);
                                 }}
                                 variant="outline"
-                                className="border-border/80 hover:bg-muted text-foreground rounded-full h-8 w-8 p-0 flex items-center justify-center shrink-0 cursor-pointer"
+                                className="border-border/80 hover:bg-muted text-foreground rounded-full h-7 w-7 sm:h-8 sm:w-8 p-0 flex items-center justify-center shrink-0 cursor-pointer"
                                 title="Message Developer"
                               >
                                 <MessageSquare className="h-3.5 w-3.5 text-[#3b49df]" />
@@ -565,17 +563,19 @@ export const ConnectPage: React.FC = () => {
                                 disabled={isFollowLoading}
                                 className={
                                   isFollowing
-                                    ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-8 cursor-pointer'
-                                    : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-8 cursor-pointer'
+                                    ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3'
+                                    : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3'
                                 }
                               >
                                 {isFollowing ? (
                                   <>
-                                    <UserCheck className="h-3.5 w-3.5 mr-1" /> Following
+                                    <UserCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 shrink-0" />
+                                    <span className="truncate">Following</span>
                                   </>
                                 ) : (
                                   <>
-                                    <UserPlus className="h-3.5 w-3.5 mr-1" /> Follow
+                                    <UserPlus className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 shrink-0" />
+                                    <span className="truncate">Follow</span>
                                   </>
                                 )}
                               </Button>
@@ -601,26 +601,26 @@ export const ConnectPage: React.FC = () => {
 
       {/* GENERAL USERS GRID WITH VERIFIED BLUE TICKS & DEVELOPER BADGES */}
       {loading && displayedGeneralUsers.length === 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
-              className="bg-card border border-border/80 rounded-lg overflow-hidden relative flex flex-col h-[260px]"
+              className="bg-card border border-border/80 rounded-lg overflow-hidden relative flex flex-col h-[200px] sm:h-[260px]"
             >
-              <div className="h-20 bg-muted/60 animate-pulse w-full shrink-0" />
-              <div className="absolute top-10 left-4">
-                <div className="h-20 w-20 rounded-full border-4 border-card bg-muted/60 animate-pulse" />
+              <div className="h-14 sm:h-20 bg-muted/60 animate-pulse w-full shrink-0" />
+              <div className="absolute top-7 sm:top-10 left-3 sm:left-4">
+                <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-full border-4 border-card bg-muted/60 animate-pulse" />
               </div>
-              <div className="pt-12 px-5 pb-5 flex-1 flex flex-col">
-                <div className="h-6 bg-muted/60 rounded animate-pulse w-1/2 mb-1" />
-                <div className="h-4 bg-muted/60 rounded animate-pulse w-1/3 mb-4" />
-                <div className="h-10 bg-muted/60 rounded-full animate-pulse w-full shrink-0 mt-auto" />
+              <div className="pt-9 sm:pt-12 px-3 sm:px-5 pb-3 sm:pb-5 flex-1 flex flex-col">
+                <div className="h-5 sm:h-6 bg-muted/60 rounded animate-pulse w-1/2 mb-1" />
+                <div className="h-3 sm:h-4 bg-muted/60 rounded animate-pulse w-1/3 mb-4" />
+                <div className="h-7 sm:h-10 bg-muted/60 rounded-full animate-pulse w-full shrink-0 mt-auto" />
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
           {displayedGeneralUsers.map((user, index) => {
             const isFollowing = user.isFollowed;
             const isFollowLoading = loadingIds.has(user.id);
@@ -632,10 +632,10 @@ export const ConnectPage: React.FC = () => {
                 className="bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
                 onClick={() => navigate(`/profile?id=${user.id}`)}
               >
-                <div className="h-20 bg-[#1a1a1a] w-full" />
+                <div className="h-14 sm:h-20 bg-[#1a1a1a] w-full" />
 
-                <div className="absolute top-10 left-4">
-                  <Avatar className="h-20 w-20 border-4 border-card bg-card">
+                <div className="absolute top-7 sm:top-10 left-3 sm:left-4">
+                  <Avatar className="h-14 w-14 sm:h-20 sm:w-20 border-4 border-card bg-card">
                     <AvatarImage
                       src={getAvatarUrl(
                         user.name,
@@ -648,7 +648,7 @@ export const ConnectPage: React.FC = () => {
                       width={80}
                       height={80}
                     />
-                    <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xl font-bold">
+                    <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-base sm:text-xl font-bold">
                       {user.name
                         ? user.name.substring(0, 2).toUpperCase()
                         : 'U'}
@@ -656,34 +656,33 @@ export const ConnectPage: React.FC = () => {
                   </Avatar>
                 </div>
 
-                <div className="pt-12 px-5 pb-5 flex-1 flex flex-col">
-                  <div className="flex items-center justify-between gap-1 mb-1">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <h3 className="font-bold text-base text-foreground hover:text-[#3b49df] truncate transition-colors">
-                        {user.name}
-                      </h3>
-                      {user.isDeveloper && <VerifiedBadge size={18} />}
-                    </div>
-
-                    <div className="flex items-center gap-1 shrink-0">
-                      {user.isDeveloper ? (
-                        <DeveloperBadge
-                          title={user.developerTitle || 'DEVELOPER'}
-                        />
-                      ) : (
-                        <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 uppercase tracking-wider shrink-0">
-                          {user.role === 'USER'
-                            ? 'STUDENT'
-                            : user.role === 'ALUMNI'
-                              ? 'ALUMNI'
-                              : user.role === 'SUPER_ADMIN'
-                                ? 'SUPER ADMIN'
-                                : user.role?.toUpperCase() || 'STUDENT'}
-                        </span>
-                      )}
-                    </div>
+                <div className="pt-9 sm:pt-12 px-3 sm:px-5 pb-3 sm:pb-5 flex-1 flex flex-col">
+                  <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 mb-1">
+                    <h3 className="font-bold text-xs sm:text-base text-foreground hover:text-[#3b49df] truncate transition-colors">
+                      {user.name}
+                    </h3>
+                    {user.isDeveloper && <VerifiedBadge size={16} />}
                   </div>
-                  <p className="text-xs text-muted-foreground truncate mb-3">
+
+                  <div className="mb-1.5 sm:mb-2">
+                    {user.isDeveloper ? (
+                      <DeveloperBadge
+                        title={user.developerTitle || 'DEVELOPER'}
+                      />
+                    ) : (
+                      <span className="inline-flex items-center text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 uppercase tracking-wider shrink-0">
+                        {user.role === 'USER'
+                          ? 'STUDENT'
+                          : user.role === 'ALUMNI'
+                            ? 'ALUMNI'
+                            : user.role === 'SUPER_ADMIN'
+                              ? 'SUPER ADMIN'
+                              : user.role?.toUpperCase() || 'STUDENT'}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-2 sm:mb-3">
                     {user.schoolCategory?.replace(/_/g, ' ') || 'EduClinic Member'}
                   </p>
 
@@ -692,7 +691,7 @@ export const ConnectPage: React.FC = () => {
                       <Button
                         onClick={() => navigate(`/profile?id=${user.id}`)}
                         variant="outline"
-                        className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-xs font-semibold h-9 cursor-pointer"
+                        className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-9 cursor-pointer px-1 sm:px-3"
                       >
                         View Profile
                       </Button>
@@ -704,17 +703,19 @@ export const ConnectPage: React.FC = () => {
                         disabled={isFollowLoading}
                         className={
                           isFollowing
-                            ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
-                            : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
+                            ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-9 cursor-pointer px-1 sm:px-3'
+                            : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-9 cursor-pointer px-1 sm:px-3'
                         }
                       >
                         {isFollowing ? (
                           <>
-                            <UserCheck className="h-4 w-4 mr-1.5" /> Following
+                            <UserCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1.5 shrink-0" />
+                            <span className="truncate">Following</span>
                           </>
                         ) : (
                           <>
-                            <UserPlus className="h-4 w-4 mr-1.5" /> Follow
+                            <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1.5 shrink-0" />
+                            <span className="truncate">Follow</span>
                           </>
                         )}
                       </Button>
