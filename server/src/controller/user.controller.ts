@@ -38,10 +38,20 @@ export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const search = ((req.query.search as string) || '').trim();
+    const roleQuery = ((req.query.role as string) || '').trim();
+    const excludeDevs =
+      req.query.excludeDevs === 'true' || req.query.excludeDevs === '1';
     const limit = Math.min(parsePgInt(req.query.limit, 16) || 16, 50);
     const skip = parsePgInt(req.query.skip, 0) || 0;
 
-    const cacheKey = generateUserListCacheKey(userId, limit, skip, search);
+    const cacheKey = generateUserListCacheKey(
+      userId,
+      limit,
+      skip,
+      search,
+      excludeDevs,
+      roleQuery
+    );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
       return res.json(cachedData);
@@ -49,6 +59,17 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
     const whereClause: any = {};
     let followingIdsSet = new Set<number>();
+
+    if (excludeDevs) {
+      whereClause.isDeveloper = false;
+    }
+
+    if (
+      roleQuery &&
+      ['USER', 'ALUMNI', 'ADMIN', 'SUPER_ADMIN'].includes(roleQuery)
+    ) {
+      whereClause.role = roleQuery;
+    }
 
     if (userId) {
       const [following, blockers] = await Promise.all([
@@ -92,7 +113,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
         isDeveloper: true,
         developerTitle: true,
       },
-      orderBy: { id: 'desc' },
+      orderBy: [{ role: 'asc' }, { id: 'desc' }],
     });
 
     let total = 0;
@@ -335,6 +356,8 @@ export const updateProfile = async (req: Request, res: Response) => {
         bio: true,
         gender: true,
         socialLink: true,
+        isDeveloper: true,
+        developerTitle: true,
         createdAt: true,
       },
     });

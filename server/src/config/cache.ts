@@ -242,8 +242,13 @@ export const generateUserListCacheKey = (
   userId: number | undefined,
   limit: number,
   skip: number,
-  search?: string
-) => `users:list:${userId || 'guest'}:${limit}:${skip}:${search || ''}`;
+  search?: string,
+  excludeDevs?: boolean,
+  role?: string
+) =>
+  `users:list:${userId || 'guest'}:${limit}:${skip}:${search || ''}:${
+    excludeDevs ? 'nodev' : 'all'
+  }:${role || 'ALL'}`;
 
 export const generateAdminUserListCacheKey = (
   endpoint: string,

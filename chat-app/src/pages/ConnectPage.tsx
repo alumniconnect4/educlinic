@@ -69,6 +69,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export const ConnectPage: React.FC = () => {
   const {
+    currentUser,
     toggleFollow,
     startDirectMessage,
     connectUsersCache,
@@ -78,6 +79,7 @@ export const ConnectPage: React.FC = () => {
   } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>('ALL');
   const [users, setUsers] = useState<ConnectUser[]>(connectUsersCache);
   const [developers, setDevelopers] = useState<ConnectUser[]>([]);
   const [shuffledDevelopers, setShuffledDevelopers] = useState<ConnectUser[]>([]);
@@ -94,6 +96,7 @@ export const ConnectPage: React.FC = () => {
       setLoadingDevs(true);
       const res = await fetch(`${API_BASE}/users/developers`, {
         headers: getAuthHeaders(),
+        credentials: 'include',
       });
       if (res.ok) {
         const data = await res.json();
@@ -119,17 +122,20 @@ export const ConnectPage: React.FC = () => {
 
   // Fetch user directory
   const fetchUsers = useCallback(
-    async (search: string) => {
+    async (search: string, role: string) => {
       try {
         setLoading(true);
         const queryParams = new URLSearchParams({
           limit: '16',
           skip: '0',
+          excludeDevs: 'true',
+          ...(role !== 'ALL' ? { role } : {}),
           ...(search ? { search } : {}),
         });
 
         const res = await fetch(`${API_BASE}/users?${queryParams}`, {
           headers: getAuthHeaders(),
+          credentials: 'include',
         });
 
         if (!res.ok) throw new Error('Failed to fetch users');
@@ -139,7 +145,7 @@ export const ConnectPage: React.FC = () => {
         const fetchedTotal = data.total || 0;
 
         setUsers(fetchedUsers);
-        if (!search) {
+        if (!search && role === 'ALL') {
           setConnectUsersCache(fetchedUsers);
           setConnectTotalCache(fetchedTotal);
         }
@@ -157,10 +163,10 @@ export const ConnectPage: React.FC = () => {
     fetchDevelopers();
   }, [fetchDevelopers]);
 
-  // Fetch users when search query changes
+  // Fetch users when search query or role filter changes
   useEffect(() => {
-    fetchUsers(debouncedSearch);
-  }, [fetchUsers, debouncedSearch]);
+    fetchUsers(debouncedSearch, roleFilter);
+  }, [fetchUsers, debouncedSearch, roleFilter]);
 
   // Lock body scroll when developer directory modal is open
   useEffect(() => {
@@ -175,7 +181,7 @@ export const ConnectPage: React.FC = () => {
   }, [showDevModal]);
 
   const handleRefreshPeople = () => {
-    fetchUsers(debouncedSearch);
+    fetchUsers(debouncedSearch, roleFilter);
   };
 
   const handleFollowToggle = async (
@@ -255,24 +261,42 @@ export const ConnectPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 w-full">
-          <div className="relative flex-1 max-w-xl">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Search by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 text-base bg-muted/40 border-border/60 focus-visible:ring-1 focus-visible:ring-[#3b49df]"
-            />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 w-full">
+          <div className="flex items-center gap-2 sm:gap-4 flex-1">
+            <div className="relative flex-1 max-w-xl">
+              <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-11 text-base bg-muted/40 border-border/60 focus-visible:ring-1 focus-visible:ring-[#3b49df]"
+              />
+            </div>
+            <Button
+              onClick={handleRefreshPeople}
+              variant="outline"
+              className="h-11 gap-2 rounded-md shrink-0 px-3 sm:px-4 cursor-pointer"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh People</span>
+            </Button>
           </div>
-          <Button
-            onClick={handleRefreshPeople}
-            variant="outline"
-            className="h-11 gap-2 rounded-md shrink-0 px-3 sm:px-4"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Refresh People</span>
-          </Button>
+
+          <div className="flex items-center gap-1.5 bg-muted/60 p-1 rounded-lg shrink-0 self-start sm:self-auto">
+            {(['ALL', 'USER', 'ALUMNI'] as const).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRoleFilter(r)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                  roleFilter === r
+                    ? 'bg-card text-foreground shadow-2xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {r === 'ALL' ? 'All' : r === 'USER' ? 'Students' : 'Alumni'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -365,34 +389,46 @@ export const ConnectPage: React.FC = () => {
                     </p>
 
                     <div className="flex items-center gap-2 mt-auto">
-                      <Button
-                        onClick={(e) => handleDirectMessage(e, dev)}
-                        variant="outline"
-                        className="border-border/80 hover:bg-muted text-foreground rounded-full h-9 w-9 p-0 flex items-center justify-center shrink-0"
-                        title="Message Developer"
-                      >
-                        <MessageSquare className="h-4 w-4 text-[#3b49df]" />
-                      </Button>
+                      {currentUser?.id === dev.id ? (
+                        <Button
+                          onClick={() => navigate(`/profile?id=${dev.id}`)}
+                          variant="outline"
+                          className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-xs font-semibold h-9 cursor-pointer"
+                        >
+                          View Profile
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            onClick={(e) => handleDirectMessage(e, dev)}
+                            variant="outline"
+                            className="border-border/80 hover:bg-muted text-foreground rounded-full h-9 w-9 p-0 flex items-center justify-center shrink-0 cursor-pointer"
+                            title="Message Developer"
+                          >
+                            <MessageSquare className="h-4 w-4 text-[#3b49df]" />
+                          </Button>
 
-                      <Button
-                        onClick={(e) => handleFollowToggle(e, dev.id, dev.isFollowed)}
-                        disabled={loadingIds.has(dev.id)}
-                        className={
-                          dev.isFollowed
-                            ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9'
-                            : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9'
-                        }
-                      >
-                        {dev.isFollowed ? (
-                          <>
-                            <UserCheck className="h-4 w-4 mr-1" /> Following
-                          </>
-                        ) : (
-                          <>
-                            <UserPlus className="h-4 w-4 mr-1" /> Follow
-                          </>
-                        )}
-                      </Button>
+                          <Button
+                            onClick={(e) => handleFollowToggle(e, dev.id, dev.isFollowed)}
+                            disabled={loadingIds.has(dev.id)}
+                            className={
+                              dev.isFollowed
+                                ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
+                                : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
+                            }
+                          >
+                            {dev.isFollowed ? (
+                              <>
+                                <UserCheck className="h-4 w-4 mr-1" /> Following
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-4 w-4 mr-1" /> Follow
+                              </>
+                            )}
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -499,37 +535,52 @@ export const ConnectPage: React.FC = () => {
                         </p>
 
                         <div className="flex items-center gap-2 mt-auto">
-                          <Button
-                            onClick={(e) => {
-                              setShowDevModal(false);
-                              handleDirectMessage(e, dev);
-                            }}
-                            variant="outline"
-                            className="border-border/80 hover:bg-muted text-foreground rounded-full h-8 w-8 p-0 flex items-center justify-center shrink-0"
-                            title="Message Developer"
-                          >
-                            <MessageSquare className="h-3.5 w-3.5 text-[#3b49df]" />
-                          </Button>
+                          {currentUser?.id === dev.id ? (
+                            <Button
+                              onClick={() => {
+                                setShowDevModal(false);
+                                navigate(`/profile?id=${dev.id}`);
+                              }}
+                              variant="outline"
+                              className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-xs font-semibold h-8 cursor-pointer"
+                            >
+                              View Profile
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                onClick={(e) => {
+                                  setShowDevModal(false);
+                                  handleDirectMessage(e, dev);
+                                }}
+                                variant="outline"
+                                className="border-border/80 hover:bg-muted text-foreground rounded-full h-8 w-8 p-0 flex items-center justify-center shrink-0 cursor-pointer"
+                                title="Message Developer"
+                              >
+                                <MessageSquare className="h-3.5 w-3.5 text-[#3b49df]" />
+                              </Button>
 
-                          <Button
-                            onClick={(e) => handleFollowToggle(e, dev.id, isFollowing)}
-                            disabled={isFollowLoading}
-                            className={
-                              isFollowing
-                                ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-8'
-                                : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-8'
-                            }
-                          >
-                            {isFollowing ? (
-                              <>
-                                <UserCheck className="h-3.5 w-3.5 mr-1" /> Following
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="h-3.5 w-3.5 mr-1" /> Follow
-                              </>
-                            )}
-                          </Button>
+                              <Button
+                                onClick={(e) => handleFollowToggle(e, dev.id, isFollowing)}
+                                disabled={isFollowLoading}
+                                className={
+                                  isFollowing
+                                    ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-8 cursor-pointer'
+                                    : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-8 cursor-pointer'
+                                }
+                              >
+                                {isFollowing ? (
+                                  <>
+                                    <UserCheck className="h-3.5 w-3.5 mr-1" /> Following
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserPlus className="h-3.5 w-3.5 mr-1" /> Follow
+                                  </>
+                                )}
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -637,27 +688,37 @@ export const ConnectPage: React.FC = () => {
                   </p>
 
                   <div className="flex gap-2 mt-auto">
-                    <Button
-                      onClick={(e) =>
-                        handleFollowToggle(e, user.id, isFollowing)
-                      }
-                      disabled={isFollowLoading}
-                      className={
-                        isFollowing
-                          ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9'
-                          : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9'
-                      }
-                    >
-                      {isFollowing ? (
-                        <>
-                          <UserCheck className="h-4 w-4 mr-1.5" /> Following
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="h-4 w-4 mr-1.5" /> Follow
-                        </>
-                      )}
-                    </Button>
+                    {currentUser?.id === user.id ? (
+                      <Button
+                        onClick={() => navigate(`/profile?id=${user.id}`)}
+                        variant="outline"
+                        className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-xs font-semibold h-9 cursor-pointer"
+                      >
+                        View Profile
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={(e) =>
+                          handleFollowToggle(e, user.id, isFollowing)
+                        }
+                        disabled={isFollowLoading}
+                        className={
+                          isFollowing
+                            ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
+                            : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-xs font-semibold h-9 cursor-pointer'
+                        }
+                      >
+                        {isFollowing ? (
+                          <>
+                            <UserCheck className="h-4 w-4 mr-1.5" /> Following
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-4 w-4 mr-1.5" /> Follow
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
