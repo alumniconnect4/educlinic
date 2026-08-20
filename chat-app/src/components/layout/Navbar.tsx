@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Search, Menu, Plus, Home, Sparkles, X, TrendingUp } from 'lucide-react';
+import {
+  Search,
+  Menu,
+  Plus,
+  Home,
+  Sparkles,
+  X,
+  TrendingUp,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { getAvatarUrl } from '../../lib/utils';
@@ -19,9 +27,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
   const isProfileIncomplete = Boolean(
     currentUser &&
-      (!currentUser.bio ||
-        !currentUser.socialLink ||
-        (!currentUser.avatarUrl && !currentUser.avatar))
+    (!currentUser.bio ||
+      !currentUser.socialLink ||
+      (!currentUser.avatarUrl && !currentUser.avatar))
   );
 
   React.useEffect(() => {

@@ -79,10 +79,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Mobile overlay */}
       <div
-        className={`fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden transition-opacity duration-300 ${isOpen
-          ? 'opacity-100 pointer-events-auto'
-          : 'opacity-0 pointer-events-none'
-          }`}
+        className={`fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden transition-opacity duration-300 ${
+          isOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
+        }`}
         onClick={onClose}
       />
 
@@ -113,7 +114,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <X className="h-5 w-5" />
           </Button>
         </div>
-
 
         {!currentUser && (
           <div className="bg-card border border-border/80 rounded-md p-4 space-y-3 shadow-2xs">
@@ -159,10 +159,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Button
                 key={item.name}
                 variant="ghost"
-                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${isActive
-                  ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
-                  : 'text-foreground/90'
-                  }`}
+                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${
+                  isActive
+                    ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
+                    : 'text-foreground/90'
+                }`}
                 onClick={() => {
                   navigate(item.path);
                   onClose?.();

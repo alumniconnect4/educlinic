@@ -9,7 +9,10 @@ import {
 } from '../config/cache.js';
 import { parsePgInt } from '../utils/validation.js';
 
-const formatCloudinaryAvatar = (url?: string | null, size = 160): string | null => {
+const formatCloudinaryAvatar = (
+  url?: string | null,
+  size = 160
+): string | null => {
   if (!url) return null;
   if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
     const uploadIndex = url.indexOf('/upload/');
@@ -189,12 +192,8 @@ export const getMessagesWithUser = async (
   try {
     const currentUserId = req.user!.id;
     const partnerId = parsePgInt(req.params.partnerId);
-    const cursor = req.query.cursor
-      ? parsePgInt(req.query.cursor)
-      : undefined;
-    const limit = req.query.limit
-      ? parsePgInt(req.query.limit, 30) || 30
-      : 30;
+    const cursor = req.query.cursor ? parsePgInt(req.query.cursor) : undefined;
+    const limit = req.query.limit ? parsePgInt(req.query.limit, 30) || 30 : 30;
 
     if (!partnerId) {
       res.status(400).json({ message: 'Invalid partner user ID' });
@@ -329,7 +328,9 @@ export const sendMessageHttp = async (
     const content = req.body.content;
 
     if (!receiverId || !content?.trim()) {
-      res.status(400).json({ message: 'Valid receiver ID and content are required' });
+      res
+        .status(400)
+        .json({ message: 'Valid receiver ID and content are required' });
       return;
     }
 
@@ -413,7 +414,9 @@ export const editMessageHttp = async (
     const { content } = req.body;
 
     if (!messageId || !content?.trim()) {
-      res.status(400).json({ message: 'Valid message ID and content are required' });
+      res
+        .status(400)
+        .json({ message: 'Valid message ID and content are required' });
       return;
     }
 

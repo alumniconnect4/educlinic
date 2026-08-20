@@ -217,7 +217,9 @@ export const PostCard: React.FC<PostCardProps> = ({
                 <div className="space-y-3 pt-2">
                   {post.comments.map((comment) => {
                     const commentAuthor =
-                      comment.author?.id && currentUser?.id && comment.author.id === currentUser.id
+                      comment.author?.id &&
+                      currentUser?.id &&
+                      comment.author.id === currentUser.id
                         ? { ...comment.author, ...currentUser }
                         : comment.author;
                     return (

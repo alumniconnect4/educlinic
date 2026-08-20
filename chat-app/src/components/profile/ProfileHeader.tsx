@@ -76,7 +76,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     }
 
     const isElevatedUser = (u?: Partial<User> | null) =>
-      Boolean(u?.isDeveloper || u?.role === 'ADMIN' || u?.role === 'SUPER_ADMIN');
+      Boolean(
+        u?.isDeveloper || u?.role === 'ADMIN' || u?.role === 'SUPER_ADMIN'
+      );
 
     const canMessageWithoutFollow =
       isElevatedUser(currentUser) || isElevatedUser(profileUser);
@@ -232,7 +234,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 
               {/* Developer Tag (if developer) */}
               {profileUser.isDeveloper && (
-                <DeveloperBadge title={profileUser.developerTitle || 'DEVELOPER'} />
+                <DeveloperBadge
+                  title={profileUser.developerTitle || 'DEVELOPER'}
+                />
               )}
             </div>
           </div>

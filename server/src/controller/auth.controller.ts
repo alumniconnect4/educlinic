@@ -60,10 +60,10 @@ export const register = async (req: Request, res: Response) => {
 
     const initialAvatarUrl = isAvatarBase64
       ? DEFAULT_AVATAR_URL
-      : (avatarUrl?.trim() || DEFAULT_AVATAR_URL);
+      : avatarUrl?.trim() || DEFAULT_AVATAR_URL;
 
-    const initialIdCardUrl = isIdCardBase64 ? null : (idCardUrl || null);
-    const initialDegreeUrl = isDegreeBase64 ? null : (degreeUrl || null);
+    const initialIdCardUrl = isIdCardBase64 ? null : idCardUrl || null;
+    const initialDegreeUrl = isDegreeBase64 ? null : degreeUrl || null;
 
     const newUser = await prisma.user.create({
       data: {
@@ -80,13 +80,28 @@ export const register = async (req: Request, res: Response) => {
 
     // Enqueue background uploads to Cloudinary for any base64 images
     if (isAvatarBase64) {
-      await enqueueUserImageUpload(newUser.id, avatarUrl, 'avatarUrl', 'avatars');
+      await enqueueUserImageUpload(
+        newUser.id,
+        avatarUrl,
+        'avatarUrl',
+        'avatars'
+      );
     }
     if (isIdCardBase64) {
-      await enqueueUserImageUpload(newUser.id, idCardUrl, 'idCardUrl', 'id_cards');
+      await enqueueUserImageUpload(
+        newUser.id,
+        idCardUrl,
+        'idCardUrl',
+        'id_cards'
+      );
     }
     if (isDegreeBase64) {
-      await enqueueUserImageUpload(newUser.id, degreeUrl, 'degreeUrl', 'degrees');
+      await enqueueUserImageUpload(
+        newUser.id,
+        degreeUrl,
+        'degreeUrl',
+        'degrees'
+      );
     }
 
     await invalidateUsersCache();

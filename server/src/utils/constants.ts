@@ -8,7 +8,11 @@ export const isBase64Image = (str?: string | null): boolean => {
   if (!str || typeof str !== 'string') return false;
   const trimmed = str.trim();
   if (trimmed.startsWith('data:image/')) return true;
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/')
+  ) {
     return false;
   }
   // Check if it matches base64 pattern and is substantial length

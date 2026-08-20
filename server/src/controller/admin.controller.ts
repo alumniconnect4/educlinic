@@ -202,7 +202,7 @@ export const createAdmin = async (req: Request, res: Response) => {
     const isAvatarBase64 = isBase64Image(avatarUrl);
     const finalAvatarUrl = isAvatarBase64
       ? DEFAULT_AVATAR_URL
-      : (avatarUrl?.trim() || DEFAULT_AVATAR_URL);
+      : avatarUrl?.trim() || DEFAULT_AVATAR_URL;
 
     const newAdmin = await prisma.user.create({
       data: {
@@ -289,7 +289,12 @@ export const updateAdmin = async (req: Request, res: Response) => {
 
     if (avatarUrl !== undefined) {
       if (isBase64Image(avatarUrl)) {
-        await enqueueUserImageUpload(id, avatarUrl, 'avatarUrl', 'admin_avatars');
+        await enqueueUserImageUpload(
+          id,
+          avatarUrl,
+          'avatarUrl',
+          'admin_avatars'
+        );
       } else {
         updateData.avatarUrl =
           avatarUrl.trim() !== '' ? avatarUrl.trim() : DEFAULT_AVATAR_URL;
@@ -490,7 +495,7 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
     const isAvatarBase64 = isBase64Image(avatarUrl);
     const finalAvatarUrl = isAvatarBase64
       ? DEFAULT_AVATAR_URL
-      : (avatarUrl?.trim() || DEFAULT_AVATAR_URL);
+      : avatarUrl?.trim() || DEFAULT_AVATAR_URL;
 
     const newUser = await prisma.user.create({
       data: {
@@ -594,8 +599,10 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
     if (gender !== undefined) updateData.gender = gender || null;
     if (socialLink !== undefined) updateData.socialLink = socialLink || null;
     if (isVerified !== undefined) updateData.isVerified = Boolean(isVerified);
-    if (isDeveloper !== undefined) updateData.isDeveloper = Boolean(isDeveloper);
-    if (developerTitle !== undefined) updateData.developerTitle = developerTitle || null;
+    if (isDeveloper !== undefined)
+      updateData.isDeveloper = Boolean(isDeveloper);
+    if (developerTitle !== undefined)
+      updateData.developerTitle = developerTitle || null;
 
     if (password && password.trim() !== '') {
       updateData.password = await bcrypt.hash(password.trim(), 10);
@@ -866,7 +873,12 @@ export const updateAdminProfile = async (req: Request, res: Response) => {
     if (email !== undefined) updateData.email = email;
     if (avatarUrl !== undefined) {
       if (isBase64Image(avatarUrl)) {
-        await enqueueUserImageUpload(id, avatarUrl, 'avatarUrl', 'admin_avatars');
+        await enqueueUserImageUpload(
+          id,
+          avatarUrl,
+          'avatarUrl',
+          'admin_avatars'
+        );
       } else {
         updateData.avatarUrl = avatarUrl;
       }
@@ -968,7 +980,10 @@ export const uploadAdminImage = async (req: Request, res: Response) => {
       });
       return res.status(200).json({ url: cloudinaryUpload.secure_url });
     } catch (cloudinaryErr) {
-      console.error('Cloudinary upload error in uploadAdminImage:', cloudinaryErr);
+      console.error(
+        'Cloudinary upload error in uploadAdminImage:',
+        cloudinaryErr
+      );
       return res.status(500).json({
         message: 'Cloudinary image upload failed',
       });

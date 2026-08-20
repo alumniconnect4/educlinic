@@ -26,9 +26,9 @@ export const FeedPage: React.FC = () => {
 
   const isProfileIncomplete = Boolean(
     currentUser &&
-      (!currentUser.bio ||
-        !currentUser.socialLink ||
-        (!currentUser.avatarUrl && !currentUser.avatar))
+    (!currentUser.bio ||
+      !currentUser.socialLink ||
+      (!currentUser.avatarUrl && !currentUser.avatar))
   );
 
   const [searchParams] = useSearchParams();
@@ -187,7 +187,9 @@ export const FeedPage: React.FC = () => {
           {feedPosts.map((post) => {
             const rawAuthor = post.author || post.createdBy;
             const authorUser =
-              rawAuthor?.id && currentUser?.id && rawAuthor.id === currentUser.id
+              rawAuthor?.id &&
+              currentUser?.id &&
+              rawAuthor.id === currentUser.id
                 ? { ...rawAuthor, ...currentUser }
                 : users.find((u) => u.id === rawAuthor?.id) || rawAuthor;
             return (

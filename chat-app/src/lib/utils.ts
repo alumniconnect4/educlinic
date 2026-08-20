@@ -39,7 +39,10 @@ export function getAvatarUrl(
 
   if (typeof userOrNameOrUrl === 'object' && userOrNameOrUrl !== null) {
     url = userOrNameOrUrl.avatarUrl || userOrNameOrUrl.avatar || avatarParam;
-  } else if (typeof userOrNameOrUrl === 'string' && userOrNameOrUrl.trim() !== '') {
+  } else if (
+    typeof userOrNameOrUrl === 'string' &&
+    userOrNameOrUrl.trim() !== ''
+  ) {
     const trimmed = userOrNameOrUrl.trim();
     if (
       trimmed.startsWith('http://') ||

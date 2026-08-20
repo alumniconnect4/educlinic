@@ -80,10 +80,14 @@ export const ConnectPage: React.FC = () => {
   } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>('ALL');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>(
+    'ALL'
+  );
   const [users, setUsers] = useState<ConnectUser[]>(connectUsersCache);
   const [developers, setDevelopers] = useState<ConnectUser[]>([]);
-  const [shuffledDevelopers, setShuffledDevelopers] = useState<ConnectUser[]>([]);
+  const [shuffledDevelopers, setShuffledDevelopers] = useState<ConnectUser[]>(
+    []
+  );
   const [loading, setLoading] = useState(connectUsersCache.length === 0);
   const [loadingDevs, setLoadingDevs] = useState(true);
   const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
@@ -101,7 +105,8 @@ export const ConnectPage: React.FC = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        const list: ConnectUser[] = data.developers || (Array.isArray(data) ? data : []);
+        const list: ConnectUser[] =
+          data.developers || (Array.isArray(data) ? data : []);
         setDevelopers(list);
         const shuffled = [...list].sort(() => Math.random() - 0.5);
         setShuffledDevelopers(shuffled);
@@ -147,9 +152,10 @@ export const ConnectPage: React.FC = () => {
         const fetchedTotal = data.total || 0;
 
         // When refreshing without an active search term, randomize the display order to show fresh discovery
-        const finalUsers = (!search && refresh)
-          ? [...fetchedUsers].sort(() => Math.random() - 0.5)
-          : fetchedUsers;
+        const finalUsers =
+          !search && refresh
+            ? [...fetchedUsers].sort(() => Math.random() - 0.5)
+            : fetchedUsers;
 
         setUsers(finalUsers);
         if (!search && role === 'ALL') {
@@ -224,7 +230,10 @@ export const ConnectPage: React.FC = () => {
     }
   };
 
-  const handleDirectMessage = async (e: React.MouseEvent, user: ConnectUser) => {
+  const handleDirectMessage = async (
+    e: React.MouseEvent,
+    user: ConnectUser
+  ) => {
     e.stopPropagation();
     try {
       const chat = startDirectMessage({
@@ -244,16 +253,19 @@ export const ConnectPage: React.FC = () => {
     }
   };
 
-  const displayedDevelopers = (shuffledDevelopers.length > 0 ? shuffledDevelopers : developers).slice(0, 4);
-  const filteredDevModalList = developers.filter((d) =>
-    d.name.toLowerCase().includes(devModalSearch.toLowerCase()) ||
-    (d.developerTitle && d.developerTitle.toLowerCase().includes(devModalSearch.toLowerCase()))
+  const displayedDevelopers = (
+    shuffledDevelopers.length > 0 ? shuffledDevelopers : developers
+  ).slice(0, 4);
+  const filteredDevModalList = developers.filter(
+    (d) =>
+      d.name.toLowerCase().includes(devModalSearch.toLowerCase()) ||
+      (d.developerTitle &&
+        d.developerTitle.toLowerCase().includes(devModalSearch.toLowerCase()))
   );
 
   // Exclude developers from the general users grid unless searching
-  const displayedGeneralUsers = debouncedSearch.trim() !== ''
-    ? users
-    : users.filter((u) => !u.isDeveloper);
+  const displayedGeneralUsers =
+    debouncedSearch.trim() !== '' ? users : users.filter((u) => !u.isDeveloper);
 
   return (
     <div className="space-y-8 pb-8">
@@ -284,7 +296,9 @@ export const ConnectPage: React.FC = () => {
               variant="outline"
               className="h-11 gap-2 rounded-md shrink-0 px-3 sm:px-4 cursor-pointer"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+              />
               <span className="hidden sm:inline">Refresh People</span>
             </Button>
           </div>
@@ -294,10 +308,11 @@ export const ConnectPage: React.FC = () => {
               <button
                 key={r}
                 onClick={() => setRoleFilter(r)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${roleFilter === r
-                  ? 'bg-card text-foreground shadow-2xs'
-                  : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                  roleFilter === r
+                    ? 'bg-card text-foreground shadow-2xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
                 {r === 'ALL' ? 'All' : r === 'USER' ? 'Students' : 'Alumni'}
               </button>
@@ -334,8 +349,13 @@ export const ConnectPage: React.FC = () => {
             {[0, 1, 2, 3].map((idx) => (
               <div
                 key={idx}
-                className={`bg-card border border-border/80 rounded-lg overflow-hidden relative flex-col h-[200px] sm:h-[260px] ${idx === 2 ? 'hidden md:flex' : idx === 3 ? 'hidden lg:flex' : 'flex'
-                  }`}
+                className={`bg-card border border-border/80 rounded-lg overflow-hidden relative flex-col h-[200px] sm:h-[260px] ${
+                  idx === 2
+                    ? 'hidden md:flex'
+                    : idx === 3
+                      ? 'hidden lg:flex'
+                      : 'flex'
+                }`}
               >
                 <div className="h-14 sm:h-20 bg-muted/60 animate-pulse w-full shrink-0" />
                 <div className="absolute top-7 sm:top-10 left-3 sm:left-4">
@@ -350,8 +370,13 @@ export const ConnectPage: React.FC = () => {
               return (
                 <div
                   key={dev.id}
-                  className={`bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex-col relative ${idx === 2 ? 'hidden md:flex' : idx === 3 ? 'hidden lg:flex' : 'flex'
-                    }`}
+                  className={`bg-card border border-border/80 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex-col relative ${
+                    idx === 2
+                      ? 'hidden md:flex'
+                      : idx === 3
+                        ? 'hidden lg:flex'
+                        : 'flex'
+                  }`}
                   onClick={() => navigate(`/profile?id=${dev.id}`)}
                 >
                   <div className="h-14 sm:h-20 bg-[#1a1a1a] w-full" />
@@ -370,7 +395,9 @@ export const ConnectPage: React.FC = () => {
                         height={80}
                       />
                       <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-base sm:text-xl font-bold">
-                        {dev.name ? dev.name.substring(0, 2).toUpperCase() : 'DEV'}
+                        {dev.name
+                          ? dev.name.substring(0, 2).toUpperCase()
+                          : 'DEV'}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -384,7 +411,9 @@ export const ConnectPage: React.FC = () => {
                     </div>
 
                     <div className="mb-1.5 sm:mb-2">
-                      <DeveloperBadge title={dev.developerTitle || 'DEVELOPER'} />
+                      <DeveloperBadge
+                        title={dev.developerTitle || 'DEVELOPER'}
+                      />
                     </div>
 
                     <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-2 sm:mb-3">
@@ -414,7 +443,9 @@ export const ConnectPage: React.FC = () => {
                           </Button>
 
                           <Button
-                            onClick={(e) => handleFollowToggle(e, dev.id, dev.isFollowed)}
+                            onClick={(e) =>
+                              handleFollowToggle(e, dev.id, dev.isFollowed)
+                            }
                             disabled={loadingIds.has(dev.id)}
                             className={
                               dev.isFollowed
@@ -444,169 +475,181 @@ export const ConnectPage: React.FC = () => {
           </div>
         ) : (
           <div className="py-6 text-center text-muted-foreground border border-dashed border-border/80 rounded-md bg-muted/20">
-            <p className="font-semibold text-xs text-foreground">No Core Builders designated yet</p>
+            <p className="font-semibold text-xs text-foreground">
+              No Core Builders designated yet
+            </p>
           </div>
         )}
       </div>
 
       {/* CORE BUILDERS FULL MODAL (MOUNTED TO BODY VIA PORTAL FOR 100% SCREEN COVERAGE) */}
-      {showDevModal && createPortal(
-        <div
-          className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-hidden animate-in fade-in duration-200"
-          onClick={() => setShowDevModal(false)}
-        >
+      {showDevModal &&
+        createPortal(
           <div
-            className="bg-card border border-border/80 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-foreground relative z-[100000]"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-hidden animate-in fade-in duration-200"
+            onClick={() => setShowDevModal(false)}
           >
-            {/* Modal Header */}
-            <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between bg-muted/20">
-              <div className="flex items-center gap-3">
-                <div>
-                  <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight">
-                    Developers Team
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Complete team directory ({developers.length} members)
-                  </p>
+            <div
+              className="bg-card border border-border/80 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-foreground relative z-[100000]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <h2 className="text-base sm:text-xl font-bold text-foreground tracking-tight">
+                      Developers Team
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Complete team directory ({developers.length} members)
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDevModal(false)}
+                  className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Search Filter */}
+              <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-border bg-card">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search builders by name..."
+                    value={devModalSearch}
+                    onChange={(e) => setDevModalSearch(e.target.value)}
+                    className="pl-9 h-9 bg-muted/40 border-border/60 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-[#3b49df] text-xs sm:text-sm rounded-lg"
+                  />
                 </div>
               </div>
-              <button
-                onClick={() => setShowDevModal(false)}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            {/* Search Filter */}
-            <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-b border-border bg-card">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search builders by name..."
-                  value={devModalSearch}
-                  onChange={(e) => setDevModalSearch(e.target.value)}
-                  className="pl-9 h-9 bg-muted/40 border-border/60 text-foreground placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-[#3b49df] text-xs sm:text-sm rounded-lg"
-                />
-              </div>
-            </div>
+              {/* Modal Content Grid */}
+              <div className="p-3 sm:p-6 overflow-y-auto flex-1 bg-muted/10">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
+                  {filteredDevModalList.map((dev) => {
+                    const isFollowing = dev.isFollowed;
+                    const isFollowLoading = loadingIds.has(dev.id);
 
-            {/* Modal Content Grid */}
-            <div className="p-3 sm:p-6 overflow-y-auto flex-1 bg-muted/10">
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
-                {filteredDevModalList.map((dev) => {
-                  const isFollowing = dev.isFollowed;
-                  const isFollowLoading = loadingIds.has(dev.id);
+                    return (
+                      <div
+                        key={dev.id}
+                        className="bg-card border border-border/80 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
+                        onClick={() => {
+                          setShowDevModal(false);
+                          navigate(`/profile?id=${dev.id}`);
+                        }}
+                      >
+                        <div className="h-12 sm:h-16 bg-[#1a1a1a] w-full" />
 
-                  return (
-                    <div
-                      key={dev.id}
-                      className="bg-card border border-border/80 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col relative"
-                      onClick={() => {
-                        setShowDevModal(false);
-                        navigate(`/profile?id=${dev.id}`);
-                      }}
-                    >
-                      <div className="h-12 sm:h-16 bg-[#1a1a1a] w-full" />
-
-                      <div className="absolute top-6 sm:top-8 left-2.5 sm:left-4">
-                        <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border-4 border-card bg-card">
-                          <AvatarImage
-                            src={getAvatarUrl(
-                              dev.name,
-                              dev.avatarUrl || dev.avatar,
-                              160
-                            )}
-                          />
-                          <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xs sm:text-base font-bold">
-                            {dev.name ? dev.name.substring(0, 2).toUpperCase() : 'DEV'}
-                          </AvatarFallback>
-                        </Avatar>
-                      </div>
-
-                      <div className="pt-7 sm:pt-10 px-2.5 sm:px-4 pb-2.5 sm:pb-4 flex-1 flex flex-col">
-                        <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 mb-1">
-                          <h3 className="font-bold text-xs sm:text-sm text-foreground hover:text-[#3b49df] truncate transition-colors">
-                            {dev.name}
-                          </h3>
-                          <VerifiedBadge size={14} />
+                        <div className="absolute top-6 sm:top-8 left-2.5 sm:left-4">
+                          <Avatar className="h-12 w-12 sm:h-16 sm:w-16 border-4 border-card bg-card">
+                            <AvatarImage
+                              src={getAvatarUrl(
+                                dev.name,
+                                dev.avatarUrl || dev.avatar,
+                                160
+                              )}
+                            />
+                            <AvatarFallback className="bg-[#3b49df]/10 text-[#3b49df] text-xs sm:text-base font-bold">
+                              {dev.name
+                                ? dev.name.substring(0, 2).toUpperCase()
+                                : 'DEV'}
+                            </AvatarFallback>
+                          </Avatar>
                         </div>
 
-                        <div className="mb-1.5">
-                          <DeveloperBadge title={dev.developerTitle || 'DEVELOPER'} />
-                        </div>
+                        <div className="pt-7 sm:pt-10 px-2.5 sm:px-4 pb-2.5 sm:pb-4 flex-1 flex flex-col">
+                          <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 mb-1">
+                            <h3 className="font-bold text-xs sm:text-sm text-foreground hover:text-[#3b49df] truncate transition-colors">
+                              {dev.name}
+                            </h3>
+                            <VerifiedBadge size={14} />
+                          </div>
 
-                        <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate mb-2 sm:mb-3">
-                          {dev.schoolCategory?.replace(/_/g, ' ') || 'BFGI Alumni Portal Tech Team'}
-                        </p>
+                          <div className="mb-1.5">
+                            <DeveloperBadge
+                              title={dev.developerTitle || 'DEVELOPER'}
+                            />
+                          </div>
 
-                        <div className="flex items-center gap-1.5 sm:gap-2 mt-auto">
-                          {currentUser?.id === dev.id ? (
-                            <Button
-                              onClick={() => {
-                                setShowDevModal(false);
-                                navigate(`/profile?id=${dev.id}`);
-                              }}
-                              variant="outline"
-                              className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3"
-                            >
-                              View Profile
-                            </Button>
-                          ) : (
-                            <>
+                          <p className="text-[10px] sm:text-[11px] text-muted-foreground truncate mb-2 sm:mb-3">
+                            {dev.schoolCategory?.replace(/_/g, ' ') ||
+                              'BFGI Alumni Portal Tech Team'}
+                          </p>
+
+                          <div className="flex items-center gap-1.5 sm:gap-2 mt-auto">
+                            {currentUser?.id === dev.id ? (
                               <Button
-                                onClick={(e) => {
+                                onClick={() => {
                                   setShowDevModal(false);
-                                  handleDirectMessage(e, dev);
+                                  navigate(`/profile?id=${dev.id}`);
                                 }}
                                 variant="outline"
-                                className="border-border/80 hover:bg-muted text-foreground rounded-full h-7 w-7 sm:h-8 sm:w-8 p-0 flex items-center justify-center shrink-0 cursor-pointer"
-                                title="Message Developer"
+                                className="w-full border-border/80 text-foreground hover:bg-muted rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3"
                               >
-                                <MessageSquare className="h-3.5 w-3.5 text-[#3b49df]" />
+                                View Profile
                               </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  onClick={(e) => {
+                                    setShowDevModal(false);
+                                    handleDirectMessage(e, dev);
+                                  }}
+                                  variant="outline"
+                                  className="border-border/80 hover:bg-muted text-foreground rounded-full h-7 w-7 sm:h-8 sm:w-8 p-0 flex items-center justify-center shrink-0 cursor-pointer"
+                                  title="Message Developer"
+                                >
+                                  <MessageSquare className="h-3.5 w-3.5 text-[#3b49df]" />
+                                </Button>
 
-                              <Button
-                                onClick={(e) => handleFollowToggle(e, dev.id, isFollowing)}
-                                disabled={isFollowLoading}
-                                className={
-                                  isFollowing
-                                    ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3'
-                                    : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3'
-                                }
-                              >
-                                {isFollowing ? (
-                                  <>
-                                    <UserCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 shrink-0" />
-                                    <span className="truncate">Following</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <UserPlus className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 shrink-0" />
-                                    <span className="truncate">Follow</span>
-                                  </>
-                                )}
-                              </Button>
-                            </>
-                          )}
+                                <Button
+                                  onClick={(e) =>
+                                    handleFollowToggle(e, dev.id, isFollowing)
+                                  }
+                                  disabled={isFollowLoading}
+                                  className={
+                                    isFollowing
+                                      ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300 transition-colors flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3'
+                                      : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white flex-1 rounded-full text-[10px] sm:text-xs font-semibold h-7 sm:h-8 cursor-pointer px-1 sm:px-3'
+                                  }
+                                >
+                                  {isFollowing ? (
+                                    <>
+                                      <UserCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 shrink-0" />
+                                      <span className="truncate">
+                                        Following
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserPlus className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 shrink-0" />
+                                      <span className="truncate">Follow</span>
+                                    </>
+                                  )}
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
 
-                {filteredDevModalList.length === 0 && (
-                  <div className="col-span-full py-12 text-center text-xs text-muted-foreground border border-dashed border-border/80 rounded-xl bg-card">
-                    No builders found matching "{devModalSearch}".
-                  </div>
-                )}
+                  {filteredDevModalList.length === 0 && (
+                    <div className="col-span-full py-12 text-center text-xs text-muted-foreground border border-dashed border-border/80 rounded-xl bg-card">
+                      No builders found matching "{devModalSearch}".
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* GENERAL USERS GRID WITH VERIFIED BLUE TICKS & DEVELOPER BADGES */}
       {loading && displayedGeneralUsers.length === 0 ? (
@@ -692,7 +735,8 @@ export const ConnectPage: React.FC = () => {
                   </div>
 
                   <p className="text-[10px] sm:text-xs text-muted-foreground truncate mb-2 sm:mb-3">
-                    {user.schoolCategory?.replace(/_/g, ' ') || 'BFGI Alumni Portal Member'}
+                    {user.schoolCategory?.replace(/_/g, ' ') ||
+                      'BFGI Alumni Portal Member'}
                   </p>
 
                   <div className="flex gap-2 mt-auto">

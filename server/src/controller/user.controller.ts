@@ -12,7 +12,10 @@ import cloudinary from '../config/cloudinary.js';
 import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
 import { enqueueUserImageUpload } from '../services/queue.service.js';
 
-const formatCloudinaryAvatar = (url?: string | null, size = 160): string | null => {
+const formatCloudinaryAvatar = (
+  url?: string | null,
+  size = 160
+): string | null => {
   if (!url) return null;
   if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
     const uploadIndex = url.indexOf('/upload/');
@@ -41,8 +44,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
     const roleQuery = ((req.query.role as string) || '').trim();
     const excludeDevs =
       req.query.excludeDevs === 'true' || req.query.excludeDevs === '1';
-    const refresh =
-      req.query.refresh === 'true' || req.query.refresh === '1';
+    const refresh = req.query.refresh === 'true' || req.query.refresh === '1';
     const limit = Math.min(parsePgInt(req.query.limit, 16) || 16, 50);
     const skip = parsePgInt(req.query.skip, 0) || 0;
 
@@ -135,7 +137,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
       ...u,
       avatarUrl: formatCloudinaryAvatar(u.avatarUrl, 160),
       isFollowed: followingIdsSet.has(u.id),
-      isVerified: Boolean(u.isDeveloper || u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'),
+      isVerified: Boolean(
+        u.isDeveloper || u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'
+      ),
     }));
 
     const responsePayload = { users: formattedUsers, total };
@@ -144,7 +148,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
     res.json(responsePayload);
   } catch (err: any) {
     if (err?.code === 'P2020') {
-      return res.status(400).json({ message: 'Value out of range for integer type' });
+      return res
+        .status(400)
+        .json({ message: 'Value out of range for integer type' });
     }
     console.error('Error fetching users:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -180,9 +186,7 @@ export const getDevelopers = async (req: Request, res: Response) => {
         isDeveloper: true,
         developerTitle: true,
       },
-      orderBy: [
-        { id: 'asc' },
-      ],
+      orderBy: [{ id: 'asc' }],
     });
 
     const formattedDevelopers = developers.map((d) => ({
@@ -246,12 +250,18 @@ export const getUserById = async (req: Request, res: Response) => {
       user: {
         ...user,
         avatarUrl: formatCloudinaryAvatar(user.avatarUrl, 400),
-        isVerified: Boolean(user.isDeveloper || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+        isVerified: Boolean(
+          user.isDeveloper ||
+          user.role === 'ADMIN' ||
+          user.role === 'SUPER_ADMIN'
+        ),
       },
     });
   } catch (err: any) {
     if (err?.code === 'P2020') {
-      return res.status(400).json({ message: 'Value out of range for integer type' });
+      return res
+        .status(400)
+        .json({ message: 'Value out of range for integer type' });
     }
     console.error('Error getting user by ID:', err);
     res.status(500).json({ message: 'Internal server error' });
