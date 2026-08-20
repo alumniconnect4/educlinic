@@ -187,6 +187,8 @@ export const login = async (req: Request, res: Response) => {
         role: user.role,
         schoolCategory: user.schoolCategory,
         avatarUrl: user.avatarUrl || DEFAULT_AVATAR_URL,
+        isDeveloper: user.isDeveloper,
+        developerTitle: user.developerTitle,
       },
     });
   } catch (err) {

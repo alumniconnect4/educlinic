@@ -14,6 +14,8 @@ type AuthenticatedUser = Pick<
   | 'bio'
   | 'gender'
   | 'socialLink'
+  | 'isDeveloper'
+  | 'developerTitle'
   | 'createdAt'
 >;
 
