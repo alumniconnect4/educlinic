@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/mockData';
 import { Toast } from '../ui/Toast';
 import { EditProfileModal } from './EditProfileModal';
+import { VerifiedBadge, DeveloperBadge } from '../../pages/ConnectPage';
 
 interface ProfileHeaderProps {
   profileUser: User;
@@ -51,7 +52,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   setActiveTab,
 }) => {
   const navigate = useNavigate();
-  const { startDirectMessage } = useStore();
+  const { startDirectMessage, currentUser } = useStore();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -73,7 +74,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       setShowToast(true);
       return;
     }
-    if (!isFollowing) {
+
+    const isElevatedUser = (u?: Partial<User> | null) =>
+      Boolean(u?.isDeveloper || u?.role === 'ADMIN' || u?.role === 'SUPER_ADMIN');
+
+    const canMessageWithoutFollow =
+      isElevatedUser(currentUser) || isElevatedUser(profileUser);
+
+    if (!isFollowing && !canMessageWithoutFollow) {
       setToastMessage('You must follow this user to send a message.');
       setShowToast(true);
       return;
@@ -82,7 +90,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     startDirectMessage({
       id: profileUser.id,
       name: profileUser.name,
-      avatar: profileUser.avatar,
+      avatarUrl: profileUser.avatarUrl || profileUser.avatar,
+      avatar: profileUser.avatarUrl || profileUser.avatar,
+      role: profileUser.role,
+      isDeveloper: profileUser.isDeveloper,
       bio: profileUser.bio,
     });
     navigate(`/chat?userId=${profileUser.id}`);
@@ -198,41 +209,55 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2 text-center sm:text-left mt-2">
-          <div className="flex items-center justify-center sm:justify-start gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-              {profileUser.name}
-            </h1>
-            <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-0.5 rounded border border-gray-300 bg-white text-gray-700 shadow-2xs uppercase tracking-wider shrink-0 my-auto">
-              {profileUser.role === 'USER'
-                ? 'Student'
-                : profileUser.role === 'ALUMNI'
-                  ? 'Alumni'
-                  : profileUser.role === 'SUPER_ADMIN'
-                    ? 'Super Admin'
-                    : profileUser.role || 'Student'}
-            </span>
+        <div className="space-y-3 mt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+                {profileUser.name}
+                {profileUser.isDeveloper && <VerifiedBadge size={22} />}
+              </h1>
+            </div>
+
+            <div className="flex items-center justify-center sm:justify-end gap-2 flex-wrap shrink-0">
+              {/* Default Role Tag */}
+              <span className="inline-flex items-center text-[10px] font-bold px-2.5 py-1 rounded-md border border-gray-200 bg-gray-50 text-gray-600 uppercase tracking-wider shrink-0">
+                {profileUser.role === 'USER'
+                  ? 'STUDENT'
+                  : profileUser.role === 'ALUMNI'
+                    ? 'ALUMNI'
+                    : profileUser.role === 'SUPER_ADMIN'
+                      ? 'SUPER ADMIN'
+                      : profileUser.role?.toUpperCase() || 'STUDENT'}
+              </span>
+
+              {/* Developer Tag (if developer) */}
+              {profileUser.isDeveloper && (
+                <DeveloperBadge title={profileUser.developerTitle || 'DEVELOPER'} />
+              )}
+            </div>
           </div>
+
           {profileUser.bio && (
-            <p className="text-base text-muted-foreground max-w-2xl leading-relaxed mt-2">
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl leading-relaxed">
               {profileUser.bio}
             </p>
           )}
 
-          <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-muted-foreground text-xs sm:text-sm pt-2">
+          {/* Metadata Labels below buttons & name */}
+          <div className="flex flex-wrap justify-center sm:justify-start gap-3 sm:gap-4 text-muted-foreground text-xs sm:text-sm pt-1">
+            {profileUser.schoolCategory && (
+              <span className="flex items-center gap-1.5 font-medium text-foreground/80">
+                <GraduationCap className="h-4 w-4 text-[#3b49df]" />{' '}
+                {profileUser.schoolCategory.replace(/_/g, ' ')}
+              </span>
+            )}
             {profileUser.gender && (
-              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted/50 border border-border/50 text-foreground/80 font-medium">
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-muted/60 border border-border/60 text-foreground/80 font-semibold text-xs">
                 {profileUser.gender}
               </span>
             )}
-            {profileUser.schoolCategory && (
-              <span className="flex items-center gap-1.5">
-                <GraduationCap className="h-4 w-4 text-[#3b49df]" />{' '}
-                {profileUser.schoolCategory.replace('_', ' ')}
-              </span>
-            )}
             {profileUser.createdAt && (
-              <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1.5 font-medium">
                 <Calendar className="h-4 w-4 text-[#3b49df]" /> Joined{' '}
                 {new Date(profileUser.createdAt).toLocaleDateString(undefined, {
                   month: 'short',
@@ -245,9 +270,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 href={profileUser.socialLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-[#3b49df] transition-colors"
+                className="flex items-center gap-1.5 font-medium hover:text-[#3b49df] transition-colors"
               >
-                <LinkIcon className="h-4 w-4" />{' '}
+                <LinkIcon className="h-4 w-4 text-[#3b49df]" />{' '}
                 {profileUser.socialLink.replace(/^https?:\/\//, '')}
               </a>
             )}

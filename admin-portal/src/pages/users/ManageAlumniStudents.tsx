@@ -34,6 +34,8 @@ interface UserRecord {
   gender?: string;
   socialLink?: string;
   isVerified: boolean;
+  isDeveloper?: boolean;
+  developerTitle?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -117,6 +119,8 @@ export default function ManageAlumniStudents() {
     gender: '',
     socialLink: '',
     isVerified: true,
+    isDeveloper: false,
+    developerTitle: '',
   });
 
   const fetchUsers = async () => {
@@ -277,6 +281,8 @@ export default function ManageAlumniStudents() {
       gender: user.gender || '',
       socialLink: user.socialLink || '',
       isVerified: user.isVerified,
+      isDeveloper: user.isDeveloper || false,
+      developerTitle: user.developerTitle || '',
     });
   };
 
@@ -1559,6 +1565,54 @@ export default function ManageAlumniStudents() {
                         />
                       </label>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Developer / Builder Tag (Light Theme with Toggle Switch) */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-xs">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">
+                      Developer / Builder Status 💻
+                    </label>
+                    <span className="text-[11px] text-gray-500 block mt-0.5">
+                      Grant core developer tag & feature in Connect tab builders showcase.
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span
+                      className={`text-xs font-semibold ${
+                        editFormData.isDeveloper
+                          ? 'text-indigo-600'
+                          : 'text-gray-400'
+                      }`}
+                    >
+                      {editFormData.isDeveloper
+                        ? 'Developer Active'
+                        : 'Standard User'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditFormData({
+                          ...editFormData,
+                          isDeveloper: !editFormData.isDeveloper,
+                        })
+                      }
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        editFormData.isDeveloper ? 'bg-indigo-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                          editFormData.isDeveloper
+                            ? 'translate-x-5'
+                            : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
               </div>

@@ -90,6 +90,12 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
   } | null>(null);
   const [isTogglingFollow, setIsTogglingFollow] = useState(false);
 
+  const isElevatedUser = (u?: Partial<User> | null) =>
+    Boolean(u?.isDeveloper || u?.role === 'ADMIN' || u?.role === 'SUPER_ADMIN');
+
+  const canChatWithoutFollow =
+    isElevatedUser(currentUser) || isElevatedUser(activeChat?.participant);
+
   useEffect(() => {
     if (activeChat?.participant.id) {
       setFollowStatus(null);
@@ -376,13 +382,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                 </button>
               )}
               <Avatar className="h-10 w-10">
-                <AvatarImage
-                  src={getAvatarUrl(
-                    activeChat.participant.name,
-                    activeChat.participant.avatarUrl ||
-                      activeChat.participant.avatar
-                  )}
-                />
+                <AvatarImage src={getAvatarUrl(activeChat.participant)} />
                 <AvatarFallback className="font-semibold bg-muted">
                   {activeChat.participant.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
@@ -533,7 +533,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
               <div className="flex-1 flex items-center justify-center h-12 bg-muted/30 border border-border/50 rounded-full text-sm text-muted-foreground">
                 You cannot send or receive messages anymore due to a block.
               </div>
-            ) : !followStatus ? (
+            ) : (!followStatus && !canChatWithoutFollow) ? (
               <div className="flex-1 relative flex items-center">
                 <button
                   disabled
@@ -553,7 +553,7 @@ export const ChatArea: React.FC<ChatAreaProps> = ({
                   <Send className="h-5 w-5" />
                 </button>
               </div>
-            ) : !followStatus.isFollowing || !followStatus.isFollowingMe ? (
+            ) : (!canChatWithoutFollow && (!followStatus?.isFollowing || !followStatus?.isFollowingMe)) ? (
               <div className="flex-1 flex items-center justify-center h-12 bg-muted/30 border border-border/50 rounded-full text-sm font-medium text-muted-foreground">
                 Both users must follow each other to chat.
               </div>

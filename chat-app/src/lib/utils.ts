@@ -28,7 +28,7 @@ export function formatCloudinaryUrl(url: string, size = 160): string {
 }
 
 export function getAvatarUrl(
-  userOrName?:
+  userOrNameOrUrl?:
     | string
     | { name?: string; avatar?: string; avatarUrl?: string }
     | null,
@@ -37,8 +37,23 @@ export function getAvatarUrl(
 ): string {
   let url: string | undefined | null = null;
 
-  if (typeof userOrName === 'object' && userOrName !== null) {
-    url = userOrName.avatarUrl || userOrName.avatar || avatarParam;
+  if (typeof userOrNameOrUrl === 'object' && userOrNameOrUrl !== null) {
+    url = userOrNameOrUrl.avatarUrl || userOrNameOrUrl.avatar || avatarParam;
+  } else if (typeof userOrNameOrUrl === 'string' && userOrNameOrUrl.trim() !== '') {
+    const trimmed = userOrNameOrUrl.trim();
+    if (
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('/') ||
+      trimmed.startsWith('data:') ||
+      trimmed.startsWith('blob:') ||
+      trimmed.includes('/') ||
+      (trimmed.includes('.') && !trimmed.includes(' '))
+    ) {
+      url = trimmed;
+    } else {
+      url = avatarParam;
+    }
   } else {
     url = avatarParam;
   }

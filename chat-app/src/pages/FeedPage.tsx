@@ -5,7 +5,7 @@ import { PostSkeleton } from '../components/feed/PostSkeleton';
 import type { Post } from '../types';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -21,6 +21,14 @@ export const FeedPage: React.FC = () => {
   );
   const [showComments, setShowComments] = useState<{ [key: number]: boolean }>(
     {}
+  );
+  const [isBubbleDismissed, setIsBubbleDismissed] = useState(false);
+
+  const isProfileIncomplete = Boolean(
+    currentUser &&
+      (!currentUser.bio ||
+        !currentUser.socialLink ||
+        (!currentUser.avatarUrl && !currentUser.avatar))
   );
 
   const [searchParams] = useSearchParams();
