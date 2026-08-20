@@ -1,3 +1,4 @@
+import os from 'os';
 import { Kafka, type Producer, type Consumer } from 'kafkajs';
 import { config } from '../config/index.js';
 import { logger } from '../config/logger.js';
@@ -55,6 +56,13 @@ const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => 
     attempt++;
     try {
       await admin.connect();
+      const existingTopics = await admin.listTopics();
+      if (existingTopics.includes('chat-messages')) {
+        logger.info('Kafka topic "chat-messages" already exists');
+        await admin.disconnect();
+        return;
+      }
+
       await admin.createTopics({
         topics: [
           { topic: 'chat-messages', numPartitions: 3, replicationFactor: 1 },
@@ -86,7 +94,14 @@ const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => 
 export const startKafkaConsumer = async (io: SocketIOServer) => {
   await ensureTopicsExist();
 
-  const groupId = process.env.KAFKA_GROUP_ID || 'chat-backend-group';
+  const baseGroupId = process.env.KAFKA_GROUP_ID || 'chat-backend-group';
+  const instanceId =
+    process.env.HOSTNAME ||
+    process.env.POD_NAME ||
+    os.hostname() ||
+    Math.random().toString(36).substring(2, 9);
+  const groupId = `${baseGroupId}-${instanceId}`;
+
   let retries = 15;
   let isConnected = false;
 
@@ -100,6 +115,10 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
 
     const currentConsumer = kafka.consumer({
       groupId,
+      sessionTimeout: 30000,
+      rebalanceTimeout: 60000,
+      heartbeatInterval: 3000,
+      allowAutoTopicCreation: true,
       retry: {
         initialRetryTime: 1000,
         retries: 10,
