@@ -36,6 +36,14 @@ const navigation: RouteItem[] = [
         path: 'https://www.bfcet.com/dept-management',
       },
       {
+        name: 'School of Commerce',
+        path: 'https://www.bfcet.com/dept-management',
+      },
+      {
+        name: 'School of Management',
+        path: 'https://www.bfcet.com/dept-management',
+      },
+      {
         name: 'School of Computer Applications',
         path: 'https://www.bfcet.com/dept-comp-application',
       },
@@ -211,21 +219,19 @@ const MainNav = () => {
                         ? (e) => handleLinkClick(e, item.path!, item.name)
                         : undefined
                     }
-                    className={`inline-flex items-center text-[15px] font-semibold pb-1 border-b-2 transition-colors ${
-                      isActive
-                        ? 'border-[#d60000] text-gray-900'
-                        : 'border-transparent text-gray-600 hover:text-[#d60000] hover:border-[#d60000]'
-                    }`}
+                    className={`inline-flex items-center text-[15px] font-semibold pb-1 border-b-2 transition-colors ${isActive
+                      ? 'border-[#d60000] text-gray-900'
+                      : 'border-transparent text-gray-600 hover:text-[#d60000] hover:border-[#d60000]'
+                      }`}
                   >
                     {item.name}
                   </Link>
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-1 text-[15px] font-semibold pb-1 border-b-2 transition-colors cursor-pointer group-hover:text-[#d60000] group-hover:border-[#d60000] ${
-                      isActive
-                        ? 'border-[#d60000] text-gray-900'
-                        : 'border-transparent text-gray-600'
-                    }`}
+                    className={`inline-flex items-center gap-1 text-[15px] font-semibold pb-1 border-b-2 transition-colors cursor-pointer group-hover:text-[#d60000] group-hover:border-[#d60000] ${isActive
+                      ? 'border-[#d60000] text-gray-900'
+                      : 'border-transparent text-gray-600'
+                      }`}
                   >
                     {item.name}
                     <ChevronDown size={16} className="mt-0.5" />
@@ -265,11 +271,10 @@ const MainNav = () => {
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition ${
-                  isLoggingOut
-                    ? 'opacity-75 cursor-not-allowed'
-                    : 'cursor-pointer'
-                }`}
+                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition ${isLoggingOut
+                  ? 'opacity-75 cursor-not-allowed'
+                  : 'cursor-pointer'
+                  }`}
               >
                 {isLoggingOut ? (
                   <>
@@ -305,19 +310,17 @@ const MainNav = () => {
 
       {/* Overlay Backdrop */}
       <div
-        className={`xl:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] transition-opacity duration-300 ease-in-out ${
-          isMenuOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className={`xl:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] transition-opacity duration-300 ease-in-out ${isMenuOpen
+          ? 'opacity-100 pointer-events-auto'
+          : 'opacity-0 pointer-events-none'
+          }`}
         onClick={() => setIsMenuOpen(false)}
       />
 
       {/* Sidebar */}
       <div
-        className={`xl:hidden fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-white z-[70] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${
-          isMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`xl:hidden fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-white z-[70] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100 sticky top-0 bg-white z-10">
           <Image
@@ -346,11 +349,10 @@ const MainNav = () => {
                 {item.path ? (
                   <Link
                     href={item.path}
-                    className={`block text-base font-medium py-3 px-4 rounded-lg transition-colors duration-200 ${
-                      pathname === item.path
-                        ? 'bg-red-50 text-[#d60000] font-semibold'
-                        : 'text-gray-700 hover:bg-red-50 hover:text-[#d60000]'
-                    }`}
+                    className={`block text-base font-medium py-3 px-4 rounded-lg transition-colors duration-200 ${pathname === item.path
+                      ? 'bg-red-50 text-[#d60000] font-semibold'
+                      : 'text-gray-700 hover:bg-red-50 hover:text-[#d60000]'
+                      }`}
                     onClick={(e) =>
                       item.path?.startsWith('http')
                         ? handleLinkClick(e, item.path, item.name, true)
@@ -364,22 +366,20 @@ const MainNav = () => {
                     onClick={() =>
                       setExpandedMenu(isExpanded ? null : item.name)
                     }
-                    className={`text-base font-medium py-3 px-4 rounded-lg flex items-center justify-between w-full transition-colors duration-200 cursor-pointer ${
-                      isExpanded || isChildActive
-                        ? 'bg-red-50 text-[#d60000] font-semibold'
-                        : 'text-gray-800 hover:bg-red-50 hover:text-[#d60000]'
-                    }`}
+                    className={`text-base font-medium py-3 px-4 rounded-lg flex items-center justify-between w-full transition-colors duration-200 cursor-pointer ${isExpanded || isChildActive
+                      ? 'bg-red-50 text-[#d60000] font-semibold'
+                      : 'text-gray-800 hover:bg-red-50 hover:text-[#d60000]'
+                      }`}
                   >
                     {item.name}
                     <ChevronDown
                       size={18}
-                      className={`transition-transform duration-300 ${
-                        isExpanded
-                          ? 'rotate-180 text-[#d60000]'
-                          : isChildActive
-                            ? 'text-[#d60000]'
-                            : 'text-gray-400'
-                      }`}
+                      className={`transition-transform duration-300 ${isExpanded
+                        ? 'rotate-180 text-[#d60000]'
+                        : isChildActive
+                          ? 'text-[#d60000]'
+                          : 'text-gray-400'
+                        }`}
                     />
                   </button>
                 )}
@@ -394,11 +394,10 @@ const MainNav = () => {
                         <Link
                           key={sub.name}
                           href={sub.path}
-                          className={`block text-sm py-2 px-3 rounded-md transition-colors duration-200 ${
-                            pathname === sub.path
-                              ? 'bg-red-50 text-[#d60000] font-medium'
-                              : 'text-gray-500 hover:bg-red-50 hover:text-[#d60000]'
-                          }`}
+                          className={`block text-sm py-2 px-3 rounded-md transition-colors duration-200 ${pathname === sub.path
+                            ? 'bg-red-50 text-[#d60000] font-medium'
+                            : 'text-gray-500 hover:bg-red-50 hover:text-[#d60000]'
+                            }`}
                           onClick={(e) =>
                             sub.path.startsWith('http')
                               ? handleLinkClick(e, sub.path, sub.name, true)
@@ -425,11 +424,10 @@ const MainNav = () => {
                 setIsMenuOpen(false);
               }}
               disabled={isLoggingOut}
-              className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm ${
-                isLoggingOut
-                  ? 'opacity-75 cursor-not-allowed'
-                  : 'cursor-pointer'
-              }`}
+              className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm ${isLoggingOut
+                ? 'opacity-75 cursor-not-allowed'
+                : 'cursor-pointer'
+                }`}
             >
               {isLoggingOut ? (
                 <>
