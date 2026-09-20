@@ -43,25 +43,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const popularTags = [
-    'campus',
-    'events',
-    'coding',
-    'sports',
-    'placements',
-    'hackathon',
-    'clubs',
-    'interview',
-    'experience',
-    'roadmap',
-    'information',
-    'ai',
-    'discussions',
-    'projects',
-    'internships',
-    'research',
-    'opportunities',
-    'help',
-    'announcements',
+    'Campus',
+    'Events',
+    'Coding',
+    'Sports',
+    'Placements',
+    'Hackathon',
+    'Clubs',
+    'Interview',
+    'Experience',
+    'Roadmap',
+    'Information',
+    'AI',
+    'Discussions',
+    'Projects',
+    'Internships',
+    'Research',
+    'Opportunities',
+    'Help',
+    'Announcements',
   ];
 
   React.useEffect(() => {
@@ -79,11 +79,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Mobile overlay */}
       <div
-        className={`fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden transition-opacity duration-300 ${
-          isOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden transition-opacity duration-300 ${isOpen
+          ? 'opacity-100 pointer-events-auto'
+          : 'opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
       />
 
@@ -159,11 +158,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Button
                 key={item.name}
                 variant="ghost"
-                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${
-                  isActive
-                    ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
-                    : 'text-foreground/90'
-                }`}
+                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${isActive
+                  ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
+                  : 'text-foreground/90'
+                  }`}
                 onClick={() => {
                   navigate(item.path);
                   onClose?.();
@@ -200,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 className="flex items-center justify-between px-3 py-1.5 rounded-md text-foreground/80 hover:text-[#3b49df] hover:bg-[#3b49df]/10 transition-colors group cursor-pointer"
               >
-                <span className="font-mono text-sm group-hover:underline">
+                <span className="font-mono text-[16px] font-bold group-hover:underline">
                   #{tag}
                 </span>
               </div>
@@ -211,7 +209,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="px-3 pt-4 border-t border-border/60 text-xs text-muted-foreground space-y-2 leading-relaxed">
           <p className="flex items-center gap-1">
             <Code2 className="h-3.5 w-3.5 text-[#3b49df]" />
-            <span>EduClinic &copy; {new Date().getFullYear()}</span>
+            <span>Alumni-Connect &copy; {new Date().getFullYear()}</span>
           </p>
           <p>Built for our college community.</p>
         </div>

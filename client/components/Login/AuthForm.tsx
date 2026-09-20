@@ -505,10 +505,10 @@ const AuthForm = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-0.5">
+                      <label className="block text-xs font-bold text-gray-700  tracking-wider mb-0.5">
                         Verification Document{' '}
                         <span className="text-[#d60000]">
-                          * (ID Card or Degree)
+                          * (Work ID or Degree)
                         </span>
                       </label>
 
@@ -756,9 +756,8 @@ const AuthForm = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md uppercase tracking-wider text-sm flex items-center justify-center gap-2 ${
-                isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
-              }`}
+              className={`w-full bg-[#d60000] hover:bg-[#b80000] text-white font-bold py-3 rounded-md transition-all mt-6 shadow-md uppercase tracking-wider text-sm flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
+                }`}
             >
               {isLoading ? (
                 <>

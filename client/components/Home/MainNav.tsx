@@ -1,15 +1,13 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { ArrowRight, Menu, X, ChevronDown, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useUserStore } from '@/store/useUserStore';
+import { usePathname, useRouter } from 'next/navigation';
+import { useUserStore, UserStore } from '@/store/useUserStore';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { toast as hotToast } from 'react-hot-toast';
-import { UserStore } from '@/store/useUserStore';
 
 type RouteItem = {
   name: string;
@@ -33,6 +31,14 @@ const navigation: RouteItem[] = [
       },
       {
         name: 'School of Business Studies',
+        path: 'https://www.bfcet.com/dept-management',
+      },
+      {
+        name: 'School of Commerce',
+        path: 'https://www.bfcet.com/dept-management',
+      },
+      {
+        name: 'School of Management',
         path: 'https://www.bfcet.com/dept-management',
       },
       {
@@ -74,7 +80,101 @@ const MainNav = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [visibleCount, setVisibleCount] = useState<number>(navigation.length);
+  const [isMounted, setIsMounted] = useState(false);
+
   const pathname = usePathname();
+  const router = useRouter();
+
+  const navContainerRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const measureContainerRef = useRef<HTMLDivElement>(null);
+
+  const isAuthenticated = useUserStore(
+    (state: UserStore) => state.isAuthenticated
+  );
+
+  // Dynamic route measurement & overflow calculation
+  const calculateVisibleCount = useCallback(() => {
+    if (!navContainerRef.current || !logoRef.current || !measureContainerRef.current) return;
+
+    const containerWidth = navContainerRef.current.clientWidth;
+
+    // Mobile / small tablet screens: collapse all items to hamburger
+    if (containerWidth < 768) {
+      setVisibleCount(0);
+      return;
+    }
+
+    const logoWidth = logoRef.current.getBoundingClientRect().width;
+    const authWidth = actionsRef.current
+      ? actionsRef.current.getBoundingClientRect().width
+      : 110;
+    const hamburgerWidth = 48;
+    const safetyMargin = 32; // Buffer to prevent edge-to-edge collision
+    const gap = 16; // Inter-item gap
+
+    const itemEls = measureContainerRef.current.querySelectorAll<HTMLElement>('[data-measure-item]');
+    if (!itemEls || itemEls.length === 0) return;
+
+    const itemWidths: number[] = [];
+    itemEls.forEach((el) => {
+      itemWidths.push(el.getBoundingClientRect().width);
+    });
+
+    const totalWidthAll =
+      itemWidths.reduce((sum, w) => sum + w, 0) + (navigation.length - 1) * gap;
+    const availWithoutHamburger = containerWidth - logoWidth - authWidth - safetyMargin;
+
+    // If all items fit comfortably without hamburger button
+    if (totalWidthAll <= availWithoutHamburger) {
+      setVisibleCount(navigation.length);
+      return;
+    }
+
+    // Otherwise hamburger button will be shown; calculate how many fit
+    const availWithHamburger = availWithoutHamburger - hamburgerWidth - gap;
+
+    let count = 0;
+    let accumulated = 0;
+    for (let i = 0; i < itemWidths.length; i++) {
+      const nextWidth = accumulated + itemWidths[i] + (i > 0 ? gap : 0);
+      if (nextWidth <= availWithHamburger) {
+        accumulated = nextWidth;
+        count = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    setVisibleCount(count);
+  }, []);
+
+  useEffect(() => {
+    setIsMounted(true);
+    calculateVisibleCount();
+
+    const container = navContainerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => {
+      calculateVisibleCount();
+    });
+    observer.observe(container);
+
+    if (typeof document !== 'undefined' && document.fonts) {
+      document.fonts.ready.then(() => {
+        calculateVisibleCount();
+      });
+    }
+
+    window.addEventListener('resize', calculateVisibleCount);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', calculateVisibleCount);
+    };
+  }, [calculateVisibleCount]);
 
   useEffect(() => {
     if (isMenuOpen) {
@@ -102,11 +202,6 @@ const MainNav = () => {
       }
     }
   }, [isMenuOpen, pathname]);
-
-  const isAuthenticated = useUserStore(
-    (state: UserStore) => state.isAuthenticated
-  );
-  const router = useRouter();
 
   const handleLogout = async () => {
     try {
@@ -174,18 +269,49 @@ const MainNav = () => {
     }
   };
 
+  const visibleItems = isMounted ? navigation.slice(0, visibleCount) : navigation;
+  const hiddenItems = isMounted ? navigation.slice(visibleCount) : [];
+  const hasOverflow = hiddenItems.length > 0 || visibleCount < navigation.length;
+
   return (
-    <div className="bg-white w-full shadow-sm border-b border-gray-100 sticky top-0 z-50">
-      <div className="w-full px-4 md:px-8 lg:px-16 xl:px-32 py-2 flex items-center justify-between">
-        <div className="flex-shrink-0 flex items-center space-x-6">
-          <Link href="/">
+    <div className="bg-white w-full shadow-xs border-b border-gray-100 sticky top-0 z-50">
+      {/* Hidden Container for accurate offscreen pixel measurement */}
+      <div
+        ref={measureContainerRef}
+        className="fixed top-0 left-0 pointer-events-none opacity-0 invisible flex items-center space-x-4 z-[-999]"
+        aria-hidden="true"
+      >
+        {navigation.map((item) => (
+          <div
+            key={item.name}
+            data-measure-item
+            className="inline-flex items-center text-[15px] font-semibold whitespace-nowrap px-1"
+          >
+            <span>{item.name}</span>
+            {item.subRoutes && (
+              <ChevronDown size={16} className="ml-1 mt-0.5 shrink-0" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div
+        ref={navContainerRef}
+        className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-16 py-2 flex items-center justify-between gap-3 relative"
+      >
+        {/* Logos */}
+        <div
+          ref={logoRef}
+          className="shrink-0 flex items-center space-x-3 sm:space-x-4 lg:space-x-5"
+        >
+          <Link href="/" className="shrink-0 flex items-center">
             <Image
               src="/logo1.png"
               alt="BABA FARID GROUP OF INSTITUTIONS"
               width={250}
               height={70}
-              loading="eager"
-              className="w-48 md:w-56 lg:w-64 h-auto object-contain"
+              priority
+              className="w-40 sm:w-48 md:w-52 lg:w-56 xl:w-60 h-auto object-contain"
             />
           </Link>
           <Image
@@ -193,16 +319,20 @@ const MainNav = () => {
             alt="NAAC Logo"
             width={110}
             height={60}
-            className="w-auto h-auto object-contain hidden md:block"
+            priority
+            className="w-auto h-8 sm:h-9 md:h-10 lg:h-11 object-contain hidden md:block shrink-0"
           />
         </div>
 
-        <div className="hidden xl:flex items-center space-x-3 xl:space-x-5">
-          {navigation.map((item) => {
-            const isActive = item.path ? pathname === item.path : false;
+        {/* Visible Desktop Navigation Links */}
+        <div className="hidden md:flex items-center space-x-2 md:space-x-3 lg:space-x-4 xl:space-x-5 overflow-hidden">
+          {visibleItems.map((item) => {
+            const isActive = item.path
+              ? pathname === item.path
+              : item.subRoutes?.some((sub) => sub.path === pathname);
 
             return (
-              <div key={item.name} className="relative group py-4">
+              <div key={item.name} className="relative group py-4 shrink-0">
                 {item.path ? (
                   <Link
                     href={item.path}
@@ -211,7 +341,7 @@ const MainNav = () => {
                         ? (e) => handleLinkClick(e, item.path!, item.name)
                         : undefined
                     }
-                    className={`inline-flex items-center text-[15px] font-semibold pb-1 border-b-2 transition-colors ${
+                    className={`inline-flex items-center text-[14px] lg:text-[15px] font-semibold pb-1 border-b-2 transition-colors whitespace-nowrap ${
                       isActive
                         ? 'border-[#d60000] text-gray-900'
                         : 'border-transparent text-gray-600 hover:text-[#d60000] hover:border-[#d60000]'
@@ -221,14 +351,17 @@ const MainNav = () => {
                   </Link>
                 ) : (
                   <span
-                    className={`inline-flex items-center gap-1 text-[15px] font-semibold pb-1 border-b-2 transition-colors cursor-pointer group-hover:text-[#d60000] group-hover:border-[#d60000] ${
+                    className={`inline-flex items-center gap-1 text-[14px] lg:text-[15px] font-semibold pb-1 border-b-2 transition-colors cursor-pointer group-hover:text-[#d60000] group-hover:border-[#d60000] whitespace-nowrap ${
                       isActive
                         ? 'border-[#d60000] text-gray-900'
                         : 'border-transparent text-gray-600'
                     }`}
                   >
                     {item.name}
-                    <ChevronDown size={16} className="mt-0.5" />
+                    <ChevronDown
+                      size={16}
+                      className="mt-0.5 shrink-0 transition-transform duration-200 group-hover:rotate-180"
+                    />
                   </span>
                 )}
 
@@ -245,7 +378,11 @@ const MainNav = () => {
                                 ? (e) => handleLinkClick(e, sub.path, sub.name)
                                 : undefined
                             }
-                            className="block px-6 py-2 text-[14px] text-gray-600 hover:text-[#d60000] transition-colors"
+                            className={`block px-6 py-2 text-[14px] transition-colors ${
+                              pathname === sub.path
+                                ? 'text-[#d60000] bg-red-50/60 font-medium'
+                                : 'text-gray-600 hover:text-[#d60000] hover:bg-gray-50'
+                            }`}
                           >
                             {sub.name}
                           </Link>
@@ -259,13 +396,17 @@ const MainNav = () => {
           })}
         </div>
 
-        <div className="flex items-center space-x-4">
-          <div className="hidden xl:block">
+        {/* Right Section: Auth Button & Hamburger Toggle */}
+        <div
+          ref={actionsRef}
+          className="flex items-center space-x-2 sm:space-x-3 shrink-0"
+        >
+          <div className="hidden sm:block">
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition ${
+                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-3.5 py-1.5 md:px-4 md:py-2 rounded flex items-center justify-center space-x-2 font-medium text-sm transition shadow-xs ${
                   isLoggingOut
                     ? 'opacity-75 cursor-not-allowed'
                     : 'cursor-pointer'
@@ -273,39 +414,53 @@ const MainNav = () => {
               >
                 {isLoggingOut ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
+                    <Loader2 size={16} className="animate-spin" />
                     <span>Logging out...</span>
                   </>
                 ) : (
                   <>
                     <span>Logout</span>
-                    <ArrowRight size={18} />
+                    <ArrowRight size={16} />
                   </>
                 )}
               </button>
             ) : (
               <Link
                 href="/auth"
-                className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-4 py-2 rounded flex items-center justify-center space-x-2 font-medium transition"
+                className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-3.5 py-1.5 md:px-4 md:py-2 rounded flex items-center justify-center space-x-2 font-medium text-sm transition shadow-xs"
               >
                 <span>Login</span>
-                <ArrowRight size={18} />
+                <ArrowRight size={16} />
               </Link>
             )}
           </div>
 
-          <button
-            className="xl:hidden text-gray-700 hover:text-[#d60000] focus:outline-none cursor-pointer"
-            onClick={() => setIsMenuOpen(true)}
-          >
-            <Menu size={28} />
-          </button>
+          {/* Hamburger Button (shown on mobile or dynamically when desktop routes overflow) */}
+          {(hasOverflow || visibleCount === 0 || !isMounted) && (
+            <button
+              className="text-gray-700 hover:text-[#d60000] hover:bg-red-50/60 p-2 rounded-lg focus:outline-none cursor-pointer transition-colors relative flex items-center gap-1.5 border border-gray-200 sm:border-transparent"
+              onClick={() => setIsMenuOpen(true)}
+              aria-label="Toggle Navigation Menu"
+              title={
+                hiddenItems.length > 0
+                  ? `${hiddenItems.length} more route${hiddenItems.length > 1 ? 's' : ''}`
+                  : 'Menu'
+              }
+            >
+              <Menu size={26} />
+              {hiddenItems.length > 0 && visibleCount > 0 && (
+                <span className="hidden md:inline-flex items-center justify-center bg-[#d60000] text-white text-[11px] font-bold h-5 px-1.5 rounded-full shadow-xs">
+                  +{hiddenItems.length}
+                </span>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       {/* Overlay Backdrop */}
       <div
-        className={`xl:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] transition-opacity duration-300 ease-in-out ${
+        className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[60] transition-opacity duration-300 ease-in-out ${
           isMenuOpen
             ? 'opacity-100 pointer-events-auto'
             : 'opacity-0 pointer-events-none'
@@ -313,9 +468,9 @@ const MainNav = () => {
         onClick={() => setIsMenuOpen(false)}
       />
 
-      {/* Sidebar */}
+      {/* Slide-out Navigation Drawer */}
       <div
-        className={`xl:hidden fixed top-0 left-0 h-full w-[280px] sm:w-[320px] bg-white z-[70] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${
+        className={`fixed top-0 left-0 h-full w-[290px] sm:w-[340px] md:w-[380px] bg-white z-[70] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${
           isMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -323,33 +478,36 @@ const MainNav = () => {
           <Image
             src="/logo1.png"
             alt="BABA FARID GROUP OF INSTITUTIONS"
-            width={150}
-            height={45}
-            className="w-32 sm:w-40 h-auto object-contain"
+            width={160}
+            height={48}
+            className="w-36 sm:w-44 h-auto object-contain"
           />
           <button
             onClick={() => setIsMenuOpen(false)}
-            className="text-gray-500 hover:text-[#d60000] focus:outline-none p-1 cursor-pointer"
+            className="text-gray-500 hover:text-[#d60000] hover:bg-gray-100 focus:outline-none p-1.5 rounded-lg cursor-pointer transition"
           >
-            <X size={24} />
+            <X size={22} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-4 flex flex-col space-y-1">
+        <div className="flex-1 overflow-y-auto py-4 px-3 sm:px-4 flex flex-col space-y-1">
           {navigation.map((item) => {
             const isExpanded = expandedMenu === item.name;
             const isChildActive = item.subRoutes?.some(
               (sub) => sub.path === pathname
             );
+            const isDirectActive = pathname === item.path;
+            const isOverflowedFromTop = hiddenItems.some((h) => h.name === item.name);
+
             return (
               <div key={item.name} className="flex flex-col">
                 {item.path ? (
                   <Link
                     href={item.path}
-                    className={`block text-base font-medium py-3 px-4 rounded-lg transition-colors duration-200 ${
-                      pathname === item.path
+                    className={`text-base font-medium py-2.5 px-3.5 rounded-lg transition-colors duration-200 flex items-center justify-between ${
+                      isDirectActive
                         ? 'bg-red-50 text-[#d60000] font-semibold'
-                        : 'text-gray-700 hover:bg-red-50 hover:text-[#d60000]'
+                        : 'text-gray-700 hover:bg-red-50/70 hover:text-[#d60000]'
                     }`}
                     onClick={(e) =>
                       item.path?.startsWith('http')
@@ -357,20 +515,32 @@ const MainNav = () => {
                         : setIsMenuOpen(false)
                     }
                   >
-                    {item.name}
+                    <span>{item.name}</span>
+                    {isOverflowedFromTop && visibleCount > 0 && (
+                      <span className="text-[10px] text-gray-400 font-normal px-1.5 py-0.5 rounded bg-gray-100">
+                        Menu
+                      </span>
+                    )}
                   </Link>
                 ) : (
                   <button
                     onClick={() =>
                       setExpandedMenu(isExpanded ? null : item.name)
                     }
-                    className={`text-base font-medium py-3 px-4 rounded-lg flex items-center justify-between w-full transition-colors duration-200 cursor-pointer ${
+                    className={`text-base font-medium py-2.5 px-3.5 rounded-lg flex items-center justify-between w-full transition-colors duration-200 cursor-pointer ${
                       isExpanded || isChildActive
                         ? 'bg-red-50 text-[#d60000] font-semibold'
-                        : 'text-gray-800 hover:bg-red-50 hover:text-[#d60000]'
+                        : 'text-gray-800 hover:bg-red-50/70 hover:text-[#d60000]'
                     }`}
                   >
-                    {item.name}
+                    <div className="flex items-center gap-2">
+                      <span>{item.name}</span>
+                      {isOverflowedFromTop && visibleCount > 0 && (
+                        <span className="text-[10px] text-gray-400 font-normal px-1.5 py-0.5 rounded bg-gray-100">
+                          Menu
+                        </span>
+                      )}
+                    </div>
                     <ChevronDown
                       size={18}
                       className={`transition-transform duration-300 ${
@@ -384,12 +554,14 @@ const MainNav = () => {
                   </button>
                 )}
 
-                {/* Subroutes with animation */}
+                {/* Subroutes Accordion with animation */}
                 <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    isExpanded ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0'
+                  }`}
                 >
                   {item.subRoutes && (
-                    <div className="pl-4 flex flex-col space-y-1 mb-2 border-l-2 border-[#d60000]/20 ml-6 py-1">
+                    <div className="pl-3 flex flex-col space-y-1 mb-2 border-l-2 border-[#d60000]/30 ml-4 py-1">
                       {item.subRoutes.map((sub) => (
                         <Link
                           key={sub.name}
@@ -397,7 +569,7 @@ const MainNav = () => {
                           className={`block text-sm py-2 px-3 rounded-md transition-colors duration-200 ${
                             pathname === sub.path
                               ? 'bg-red-50 text-[#d60000] font-medium'
-                              : 'text-gray-500 hover:bg-red-50 hover:text-[#d60000]'
+                              : 'text-gray-600 hover:bg-red-50/70 hover:text-[#d60000]'
                           }`}
                           onClick={(e) =>
                             sub.path.startsWith('http')
