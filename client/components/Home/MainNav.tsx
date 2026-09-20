@@ -325,7 +325,7 @@ const MainNav = () => {
         </div>
 
         {/* Visible Desktop Navigation Links */}
-        <div className="hidden md:flex items-center space-x-2 md:space-x-3 lg:space-x-4 xl:space-x-5 overflow-hidden">
+        <div className="hidden md:flex items-center space-x-2 md:space-x-3 lg:space-x-4 xl:space-x-5">
           {visibleItems.map((item) => {
             const isActive = item.path
               ? pathname === item.path
@@ -366,28 +366,26 @@ const MainNav = () => {
                 )}
 
                 {item.subRoutes && (
-                  <div className="absolute top-[100%] left-0 min-w-[260px] bg-white border border-gray-100 border-t-0 shadow-xl rounded-b-md z-50 grid grid-rows-[0fr] opacity-0 invisible group-hover:grid-rows-[1fr] group-hover:opacity-100 group-hover:visible transition-all duration-300 ease-in-out">
-                    <div className="overflow-hidden">
-                      <div className="flex flex-col py-2">
-                        {item.subRoutes.map((sub) => (
-                          <Link
-                            key={sub.name}
-                            href={sub.path}
-                            onClick={
-                              sub.path.startsWith('http')
-                                ? (e) => handleLinkClick(e, sub.path, sub.name)
-                                : undefined
-                            }
-                            className={`block px-6 py-2 text-[14px] transition-colors ${
-                              pathname === sub.path
-                                ? 'text-[#d60000] bg-red-50/60 font-medium'
-                                : 'text-gray-600 hover:text-[#d60000] hover:bg-gray-50'
-                            }`}
-                          >
-                            {sub.name}
-                          </Link>
-                        ))}
-                      </div>
+                  <div className="absolute top-full left-0 min-w-[260px] bg-white border border-gray-100 shadow-xl rounded-b-md z-[100] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out pointer-events-none group-hover:pointer-events-auto">
+                    <div className="flex flex-col py-2">
+                      {item.subRoutes.map((sub) => (
+                        <Link
+                          key={sub.name}
+                          href={sub.path}
+                          onClick={
+                            sub.path.startsWith('http')
+                              ? (e) => handleLinkClick(e, sub.path, sub.name)
+                              : undefined
+                          }
+                          className={`block px-6 py-2.5 text-[14px] transition-colors ${
+                            pathname === sub.path
+                              ? 'text-[#d60000] bg-red-50 font-medium'
+                              : 'text-gray-600 hover:text-[#d60000] hover:bg-gray-50'
+                          }`}
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 )}
