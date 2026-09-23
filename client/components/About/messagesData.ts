@@ -17,7 +17,7 @@ export const leadershipMessages: LeadershipMessage[] = [
     salutation: 'Dear Alumni & Students,',
     name: 'Dr. Gurmeet Singh Dhaliwal',
     role: '(Chairman)',
-    image: '/images/chairman.png',
+    image: '/images/chairman.webp',
     imageAlt: 'Dr. Gurmeet Singh Dhaliwal - Chairman BFGI',
     highlights: [
       'Bridging the Gap Between Alumni and Students',
@@ -37,7 +37,7 @@ export const leadershipMessages: LeadershipMessage[] = [
     salutation: 'Dear BFGI Family,',
     name: 'Prof. (Dr.) M.P. Poonia',
     role: 'Campus Director',
-    image: '/images/director.png',
+    image: '/images/director.webp',
     imageAlt: 'Prof. (Dr.) M.P. Poonia - Campus Director BFGI',
     highlights: [
       'Building a Strong Mentorship Network',
@@ -57,7 +57,7 @@ export const leadershipMessages: LeadershipMessage[] = [
     salutation: 'Dear Students & Corporate Partners,',
     name: 'Major Chavvi Saxena',
     role: 'Dean - Corporate Relation, Industry Connect and HR',
-    image: '/images/dean.png',
+    image: '/images/dean.webp',
     imageAlt: 'Dean - Corporate Relation, Industry Connect and HR',
     highlights: [
       'Bridging the Academia-Industry Gap',
