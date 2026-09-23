@@ -21,7 +21,7 @@ spec:
       containers:
       - name: backend
         image: ghcr.io/alumniconnect4/educlinic-backend:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 4000
         env:
