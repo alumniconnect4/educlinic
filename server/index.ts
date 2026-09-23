@@ -29,6 +29,7 @@ const io = new SocketIOServer(httpServer, {
 setupChatSocket(io);
 app.set('io', io);
 
+import { ensureDatabaseSchema } from './src/config/db.js';
 import { startKafkaConsumer } from './src/services/kafka.service.js';
 import {
   initChatWorker,
@@ -36,7 +37,7 @@ import {
 } from './src/services/queue.service.js';
 
 const startAllServices: () => Promise<void> = async () => {
-  await Promise.all([connectRedis()]);
+  await Promise.all([connectRedis(), ensureDatabaseSchema()]);
   initChatWorker(io);
   initImageUploadWorker();
   await startKafkaConsumer(io);
