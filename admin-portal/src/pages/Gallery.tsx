@@ -78,6 +78,7 @@ export default function Gallery() {
           description: formData.description?.trim() || undefined,
           category: formData.category.trim(),
           coverImageUrl: formData.coverImageUrl || undefined,
+          eventIds: formData.eventIds || [],
         },
         { withCredentials: true }
       );
@@ -105,6 +106,7 @@ export default function Gallery() {
           description: updatedData.description?.trim() || undefined,
           category: updatedData.category.trim(),
           coverImageUrl: updatedData.coverImageUrl || undefined,
+          eventIds: updatedData.eventIds ?? undefined,
         },
         { withCredentials: true }
       );
