@@ -37,13 +37,14 @@ ENV NODE_ENV=PRODUCTION
 ENV PORT=4000
 ENV HOST=0.0.0.0
 
-# Copy node_modules, generated Prisma client, compiled output, and prisma schema
+# Copy node_modules, generated Prisma client, compiled output, prisma schema, and config
 COPY package.json pnpm-lock.yaml ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 4000
 
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "pnpm prisma migrate deploy && node dist/index.js"]
