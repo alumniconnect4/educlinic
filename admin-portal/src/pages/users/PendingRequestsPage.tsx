@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import axios, { isAxiosError } from 'axios';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface UserRecord {
   id: number;
@@ -29,7 +30,29 @@ interface UserRecord {
 
 const DEFAULT_USER_AVATAR = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23cbd5e1'/><circle cx='50' cy='38' r='18' fill='%2364748b'/><path d='M14 88 a36 36 0 0 1 72 0 Z' fill='%2364748b'/></svg>`;
 
+const SCHOOL_OPTIONS = [
+  { label: 'Select School (Optional)', value: '' },
+  { label: 'School of Engineering', value: 'School_of_Engineering' },
+  { label: 'School of Sciences', value: 'School_of_Sciences' },
+  { label: 'School of Agriculture', value: 'School_of_Agriculture' },
+  { label: 'School of Business Studies', value: 'School_of_Business_Studies' },
+  { label: 'School of Commerce', value: 'School_of_Commerce' },
+  { label: 'School of Management', value: 'School_of_Management' },
+  {
+    label: 'School of Computer Applications',
+    value: 'School_of_Computer_Applications',
+  },
+  { label: 'School of Humanities', value: 'School_of_Humanities' },
+  { label: 'School of Education', value: 'School_of_Education' },
+  { label: 'School of Law', value: 'School_of_Law' },
+  { label: 'School of Pharmacy', value: 'School_of_Pharmacy' },
+];
+
 export default function PendingRequestsPage() {
+  const currentUser = useAuthStore((state) => state.user);
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+  const adminSchool = currentUser?.schoolCategory;
+
   const [pendingRequests, setPendingRequests] = useState<UserRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -40,6 +63,7 @@ export default function PendingRequestsPage() {
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>(
     'ALL'
   );
+  const [schoolFilter, setSchoolFilter] = useState('ALL');
   const [selectedRequest, setSelectedRequest] = useState<UserRecord | null>(
     null
   );
@@ -52,8 +76,9 @@ export default function PendingRequestsPage() {
   const fetchPendingRequests = async () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
+      const schoolQuery = isSuperAdmin && schoolFilter !== 'ALL' ? `&school=${schoolFilter}` : '';
       const res = await axios.get(
-        `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+        `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}${schoolQuery}`,
         { withCredentials: true }
       );
       setPendingRequests(res.data.data);
@@ -68,9 +93,10 @@ export default function PendingRequestsPage() {
     let ignore = false;
     const timer = setTimeout(() => {
       const apiUrl = import.meta.env.VITE_API_URL;
+      const schoolQuery = isSuperAdmin && schoolFilter !== 'ALL' ? `&school=${schoolFilter}` : '';
       axios
         .get(
-          `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+          `${apiUrl}/admin-portal/pending-requests?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}${schoolQuery}`,
           { withCredentials: true }
         )
         .then((res) => {
@@ -90,7 +116,7 @@ export default function PendingRequestsPage() {
       ignore = true;
       clearTimeout(timer);
     };
-  }, [searchQuery, currentPage, roleFilter]);
+  }, [searchQuery, currentPage, roleFilter, schoolFilter, isSuperAdmin]);
 
   const handleApprove = async (id: number, name: string) => {
     setProcessingId(id);
@@ -209,7 +235,15 @@ export default function PendingRequestsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {!isSuperAdmin && adminSchool && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-800 text-xs font-semibold rounded-sm border border-slate-300 shadow-2xs">
+              <GraduationCap className="w-3.5 h-3.5 text-slate-600" />
+              <span>
+                School Scope: <strong className="font-bold">{formatSchool(adminSchool)}</strong>
+              </span>
+            </span>
+          )}
           <span className="bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold px-3 py-1 rounded-sm">
             {total} Total Pending
           </span>
@@ -230,7 +264,29 @@ export default function PendingRequestsPage() {
             </span>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            {/* School Filter Dropdown (Super Admin only) */}
+            {isSuperAdmin && (
+              <div className="relative min-w-[200px]">
+                <select
+                  value={schoolFilter}
+                  onChange={(e) => {
+                    setSchoolFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full h-8 border border-gray-300 rounded-sm text-xs font-medium focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors bg-white px-2.5 text-gray-700"
+                >
+                  <option value="ALL">All Schools (All Categories)</option>
+                  {SCHOOL_OPTIONS.filter((o) => o.value).map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                  <option value="UNASSIGNED">Unassigned / General</option>
+                </select>
+              </div>
+            )}
+
             {/* Role Filter Tabs */}
             <div className="inline-flex rounded-sm bg-slate-100 p-0.5 border border-slate-200 text-xs font-semibold">
               <button

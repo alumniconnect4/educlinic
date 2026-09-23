@@ -49,6 +49,8 @@ export const getRoleSchoolStats = async (req: Request, res: Response) => {
       School_of_Sciences: 0,
       School_of_Agriculture: 0,
       School_of_Business_Studies: 0,
+      School_of_Commerce: 0,
+      School_of_Management: 0,
       School_of_Computer_Applications: 0,
       School_of_Humanities: 0,
       School_of_Education: 0,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   UserPlus,
@@ -43,6 +44,8 @@ const SCHOOL_OPTIONS = [
   { label: 'School of Sciences', value: 'School_of_Sciences' },
   { label: 'School of Agriculture', value: 'School_of_Agriculture' },
   { label: 'School of Business Studies', value: 'School_of_Business_Studies' },
+  { label: 'School of Commerce', value: 'School_of_Commerce' },
+  { label: 'School of Management', value: 'School_of_Management' },
   {
     label: 'School of Computer Applications',
     value: 'School_of_Computer_Applications',
@@ -54,8 +57,16 @@ const SCHOOL_OPTIONS = [
 ];
 
 export default function ManageAdmins() {
+  const navigate = useNavigate();
   const currentUser = useAuthStore((state) => state.user);
   const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+
+  useEffect(() => {
+    if (!isSuperAdmin) {
+      navigate('/users/alumni-students', { replace: true });
+    }
+  }, [isSuperAdmin, navigate]);
+
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -66,6 +77,7 @@ export default function ManageAdmins() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isTableLoading, setIsTableLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [schoolFilter, setSchoolFilter] = useState('ALL');
 
   // View Admin Modal & Zoom State
   const [viewingAdmin, setViewingAdmin] = useState<AdminUser | null>(null);
@@ -99,11 +111,12 @@ export default function ManageAdmins() {
   });
 
   const fetchAdmins = async () => {
+    if (!isSuperAdmin) return;
     setIsTableLoading(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
       const response = await axios.get(
-        `${apiUrl}/admin-portal/admins?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}`,
+        `${apiUrl}/admin-portal/admins?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&school=${schoolFilter}`,
         { withCredentials: true }
       );
       setAdmins(response.data.data);
@@ -117,11 +130,12 @@ export default function ManageAdmins() {
   };
 
   useEffect(() => {
+    if (!isSuperAdmin) return;
     const timer = setTimeout(() => {
       fetchAdmins();
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, currentPage]);
+  }, [searchQuery, currentPage, schoolFilter, isSuperAdmin]);
 
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -434,17 +448,40 @@ export default function ManageAdmins() {
             </span>
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              className="w-full pl-9 pr-4 h-9 border border-gray-300 rounded-sm text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors bg-white"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+            {/* School Filter Dropdown */}
+            <div className="relative min-w-[200px]">
+              <select
+                value={schoolFilter}
+                onChange={(e) => {
+                  setSchoolFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full h-9 border border-gray-300 rounded-sm text-xs font-medium focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors bg-white px-2.5 text-gray-700"
+              >
+                <option value="ALL">All Schools (All Categories)</option>
+                {SCHOOL_OPTIONS.filter((o) => o.value).map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+                <option value="UNASSIGNED">Unassigned / Global</option>
+              </select>
+            </div>
+
+            {/* Search */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                className="w-full pl-9 pr-4 h-9 border border-gray-300 rounded-sm text-sm focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors bg-white"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
           </div>
         </div>
 
