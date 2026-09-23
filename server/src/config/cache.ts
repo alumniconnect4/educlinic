@@ -255,9 +255,10 @@ export const generateAdminUserListCacheKey = (
   page: number,
   limit: number,
   role?: string,
-  search?: string
+  search?: string,
+  school?: string
 ) =>
-  `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}`;
+  `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}:${school || 'all'}`;
 
 export const invalidateUsersCache = async (): Promise<void> => {
   await deleteCachePattern('user:*');

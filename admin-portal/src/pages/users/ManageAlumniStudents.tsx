@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import axios, { isAxiosError } from 'axios';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface UserRecord {
   id: number;
@@ -48,6 +49,8 @@ const SCHOOL_OPTIONS = [
   { label: 'School of Sciences', value: 'School_of_Sciences' },
   { label: 'School of Agriculture', value: 'School_of_Agriculture' },
   { label: 'School of Business Studies', value: 'School_of_Business_Studies' },
+  { label: 'School of Commerce', value: 'School_of_Commerce' },
+  { label: 'School of Management', value: 'School_of_Management' },
   {
     label: 'School of Computer Applications',
     value: 'School_of_Computer_Applications',
@@ -59,6 +62,10 @@ const SCHOOL_OPTIONS = [
 ];
 
 export default function ManageAlumniStudents() {
+  const currentUser = useAuthStore((state) => state.user);
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+  const adminSchool = currentUser?.schoolCategory;
+
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -72,6 +79,7 @@ export default function ManageAlumniStudents() {
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'USER' | 'ALUMNI'>(
     'ALL'
   );
+  const [schoolFilter, setSchoolFilter] = useState('ALL');
 
   // Pending Requests Count State
   const [pendingCount, setPendingCount] = useState(0);
@@ -100,9 +108,16 @@ export default function ManageAlumniStudents() {
     email: '',
     password: '',
     role: 'USER' as 'USER' | 'ALUMNI',
-    schoolCategory: '',
+    schoolCategory: !isSuperAdmin && adminSchool ? adminSchool : '',
     avatarUrl: '',
   });
+
+  // Keep formData school in sync if auth state loads
+  useEffect(() => {
+    if (!isSuperAdmin && adminSchool) {
+      setFormData((prev) => ({ ...prev, schoolCategory: adminSchool }));
+    }
+  }, [isSuperAdmin, adminSchool]);
 
   // Edit Modal State
   const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
@@ -127,8 +142,9 @@ export default function ManageAlumniStudents() {
     setIsFetching(true);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
+      const schoolQuery = isSuperAdmin && schoolFilter !== 'ALL' ? `&school=${schoolFilter}` : '';
       const response = await axios.get(
-        `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+        `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}${schoolQuery}`,
         { withCredentials: true }
       );
       setUsers(response.data.data);
@@ -164,9 +180,10 @@ export default function ManageAlumniStudents() {
     setIsFetching(true);
     const timer = setTimeout(() => {
       const apiUrl = import.meta.env.VITE_API_URL;
+      const schoolQuery = isSuperAdmin && schoolFilter !== 'ALL' ? `&school=${schoolFilter}` : '';
       axios
         .get(
-          `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}`,
+          `${apiUrl}/admin-portal/alumni-students?page=${currentPage}&limit=${itemsPerPage}&search=${searchQuery}&role=${roleFilter}${schoolQuery}`,
           { withCredentials: true }
         )
         .then((res) => {
@@ -186,7 +203,7 @@ export default function ManageAlumniStudents() {
       ignore = true;
       clearTimeout(timer);
     };
-  }, [searchQuery, currentPage, roleFilter]);
+  }, [searchQuery, currentPage, roleFilter, schoolFilter, isSuperAdmin]);
 
   const handleImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -250,7 +267,7 @@ export default function ManageAlumniStudents() {
         email: '',
         password: '',
         role: 'USER',
-        schoolCategory: '',
+        schoolCategory: !isSuperAdmin && adminSchool ? adminSchool : '',
         avatarUrl: '',
       });
       fetchUsers();
@@ -369,18 +386,28 @@ export default function ManageAlumniStudents() {
           </p>
         </div>
 
-        <Link
-          to="/users/pending-requests"
-          className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm self-start sm:self-auto"
-        >
-          <Clock className="w-4 h-4 text-slate-200" />
-          <span>Pending Requests</span>
-          {pendingCount > 0 && (
-            <span className="ml-1 bg-slate-900 text-white font-bold text-[11px] px-2 py-0.5 rounded-full shadow-2xs">
-              {pendingCount}
+        <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+          {!isSuperAdmin && adminSchool && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-800 text-xs font-semibold rounded-sm border border-slate-300 shadow-2xs">
+              <GraduationCap className="w-4 h-4 text-slate-600" />
+              <span>
+                School Scope: <strong className="font-bold">{formatSchool(adminSchool)}</strong>
+              </span>
             </span>
           )}
-        </Link>
+          <Link
+            to="/users/pending-requests"
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-sm text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
+          >
+            <Clock className="w-4 h-4 text-slate-200" />
+            <span>Pending Requests</span>
+            {pendingCount > 0 && (
+              <span className="ml-1 bg-slate-900 text-white font-bold text-[11px] px-2 py-0.5 rounded-full shadow-2xs">
+                {pendingCount}
+              </span>
+            )}
+          </Link>
+        </div>
       </div>
 
       {/* Main Grid: Create Form + Directory Table */}
@@ -451,11 +478,19 @@ export default function ManageAlumniStudents() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  School Category
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    School Category
+                  </label>
+                  {!isSuperAdmin && (
+                    <span className="text-[11px] text-slate-500 font-medium italic">
+                      Locked to your school
+                    </span>
+                  )}
+                </div>
                 <select
-                  className="w-full h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
+                  disabled={!isSuperAdmin}
+                  className="w-full h-10 rounded-sm border border-gray-300 bg-white disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors"
                   value={formData.schoolCategory}
                   onChange={(e) =>
                     setFormData({ ...formData, schoolCategory: e.target.value })
@@ -549,7 +584,29 @@ export default function ManageAlumniStudents() {
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              {/* School Filter Dropdown (Super Admin only) */}
+              {isSuperAdmin && (
+                <div className="relative min-w-[200px]">
+                  <select
+                    value={schoolFilter}
+                    onChange={(e) => {
+                      setSchoolFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full h-8 border border-gray-300 rounded-sm text-xs font-medium focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-colors bg-white px-2.5 text-gray-700"
+                  >
+                    <option value="ALL">All Schools (All Categories)</option>
+                    {SCHOOL_OPTIONS.filter((o) => o.value).map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                    <option value="UNASSIGNED">Unassigned / General</option>
+                  </select>
+                </div>
+              )}
+
               {/* Role Tabs */}
               <div className="inline-flex rounded-sm bg-slate-100 p-0.5 border border-slate-200 text-xs font-semibold">
                 <button
@@ -1245,11 +1302,19 @@ export default function ManageAlumniStudents() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                      School / Department
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        School / Department
+                      </label>
+                      {!isSuperAdmin && (
+                        <span className="text-[11px] text-slate-500 font-medium italic">
+                          Locked to your school
+                        </span>
+                      )}
+                    </div>
                     <select
-                      className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
+                      disabled={!isSuperAdmin}
+                      className="w-full h-10 rounded-md border border-gray-300 bg-white disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed px-3 text-sm text-gray-700 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none"
                       value={editFormData.schoolCategory}
                       onChange={(e) =>
                         setEditFormData({

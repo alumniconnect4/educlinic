@@ -37,6 +37,8 @@ const SCHOOL_CATEGORIES = [
   { value: 'School_of_Sciences', label: 'School of Sciences' },
   { value: 'School_of_Agriculture', label: 'School of Agriculture' },
   { value: 'School_of_Business_Studies', label: 'School of Business Studies' },
+  { value: 'School_of_Commerce', label: 'School of Commerce' },
+  { value: 'School_of_Management', label: 'School of Management' },
   {
     value: 'School_of_Computer_Applications',
     label: 'School of Computer Applications',

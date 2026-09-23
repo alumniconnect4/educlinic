@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Pencil, Upload, Loader2, Link2 } from 'lucide-react';
 import { ALBUM_CATEGORIES, type AlbumItem } from './CreateAlbumForm';
+import { EventSelect } from './EventSelect';
 
 interface EditAlbumModalProps {
   album: AlbumItem | null;
@@ -12,6 +13,7 @@ interface EditAlbumModalProps {
       description: string;
       category: string;
       coverImageUrl: string;
+      eventIds: number[];
     }
   ) => Promise<void>;
   isUpdating: boolean;
@@ -28,18 +30,23 @@ export const EditAlbumModal: React.FC<EditAlbumModalProps> = ({
     description: '',
     category: '',
     coverImageUrl: '',
+    eventIds: [] as number[],
   });
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [imageMode, setImageMode] = useState<'FILE' | 'URL'>('FILE');
   const [coverPreview, setCoverPreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (album) {
+      const initialEventId = album.events && album.events.length > 0 ? album.events[0].id : null;
+      setSelectedEventId(initialEventId);
       setFormData({
         name: album.name || '',
         description: album.description || '',
         category: album.category || '',
         coverImageUrl: album.coverImageUrl || '',
+        eventIds: initialEventId ? [initialEventId] : [],
       });
       setCoverPreview(album.coverImageUrl || '');
     }
@@ -71,6 +78,14 @@ export const EditAlbumModal: React.FC<EditAlbumModalProps> = ({
     }
   };
 
+  const handleEventChange = (eventId: number | null) => {
+    setSelectedEventId(eventId);
+    setFormData((prev) => ({
+      ...prev,
+      eventIds: eventId ? [eventId] : [],
+    }));
+  };
+
   const clearImage = () => {
     setCoverPreview('');
     setFormData((prev) => ({ ...prev, coverImageUrl: '' }));
@@ -79,7 +94,10 @@ export const EditAlbumModal: React.FC<EditAlbumModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(album.id, formData);
+    await onSubmit(album.id, {
+      ...formData,
+      eventIds: selectedEventId ? [selectedEventId] : [],
+    });
   };
 
   const inputClass =
@@ -98,7 +116,7 @@ export const EditAlbumModal: React.FC<EditAlbumModalProps> = ({
               Edit Album
             </h2>
             <p className="text-xs text-gray-400 mt-0.5 font-normal">
-              Update album details and cover image
+              Update album details, description, linked event, and cover image
             </p>
           </div>
           <button
@@ -148,6 +166,26 @@ export const EditAlbumModal: React.FC<EditAlbumModalProps> = ({
               ))}
             </select>
           </div>
+
+          {/* Description */}
+          <div>
+            <label className={labelClass}>Description (Optional)</label>
+            <textarea
+              name="description"
+              rows={3}
+              value={formData.description || ''}
+              onChange={handleChange}
+              placeholder="Add or update description for this album..."
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-sm bg-white placeholder-gray-300 text-slate-800 focus:outline-none focus:border-slate-800 transition-colors resize-y leading-relaxed"
+            />
+          </div>
+
+          {/* Single Event Selector */}
+          <EventSelect
+            selectedEventId={selectedEventId}
+            onChange={handleEventChange}
+            label="Link with Event (Optional)"
+          />
 
           <div>
             <label className={labelClass}>Cover Image</label>

@@ -295,6 +295,12 @@ const AuthForm = () => {
                       <option value="School_of_Business_Studies">
                         School of Business Studies
                       </option>
+                      <option value="School_of_Commerce">
+                        School of Commerce
+                      </option>
+                      <option value="School_of_Management">
+                        School of Management
+                      </option>
                       <option value="School_of_Computer_Applications">
                         School of Computer Applications
                       </option>

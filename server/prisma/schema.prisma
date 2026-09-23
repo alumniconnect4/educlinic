@@ -24,6 +24,8 @@ enum SchoolCategory {
   School_of_Sciences
   School_of_Agriculture
   School_of_Business_Studies
+  School_of_Commerce
+  School_of_Management
   School_of_Computer_Applications
   School_of_Humanities
   School_of_Education
@@ -108,6 +110,7 @@ model Event {
   createdById           Int
   createdBy             User            @relation(fields: [createdById], references: [id], onDelete: Restrict)
   registrations         Registration[]
+  albums                Album[]
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
 }
@@ -257,6 +260,7 @@ model Album {
   category      String
   coverImageUrl String?
   images        GalleryImage[]
+  events        Event[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }

@@ -27,7 +27,7 @@ const isBase64DataUri = (value: string) =>
 // ─── Create Album ────────────────────────────────────────────────────────────
 export const createAlbum = async (req: Request, res: Response) => {
   try {
-    const { name, description, category, coverImageUrl } = req.body;
+    const { name, description, category, coverImageUrl, eventIds } = req.body;
 
     if (!name?.trim() || !category?.trim()) {
       return res
@@ -49,15 +49,35 @@ export const createAlbum = async (req: Request, res: Response) => {
       }
     }
 
+    const parsedEventIds = Array.isArray(eventIds)
+      ? eventIds.map((id: any) => Number(id)).filter((id: number) => !isNaN(id))
+      : [];
+
     const album = await prisma.album.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null,
         category: category.trim(),
         coverImageUrl: finalCoverUrl,
+        ...(parsedEventIds.length > 0
+          ? {
+              events: {
+                connect: parsedEventIds.map((id: number) => ({ id })),
+              },
+            }
+          : {}),
       },
       include: {
         _count: { select: { images: true } },
+        events: {
+          select: {
+            id: true,
+            name: true,
+            startDate: true,
+            place: true,
+            imageUrl: true,
+          },
+        },
       },
     });
 
@@ -112,6 +132,15 @@ export const getAllAlbums = async (req: Request, res: Response) => {
         orderBy: { createdAt: 'desc' },
         include: {
           _count: { select: { images: true } },
+          events: {
+            select: {
+              id: true,
+              name: true,
+              startDate: true,
+              place: true,
+              imageUrl: true,
+            },
+          },
         },
       }),
       prisma.album.count({ where }),
@@ -146,6 +175,15 @@ export const getAlbumById = async (req: Request, res: Response) => {
       where: { id },
       include: {
         images: { orderBy: { createdAt: 'asc' } },
+        events: {
+          select: {
+            id: true,
+            name: true,
+            startDate: true,
+            place: true,
+            imageUrl: true,
+          },
+        },
         _count: { select: { images: true } },
       },
     });
@@ -393,7 +431,7 @@ export const updateAlbum = async (req: Request, res: Response) => {
     const id = parseInt(idParam || '');
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid album ID' });
 
-    const { name, description, category, coverImageUrl } = req.body;
+    const { name, description, category, coverImageUrl, eventIds } = req.body;
 
     const existing = await prisma.album.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ message: 'Album not found' });
@@ -415,6 +453,18 @@ export const updateAlbum = async (req: Request, res: Response) => {
       }
     }
 
+    let eventsUpdate: any = {};
+    if (Array.isArray(eventIds)) {
+      const parsedEventIds = eventIds
+        .map((id: any) => Number(id))
+        .filter((id: number) => !isNaN(id));
+      eventsUpdate = {
+        events: {
+          set: parsedEventIds.map((id: number) => ({ id })),
+        },
+      };
+    }
+
     const updated = await prisma.album.update({
       where: { id },
       data: {
@@ -425,8 +475,20 @@ export const updateAlbum = async (req: Request, res: Response) => {
             : existing.description,
         category: category?.trim() || existing.category,
         coverImageUrl: finalCoverUrl,
+        ...eventsUpdate,
       },
-      include: { _count: { select: { images: true } } },
+      include: {
+        _count: { select: { images: true } },
+        events: {
+          select: {
+            id: true,
+            name: true,
+            startDate: true,
+            place: true,
+            imageUrl: true,
+          },
+        },
+      },
     });
 
     await invalidateGalleryCache();

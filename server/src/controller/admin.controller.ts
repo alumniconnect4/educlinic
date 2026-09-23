@@ -58,6 +58,7 @@ export const loginAdmin = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        schoolCategory: user.schoolCategory,
         avatarUrl: user.avatarUrl,
       },
     });
@@ -93,6 +94,10 @@ export const getAdmins = async (req: Request, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 8;
     const search = (req.query.search as string) || '';
+    const schoolFilter =
+      (req.query.school as string) ||
+      (req.query.schoolCategory as string) ||
+      'ALL';
     const skip = (page - 1) * limit;
 
     const cacheKey = generateAdminUserListCacheKey(
@@ -100,7 +105,8 @@ export const getAdmins = async (req: Request, res: Response) => {
       page,
       limit,
       undefined,
-      search
+      search,
+      schoolFilter
     );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
@@ -112,6 +118,11 @@ export const getAdmins = async (req: Request, res: Response) => {
       role: {
         in: ['ADMIN', 'SUPER_ADMIN'],
       },
+      ...(schoolFilter && schoolFilter !== 'ALL'
+        ? schoolFilter === 'UNASSIGNED'
+          ? { schoolCategory: null }
+          : { schoolCategory: schoolFilter }
+        : {}),
       ...(search
         ? {
             OR: [
@@ -384,10 +395,22 @@ export const deleteAdmin = async (req: Request, res: Response) => {
 
 export const getAlumniStudents = async (req: Request, res: Response) => {
   try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 8;
     const search = (req.query.search as string) || '';
     const roleFilter = (req.query.role as string) || 'ALL';
+    const schoolParam =
+      (req.query.school as string) ||
+      (req.query.schoolCategory as string) ||
+      'ALL';
+    const targetSchool = isSuperAdmin
+      ? schoolParam !== 'ALL'
+        ? schoolParam
+        : undefined
+      : adminSchool || undefined;
 
     const skip = (page - 1) * limit;
 
@@ -396,7 +419,8 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
       page,
       limit,
       roleFilter,
-      search
+      search,
+      isSuperAdmin ? schoolParam || 'ALL' : adminSchool || 'UNASSIGNED'
     );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
@@ -413,6 +437,13 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
     const whereClause: any = {
       role: { in: roleCondition },
       isVerified: true,
+      ...(isSuperAdmin
+        ? targetSchool
+          ? targetSchool === 'UNASSIGNED'
+            ? { schoolCategory: null }
+            : { schoolCategory: targetSchool }
+          : {}
+        : { schoolCategory: (adminSchool as any) || null }),
       ...(search
         ? {
             OR: [
@@ -470,6 +501,8 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
 
 export const createAlumniStudent = async (req: Request, res: Response) => {
   try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
     const { name, email, password, role, schoolCategory, avatarUrl } = req.body;
 
     if (!name || !email || !password || !role) {
@@ -484,12 +517,29 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         .json({ message: 'Role must be Student (USER) or Alumni (ALUMNI)' });
     }
 
+    if (!isSuperAdmin) {
+      if (!adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You do not have an assigned school to manage students',
+        });
+      }
+      if (schoolCategory && schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only create students/alumni for your assigned school',
+        });
+      }
+    }
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res
         .status(400)
         .json({ message: 'User with this email already exists' });
     }
+
+    const finalSchool = isSuperAdmin
+      ? (schoolCategory || null)
+      : adminSchool;
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const isAvatarBase64 = isBase64Image(avatarUrl);
@@ -505,7 +555,7 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         role,
         isVerified: true, // Admin created accounts are pre-approved
         avatarUrl: finalAvatarUrl,
-        ...(schoolCategory ? { schoolCategory } : {}),
+        ...(finalSchool ? { schoolCategory: finalSchool } : {}),
       },
       select: {
         id: true,
@@ -541,9 +591,33 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
 
 export const updateAlumniStudent = async (req: Request, res: Response) => {
   try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
     const id = parseInt(req.params.id as string);
     if (isNaN(id)) {
       return res.status(400).json({ message: 'Invalid User ID' });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, schoolCategory: true, email: true },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (existingUser.role !== 'USER' && existingUser.role !== 'ALUMNI') {
+      return res.status(403).json({ message: 'Forbidden: Cannot modify admin accounts' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || existingUser.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only update students/alumni from your assigned school',
+        });
+      }
     }
 
     const {
@@ -563,12 +637,18 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
       developerTitle,
     } = req.body;
 
+    if (!isSuperAdmin && schoolCategory !== undefined && schoolCategory !== adminSchool) {
+      return res.status(403).json({
+        message: 'Forbidden: You cannot change a student’s school to another school',
+      });
+    }
+
     const updateData: any = {};
     if (name !== undefined) updateData.name = name;
     if (email !== undefined) updateData.email = email;
     if (role && (role === 'USER' || role === 'ALUMNI')) updateData.role = role;
     if (schoolCategory !== undefined)
-      updateData.schoolCategory = schoolCategory || null;
+      updateData.schoolCategory = isSuperAdmin ? (schoolCategory || null) : adminSchool;
 
     if (avatarUrl !== undefined) {
       if (isBase64Image(avatarUrl)) {
@@ -644,22 +724,41 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
 
 export const deleteAlumniStudent = async (req: Request, res: Response) => {
   try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
     const id = parseInt(req.params.id as string);
     if (isNaN(id)) {
       return res.status(400).json({ message: 'Invalid User ID' });
     }
 
-    const user = await prisma.user.findUnique({
+    const targetUser = await prisma.user.findUnique({
       where: { id },
-      select: { email: true },
+      select: { id: true, role: true, schoolCategory: true, email: true },
     });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (targetUser.role !== 'USER' && targetUser.role !== 'ALUMNI') {
+      return res.status(403).json({ message: 'Forbidden: Cannot delete admin accounts' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || targetUser.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only delete students/alumni from your assigned school',
+        });
+      }
+    }
 
     await prisma.user.delete({
       where: { id },
     });
 
-    if (user?.email) {
-      await deleteUserCache(user.email);
+    if (targetUser.email) {
+      await deleteUserCache(targetUser.email);
     }
     await invalidateUsersCache();
 
@@ -674,10 +773,16 @@ export const deleteAlumniStudent = async (req: Request, res: Response) => {
 
 export const getPendingRequests = async (req: Request, res: Response) => {
   try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 8;
     const search = (req.query.search as string) || '';
     const roleFilter = (req.query.role as string) || 'ALL';
+    const targetSchool = isSuperAdmin
+      ? ((req.query.school as string) || (req.query.schoolCategory as string) || undefined)
+      : (adminSchool || undefined);
 
     const skip = (page - 1) * limit;
 
@@ -686,7 +791,8 @@ export const getPendingRequests = async (req: Request, res: Response) => {
       page,
       limit,
       roleFilter,
-      search
+      search,
+      targetSchool || (isSuperAdmin ? 'ALL' : 'UNASSIGNED')
     );
     const cachedData = await getCache<any>(cacheKey);
     if (cachedData) {
@@ -703,6 +809,9 @@ export const getPendingRequests = async (req: Request, res: Response) => {
     const whereClause: any = {
       isVerified: false,
       role: { in: roleCondition },
+      ...(isSuperAdmin
+        ? (targetSchool ? { schoolCategory: targetSchool } : {})
+        : { schoolCategory: (adminSchool as any) || null }),
       ...(search
         ? {
             OR: [
@@ -753,9 +862,29 @@ export const getPendingRequests = async (req: Request, res: Response) => {
 
 export const approvePendingRequest = async (req: Request, res: Response) => {
   try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
     const id = parseInt(req.params.id as string);
     if (isNaN(id)) {
       return res.status(400).json({ message: 'Invalid Request ID' });
+    }
+
+    const applicant = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, schoolCategory: true, isVerified: true, email: true },
+    });
+
+    if (!applicant) {
+      return res.status(404).json({ message: 'Registration request not found' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || applicant.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only approve registration requests from your assigned school',
+        });
+      }
     }
 
     const approvedUser = await prisma.user.update({
@@ -785,22 +914,37 @@ export const approvePendingRequest = async (req: Request, res: Response) => {
 
 export const declinePendingRequest = async (req: Request, res: Response) => {
   try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
     const id = parseInt(req.params.id as string);
     if (isNaN(id)) {
       return res.status(400).json({ message: 'Invalid Request ID' });
     }
 
-    const user = await prisma.user.findUnique({
+    const applicant = await prisma.user.findUnique({
       where: { id },
-      select: { email: true },
+      select: { id: true, role: true, schoolCategory: true, email: true },
     });
+
+    if (!applicant) {
+      return res.status(404).json({ message: 'Registration request not found' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || applicant.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only decline registration requests from your assigned school',
+        });
+      }
+    }
 
     await prisma.user.delete({
       where: { id },
     });
 
-    if (user?.email) {
-      await deleteUserCache(user.email);
+    if (applicant.email) {
+      await deleteUserCache(applicant.email);
     }
     await invalidateUsersCache();
 

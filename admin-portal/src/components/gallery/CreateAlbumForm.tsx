@@ -1,11 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { FolderPlus, Upload, X, Loader2, Link2 } from 'lucide-react';
+import { EventSelect } from './EventSelect';
 
 export interface CreateAlbumFormData {
   name: string;
   category: string;
   coverImageUrl: string;
   description?: string;
+  eventIds?: number[];
+}
+
+export interface LinkedEvent {
+  id: number;
+  name: string;
+  startDate?: string;
+  place?: string;
+  imageUrl?: string | null;
 }
 
 export interface AlbumItem {
@@ -17,6 +27,7 @@ export interface AlbumItem {
   imageCount?: number;
   createdAt?: string;
   updatedAt?: string;
+  events?: LinkedEvent[];
   _count?: { images: number };
 }
 
@@ -48,7 +59,9 @@ export const CreateAlbumForm: React.FC<CreateAlbumFormProps> = ({
     description: '',
     category: '',
     coverImageUrl: '',
+    eventIds: [],
   });
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [imageMode, setImageMode] = useState<'FILE' | 'URL'>('FILE');
   const [coverPreview, setCoverPreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +90,14 @@ export const CreateAlbumForm: React.FC<CreateAlbumFormProps> = ({
     }
   };
 
+  const handleEventChange = (eventId: number | null) => {
+    setSelectedEventId(eventId);
+    setFormData((prev) => ({
+      ...prev,
+      eventIds: eventId ? [eventId] : [],
+    }));
+  };
+
   const clearImage = () => {
     setCoverPreview('');
     setFormData((prev) => ({ ...prev, coverImageUrl: '' }));
@@ -85,8 +106,18 @@ export const CreateAlbumForm: React.FC<CreateAlbumFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
-    setFormData({ name: '', description: '', category: '', coverImageUrl: '' });
+    await onSubmit({
+      ...formData,
+      eventIds: selectedEventId ? [selectedEventId] : [],
+    });
+    setFormData({
+      name: '',
+      description: '',
+      category: '',
+      coverImageUrl: '',
+      eventIds: [],
+    });
+    setSelectedEventId(null);
     setCoverPreview('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -110,7 +141,7 @@ export const CreateAlbumForm: React.FC<CreateAlbumFormProps> = ({
       {/* ── Form Body ── */}
       <form
         onSubmit={handleSubmit}
-        className="flex-1 overflow-y-auto px-5 py-5 space-y-5"
+        className="flex-1 overflow-y-auto px-5 py-5 space-y-4"
       >
         {/* Album Name */}
         <div>
@@ -148,6 +179,26 @@ export const CreateAlbumForm: React.FC<CreateAlbumFormProps> = ({
             ))}
           </select>
         </div>
+
+        {/* Description (Optional) */}
+        <div>
+          <label className={labelClass}>Description (Optional)</label>
+          <textarea
+            name="description"
+            rows={3}
+            value={formData.description || ''}
+            onChange={handleChange}
+            placeholder="Add brief description, context, or notes for this album..."
+            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-sm bg-white placeholder-gray-300 text-slate-800 focus:outline-none focus:border-slate-800 transition-colors resize-y leading-relaxed"
+          />
+        </div>
+
+        {/* Single Event Selector */}
+        <EventSelect
+          selectedEventId={selectedEventId}
+          onChange={handleEventChange}
+          label="Link with Event (Optional)"
+        />
 
         {/* Cover Image */}
         <div>
