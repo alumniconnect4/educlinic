@@ -9,8 +9,13 @@ import {
 } from '../config/cache.js';
 import { parsePgInt } from '../utils/validation.js';
 import cloudinary from '../config/cloudinary.js';
+import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
+import { enqueueUserImageUpload } from '../services/queue.service.js';
 
-const formatCloudinaryAvatar = (url?: string | null, size = 160): string | null => {
+const formatCloudinaryAvatar = (
+  url?: string | null,
+  size = 160
+): string | null => {
   if (!url) return null;
   if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
     const uploadIndex = url.indexOf('/upload/');
@@ -36,17 +41,41 @@ export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
     const search = ((req.query.search as string) || '').trim();
+    const roleQuery = ((req.query.role as string) || '').trim();
+    const excludeDevs =
+      req.query.excludeDevs === 'true' || req.query.excludeDevs === '1';
+    const refresh = req.query.refresh === 'true' || req.query.refresh === '1';
     const limit = Math.min(parsePgInt(req.query.limit, 16) || 16, 50);
     const skip = parsePgInt(req.query.skip, 0) || 0;
 
-    const cacheKey = generateUserListCacheKey(userId, limit, skip, search);
-    const cachedData = await getCache<any>(cacheKey);
-    if (cachedData) {
-      return res.json(cachedData);
+    const cacheKey = generateUserListCacheKey(
+      userId,
+      limit,
+      skip,
+      search,
+      excludeDevs,
+      roleQuery
+    );
+    if (!refresh) {
+      const cachedData = await getCache<any>(cacheKey);
+      if (cachedData) {
+        return res.json(cachedData);
+      }
     }
 
     const whereClause: any = {};
     let followingIdsSet = new Set<number>();
+
+    if (excludeDevs && !search) {
+      whereClause.isDeveloper = false;
+    }
+
+    if (
+      roleQuery &&
+      ['USER', 'ALUMNI', 'ADMIN', 'SUPER_ADMIN'].includes(roleQuery)
+    ) {
+      whereClause.role = roleQuery;
+    }
 
     if (userId) {
       const [following, blockers] = await Promise.all([
@@ -72,7 +101,11 @@ export const getAllUsers = async (req: Request, res: Response) => {
     }
 
     if (search) {
-      whereClause.name = { contains: search, mode: 'insensitive' };
+      whereClause.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { developerTitle: { contains: search, mode: 'insensitive' } },
+        { bio: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
     const users = await prisma.user.findMany({
@@ -86,8 +119,11 @@ export const getAllUsers = async (req: Request, res: Response) => {
         schoolCategory: true,
         avatarUrl: true,
         bio: true,
+        isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
       },
-      orderBy: { id: 'desc' },
+      orderBy: [{ role: 'asc' }, { id: 'desc' }],
     });
 
     let total = 0;
@@ -101,6 +137,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
       ...u,
       avatarUrl: formatCloudinaryAvatar(u.avatarUrl, 160),
       isFollowed: followingIdsSet.has(u.id),
+      isVerified: Boolean(
+        u.isDeveloper || u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'
+      ),
     }));
 
     const responsePayload = { users: formattedUsers, total };
@@ -109,9 +148,58 @@ export const getAllUsers = async (req: Request, res: Response) => {
     res.json(responsePayload);
   } catch (err: any) {
     if (err?.code === 'P2020') {
-      return res.status(400).json({ message: 'Value out of range for integer type' });
+      return res
+        .status(400)
+        .json({ message: 'Value out of range for integer type' });
     }
     console.error('Error fetching users:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getDevelopers = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    let followingIdsSet = new Set<number>();
+    if (userId) {
+      const following = await prisma.follow.findMany({
+        where: { followerId: userId },
+        select: { followingId: true },
+      });
+      followingIdsSet = new Set(following.map((f) => f.followingId));
+    }
+
+    const developers = await prisma.user.findMany({
+      where: {
+        isDeveloper: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        bio: true,
+        socialLink: true,
+        isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
+      },
+      orderBy: [{ id: 'asc' }],
+    });
+
+    const formattedDevelopers = developers.map((d) => ({
+      ...d,
+      avatarUrl: formatCloudinaryAvatar(d.avatarUrl, 160),
+      isFollowed: followingIdsSet.has(d.id),
+      developerTitle: d.developerTitle || 'Developer',
+      isDeveloper: true,
+    }));
+
+    res.json({ developers: formattedDevelopers });
+  } catch (err: any) {
+    console.error('Error fetching developers:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -135,6 +223,9 @@ export const getUserById = async (req: Request, res: Response) => {
         bio: true,
         gender: true,
         socialLink: true,
+        isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
         createdAt: true,
       },
     });
@@ -159,11 +250,18 @@ export const getUserById = async (req: Request, res: Response) => {
       user: {
         ...user,
         avatarUrl: formatCloudinaryAvatar(user.avatarUrl, 400),
+        isVerified: Boolean(
+          user.isDeveloper ||
+          user.role === 'ADMIN' ||
+          user.role === 'SUPER_ADMIN'
+        ),
       },
     });
   } catch (err: any) {
     if (err?.code === 'P2020') {
-      return res.status(400).json({ message: 'Value out of range for integer type' });
+      return res
+        .status(400)
+        .json({ message: 'Value out of range for integer type' });
     }
     console.error('Error getting user by ID:', err);
     res.status(500).json({ message: 'Internal server error' });
@@ -245,16 +343,16 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     const { name, bio, gender, socialLink, avatarUrl } = req.body;
 
-    let finalAvatarUrl = avatarUrl;
-    if (avatarUrl && avatarUrl.startsWith('data:image')) {
-      try {
-        const uploadRes = await cloudinary.uploader.upload(avatarUrl, {
-          folder: 'avatars',
-        });
-        finalAvatarUrl = uploadRes.secure_url;
-      } catch (cErr) {
-        console.error('Cloudinary upload error in updateProfile:', cErr);
-      }
+    const isAvatarBase64 = isBase64Image(avatarUrl);
+    let finalAvatarUrl = isAvatarBase64 ? undefined : avatarUrl;
+
+    if (isAvatarBase64) {
+      await enqueueUserImageUpload(
+        currentUserId,
+        avatarUrl,
+        'avatarUrl',
+        'avatars'
+      );
     }
 
     const updatedUser = await prisma.user.update({
@@ -276,15 +374,24 @@ export const updateProfile = async (req: Request, res: Response) => {
         bio: true,
         gender: true,
         socialLink: true,
+        isDeveloper: true,
+        developerTitle: true,
         createdAt: true,
       },
     });
 
     await Promise.all([invalidateUsersCache(), invalidatePostsCache()]);
 
-    return res
-      .status(200)
-      .json({ message: 'Profile updated successfully', user: updatedUser });
+    return res.status(200).json({
+      message: 'Profile updated successfully',
+      user: {
+        ...updatedUser,
+        avatarUrl: formatCloudinaryAvatar(
+          updatedUser.avatarUrl || DEFAULT_AVATAR_URL,
+          400
+        ),
+      },
+    });
   } catch (err) {
     console.error('Error updating profile:', err);
     return res.status(500).json({ message: 'Internal server error' });

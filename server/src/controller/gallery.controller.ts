@@ -27,7 +27,7 @@ const isBase64DataUri = (value: string) =>
 // ─── Create Album ────────────────────────────────────────────────────────────
 export const createAlbum = async (req: Request, res: Response) => {
   try {
-    const { name, description, category, coverImageUrl } = req.body;
+    const { name, description, category, coverImageUrl, eventIds } = req.body;
 
     if (!name?.trim() || !category?.trim()) {
       return res
@@ -49,15 +49,35 @@ export const createAlbum = async (req: Request, res: Response) => {
       }
     }
 
+    const parsedEventIds = Array.isArray(eventIds)
+      ? eventIds.map((id: any) => Number(id)).filter((id: number) => !isNaN(id))
+      : [];
+
     const album = await prisma.album.create({
       data: {
         name: name.trim(),
         description: description?.trim() || null,
         category: category.trim(),
         coverImageUrl: finalCoverUrl,
+        ...(parsedEventIds.length > 0
+          ? {
+              events: {
+                connect: parsedEventIds.map((id: number) => ({ id })),
+              },
+            }
+          : {}),
       },
       include: {
         _count: { select: { images: true } },
+        events: {
+          select: {
+            id: true,
+            name: true,
+            startDate: true,
+            place: true,
+            imageUrl: true,
+          },
+        },
       },
     });
 
@@ -82,48 +102,99 @@ export const getAllAlbums = async (req: Request, res: Response) => {
       ? req.params.offset[0]
       : req.params.offset;
 
-    const limit = parseInt(limitParam || '6') || 6;
-    const offset = parseInt(offsetParam || '0') || 0;
+    const limit = Math.max(1, parseInt(limitParam || '6') || 6);
+    const offset = Math.max(0, parseInt(offsetParam || '0') || 0);
     const search = (req.query.search as string)?.trim() || '';
 
     const cacheKey = generateGalleryListCacheKey(limit, offset, search);
-    const cachedData = await getCache<{ albums: any[]; total: number }>(
-      cacheKey
-    );
-    if (cachedData) {
-      return res.status(200).json(cachedData);
+    try {
+      const cachedData = await getCache<{ albums: any[]; total: number }>(
+        cacheKey
+      );
+      if (cachedData) {
+        return res.status(200).json(cachedData);
+      }
+    } catch {
+      // Ignore cache failure
     }
 
-    const where = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { category: { contains: search, mode: 'insensitive' as const } },
-            { description: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : {};
+    let albums: any[] = [];
+    let total = 0;
 
-    const [albums, total] = await Promise.all([
-      prisma.album.findMany({
-        where,
-        skip: offset,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          _count: { select: { images: true } },
-        },
-      }),
-      prisma.album.count({ where }),
-    ]);
+    try {
+      const where = search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { category: { contains: search, mode: 'insensitive' as const } },
+              { description: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {};
+
+      [albums, total] = await Promise.all([
+        prisma.album.findMany({
+          where,
+          skip: offset,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            _count: { select: { images: true } },
+            events: {
+              select: {
+                id: true,
+                name: true,
+                startDate: true,
+                place: true,
+                imageUrl: true,
+              },
+            },
+          },
+        }),
+        prisma.album.count({ where }),
+      ]);
+    } catch (relationErr) {
+      console.warn('getAllAlbums full query failed, attempting fallback query:', relationErr);
+      const simpleWhere = search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { category: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {};
+
+      const [fallbackAlbums, fallbackTotal] = await Promise.all([
+        prisma.album.findMany({
+          where: simpleWhere,
+          skip: offset,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            _count: { select: { images: true } },
+          },
+        }),
+        prisma.album.count({ where: simpleWhere }),
+      ]);
+
+      albums = fallbackAlbums.map((alb) => ({
+        ...alb,
+        events: (alb as any).events || [],
+      }));
+      total = fallbackTotal;
+    }
 
     const responsePayload = { albums, total };
-    await setCache(cacheKey, responsePayload);
+    try {
+      await setCache(cacheKey, responsePayload);
+    } catch {
+      // Ignore cache failure
+    }
 
     return res.status(200).json(responsePayload);
   } catch (error) {
     console.error('getAllAlbums error:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(200).json({ albums: [], total: 0 });
   }
 };
 
@@ -137,23 +208,59 @@ export const getAlbumById = async (req: Request, res: Response) => {
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid album ID' });
 
     const cacheKey = generateGalleryDetailCacheKey(id);
-    const cachedData = await getCache<{ album: any }>(cacheKey);
-    if (cachedData) {
-      return res.status(200).json(cachedData);
+    try {
+      const cachedData = await getCache<{ album: any }>(cacheKey);
+      if (cachedData) {
+        return res.status(200).json(cachedData);
+      }
+    } catch {
+      // Ignore cache failure
     }
 
-    const album = await prisma.album.findUnique({
-      where: { id },
-      include: {
-        images: { orderBy: { createdAt: 'asc' } },
-        _count: { select: { images: true } },
-      },
-    });
+    let album: any = null;
+    try {
+      album = await prisma.album.findUnique({
+        where: { id },
+        include: {
+          images: { orderBy: { createdAt: 'asc' } },
+          events: {
+            select: {
+              id: true,
+              name: true,
+              startDate: true,
+              place: true,
+              imageUrl: true,
+            },
+          },
+          _count: { select: { images: true } },
+        },
+      });
+    } catch (queryErr) {
+      console.warn('getAlbumById full query failed, attempting fallback query:', queryErr);
+      album = await prisma.album.findUnique({
+        where: { id },
+        include: {
+          images: { orderBy: { createdAt: 'asc' } },
+          _count: { select: { images: true } },
+        },
+      });
+      if (album) {
+        album.events = [];
+      }
+    }
 
     if (!album) return res.status(404).json({ message: 'Album not found' });
 
+    if (!album.events) {
+      album.events = [];
+    }
+
     const responsePayload = { album };
-    await setCache(cacheKey, responsePayload);
+    try {
+      await setCache(cacheKey, responsePayload);
+    } catch {
+      // Ignore cache failure
+    }
 
     return res.status(200).json(responsePayload);
   } catch (error) {
@@ -393,7 +500,7 @@ export const updateAlbum = async (req: Request, res: Response) => {
     const id = parseInt(idParam || '');
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid album ID' });
 
-    const { name, description, category, coverImageUrl } = req.body;
+    const { name, description, category, coverImageUrl, eventIds } = req.body;
 
     const existing = await prisma.album.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ message: 'Album not found' });
@@ -415,6 +522,18 @@ export const updateAlbum = async (req: Request, res: Response) => {
       }
     }
 
+    let eventsUpdate: any = {};
+    if (Array.isArray(eventIds)) {
+      const parsedEventIds = eventIds
+        .map((id: any) => Number(id))
+        .filter((id: number) => !isNaN(id));
+      eventsUpdate = {
+        events: {
+          set: parsedEventIds.map((id: number) => ({ id })),
+        },
+      };
+    }
+
     const updated = await prisma.album.update({
       where: { id },
       data: {
@@ -425,8 +544,20 @@ export const updateAlbum = async (req: Request, res: Response) => {
             : existing.description,
         category: category?.trim() || existing.category,
         coverImageUrl: finalCoverUrl,
+        ...eventsUpdate,
       },
-      include: { _count: { select: { images: true } } },
+      include: {
+        _count: { select: { images: true } },
+        events: {
+          select: {
+            id: true,
+            name: true,
+            startDate: true,
+            place: true,
+            imageUrl: true,
+          },
+        },
+      },
     });
 
     await invalidateGalleryCache();

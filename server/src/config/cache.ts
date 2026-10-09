@@ -242,17 +242,23 @@ export const generateUserListCacheKey = (
   userId: number | undefined,
   limit: number,
   skip: number,
-  search?: string
-) => `users:list:${userId || 'guest'}:${limit}:${skip}:${search || ''}`;
+  search?: string,
+  excludeDevs?: boolean,
+  role?: string
+) =>
+  `users:list:${userId || 'guest'}:${limit}:${skip}:${search || ''}:${
+    excludeDevs ? 'nodev' : 'all'
+  }:${role || 'ALL'}`;
 
 export const generateAdminUserListCacheKey = (
   endpoint: string,
   page: number,
   limit: number,
   role?: string,
-  search?: string
+  search?: string,
+  school?: string
 ) =>
-  `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}`;
+  `admin:users:${endpoint}:${page}:${limit}:${role || 'ALL'}:${search || ''}:${school || 'all'}`;
 
 export const invalidateUsersCache = async (): Promise<void> => {
   await deleteCachePattern('user:*');

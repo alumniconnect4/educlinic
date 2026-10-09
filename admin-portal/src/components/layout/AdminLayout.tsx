@@ -87,25 +87,31 @@ export default function AdminLayout() {
     }
   };
 
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
+  const userSubItems = [
+    ...(isSuperAdmin
+      ? [{ name: 'Manage Admins', path: '/users/admins', icon: ShieldCheck }]
+      : []),
+    {
+      name: 'Manage Alumni & Students',
+      path: '/users/alumni-students',
+      icon: User,
+    },
+    {
+      name: 'Pending Requests',
+      path: '/users/pending-requests',
+      icon: Clock,
+    },
+  ];
+
   const navItems = [
     { name: 'DashBoard', path: '/', icon: LayoutDashboard },
     {
       name: 'Manage Users',
-      path: '/users',
+      path: isSuperAdmin ? '/users/admins' : '/users/alumni-students',
       icon: Users,
-      subItems: [
-        { name: 'Manage Admins', path: '/users/admins', icon: ShieldCheck },
-        {
-          name: 'Manage Alumni & Students',
-          path: '/users/alumni-students',
-          icon: User,
-        },
-        {
-          name: 'Pending Requests',
-          path: '/users/pending-requests',
-          icon: Clock,
-        },
-      ],
+      subItems: userSubItems,
     },
     { name: 'Events', path: '/events', icon: CalendarDays },
     { name: 'Gallery', path: '/gallery', icon: ImageIcon },

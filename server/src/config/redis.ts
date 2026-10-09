@@ -7,7 +7,9 @@ const redisClient: ReturnType<typeof createClient> = createClient({
   socket: {
     reconnectStrategy: (retries: number) => {
       const delay = Math.min(retries * 100, 3000);
-      logger.warn(`Redis client reconnecting in ${delay}ms (attempt ${retries})...`);
+      logger.warn(
+        `Redis client reconnecting in ${delay}ms (attempt ${retries})...`
+      );
       return delay;
     },
     connectTimeout: 5000,
@@ -30,7 +32,10 @@ redisClient.on('reconnecting', () => {
   logger.warn('Redis Client reconnecting...');
 });
 
-const connectRedis = async (maxRetries = 5, retryDelayMs = 2000): Promise<void> => {
+const connectRedis = async (
+  maxRetries = 5,
+  retryDelayMs = 2000
+): Promise<void> => {
   let attempt = 0;
   while (attempt < maxRetries) {
     attempt++;
@@ -41,14 +46,17 @@ const connectRedis = async (maxRetries = 5, retryDelayMs = 2000): Promise<void> 
       logger.info('Connected to Redis successfully');
       return;
     } catch (error) {
-      logger.error(`Redis connection attempt ${attempt}/${maxRetries} failed: ${error}`);
+      logger.error(
+        `Redis connection attempt ${attempt}/${maxRetries} failed: ${error}`
+      );
       if (attempt < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
       }
     }
   }
-  logger.warn('Redis initial connection could not be established; background reconnection will continue.');
+  logger.warn(
+    'Redis initial connection could not be established; background reconnection will continue.'
+  );
 };
 
 export { redisClient, connectRedis };
-

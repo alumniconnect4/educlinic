@@ -106,6 +106,8 @@ export const authMiddleware =
           bio: true,
           gender: true,
           socialLink: true,
+          isDeveloper: true,
+          developerTitle: true,
           createdAt: true,
         },
       });

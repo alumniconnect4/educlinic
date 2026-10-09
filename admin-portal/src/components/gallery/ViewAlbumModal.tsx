@@ -9,6 +9,10 @@ import {
   CheckSquare,
   Square,
   Eye,
+  Calendar,
+  FileText,
+  CalendarDays,
+  MapPin,
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -35,10 +39,12 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
   onAlbumUpdated,
 }) => {
   const [images, setImages] = useState<GalleryImageItem[]>([]);
+  const [detailedAlbum, setDetailedAlbum] = useState<AlbumItem | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+  const [isDescModalOpen, setIsDescModalOpen] = useState(false);
 
   const fetchAlbumDetails = async () => {
     if (!album) return;
@@ -48,7 +54,9 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
       const response = await axios.get(`${apiUrl}/gallery/${album.id}`, {
         withCredentials: true,
       });
-      setImages(response.data.album.images || []);
+      const albumData = response.data.album;
+      setDetailedAlbum(albumData || album);
+      setImages(albumData?.images || []);
       setSelectedIds([]);
     } catch (error) {
       console.error('Failed to load album images:', error);
@@ -60,8 +68,10 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
 
   useEffect(() => {
     if (album) {
+      setDetailedAlbum(album);
       fetchAlbumDetails();
     } else {
+      setDetailedAlbum(null);
       setImages([]);
       setSelectedIds([]);
     }
@@ -159,35 +169,58 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
 
   if (!album) return null;
 
+  const currentAlbum = detailedAlbum || album;
   const isAllSelected =
     images.length > 0 && selectedIds.length === images.length;
+  const hasDescription = Boolean(currentAlbum.description?.trim());
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-sm shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0 bg-slate-50">
-          <div>
-            <div className="flex items-center gap-2">
+        <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0 bg-slate-50">
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base font-bold text-slate-900">
-                {album.name}
+                {currentAlbum.name}
               </h2>
-              {album.category && (
+              {currentAlbum.category && (
                 <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                   <Tag className="w-2.5 h-2.5" />
-                  {album.category}
+                  {currentAlbum.category}
                 </span>
               )}
             </div>
-            {album.description && (
-              <p className="text-xs text-gray-500 mt-0.5">
-                {album.description}
-              </p>
+
+            {/* Linked Event badge */}
+            {currentAlbum.events && currentAlbum.events.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-slate-400" />
+                  Linked Event:
+                </span>
+                <span
+                  key={currentAlbum.events[0].id}
+                  className="bg-white border border-slate-200 text-slate-800 text-[10px] font-medium px-2 py-0.5 rounded shadow-2xs"
+                >
+                  {currentAlbum.events[0].name}
+                </span>
+              </div>
             )}
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto">
+            {hasDescription && (
+              <button
+                type="button"
+                onClick={() => setIsDescModalOpen(true)}
+                className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold px-3 py-1.5 rounded-sm text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              >
+                <FileText className="w-3.5 h-3.5 text-slate-600" />
+                <span>View Description</span>
+              </button>
+            )}
             <button
-              onClick={() => onAddImagesClick(album)}
+              onClick={() => onAddImagesClick(currentAlbum)}
               className="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-semibold px-3 py-1.5 rounded-sm text-xs transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <ImagePlus className="w-3.5 h-3.5 text-slate-600" />
@@ -361,6 +394,134 @@ export const ViewAlbumModal: React.FC<ViewAlbumModalProps> = ({
               alt="Full preview"
               className="max-w-full max-h-[85vh] object-contain rounded-sm shadow-2xl"
             />
+          </div>
+        </div>
+      )}
+
+      {/* ── Squarish Description Modal ── */}
+      {isDescModalOpen && hasDescription && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setIsDescModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-sm shadow-2xl border border-gray-200 w-full max-w-2xl sm:max-w-3xl overflow-hidden flex flex-col max-h-[88vh] cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-4 bg-gray-50">
+              <div className="space-y-0.5 min-w-0">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 uppercase tracking-wider">
+                  Album Description
+                </h3>
+                <p className="text-xs text-slate-500 font-medium truncate">
+                  {currentAlbum.name}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDescModalOpen(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded-sm transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-slate-500" />
+                  <span>About this Album</span>
+                </h4>
+                <div className="text-sm sm:text-[15px] text-slate-700 leading-relaxed whitespace-pre-line bg-gray-50 p-4 sm:p-5 rounded-sm border border-gray-200 font-normal">
+                  {currentAlbum.description}
+                </div>
+              </div>
+
+              {/* Linked Events (if any) */}
+              {currentAlbum.events && currentAlbum.events.length > 0 && (
+                <div className="pt-3 border-t border-gray-200">
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                    <CalendarDays className="w-4 h-4 text-red-600" />
+                    <span>Linked Event</span>
+                  </h4>
+                  <div className="space-y-2.5">
+                    {currentAlbum.events.map((ev) => {
+                      const dateText = ev.startDate
+                        ? new Date(ev.startDate).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : null;
+
+                      return (
+                        <div
+                          key={ev.id}
+                          className="flex flex-col sm:flex-row bg-white rounded-sm border border-gray-200 overflow-hidden hover:border-slate-400 transition-all group"
+                        >
+                          {/* Compact Thumbnail */}
+                          <div className="relative sm:w-36 h-24 sm:h-28 shrink-0 bg-slate-100 overflow-hidden">
+                            {ev.imageUrl ? (
+                              <img
+                                src={ev.imageUrl}
+                                alt={ev.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50 p-2 text-center">
+                                <CalendarDays className="w-6 h-6 text-slate-300 mb-0.5" />
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                                  Event
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Compact Details */}
+                          <div className="flex-1 p-3.5 sm:p-4 flex flex-col justify-center">
+                            <div className="space-y-1.5">
+                              <h5 className="text-sm font-bold text-slate-900 group-hover:text-red-700 transition-colors leading-snug line-clamp-1">
+                                {ev.name}
+                              </h5>
+
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-x-4 gap-y-1 text-xs text-slate-600">
+                                {dateText && (
+                                  <div className="flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span>{dateText}</span>
+                                  </div>
+                                )}
+                                {ev.place && (
+                                  <div className="flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                    <span className="line-clamp-1">
+                                      {ev.place}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3.5 border-t border-gray-200 bg-gray-50 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setIsDescModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-sm text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+import os from 'os';
 import { Kafka, type Producer, type Consumer } from 'kafkajs';
 import { config } from '../config/index.js';
 import { logger } from '../config/logger.js';
@@ -48,13 +49,23 @@ export const getKafkaProducer = async (): Promise<Producer> => {
   }
 };
 
-const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => {
+const ensureTopicsExist = async (
+  retries = 5,
+  delayMs = 2000
+): Promise<void> => {
   const admin = kafka.admin();
   let attempt = 0;
   while (attempt < retries) {
     attempt++;
     try {
       await admin.connect();
+      const existingTopics = await admin.listTopics();
+      if (existingTopics.includes('chat-messages')) {
+        logger.info('Kafka topic "chat-messages" already exists');
+        await admin.disconnect();
+        return;
+      }
+
       await admin.createTopics({
         topics: [
           { topic: 'chat-messages', numPartitions: 3, replicationFactor: 1 },
@@ -68,7 +79,10 @@ const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => 
       try {
         await admin.disconnect();
       } catch {}
-      if (err?.name === 'TopicExistsError' || err?.message?.includes('exists')) {
+      if (
+        err?.name === 'TopicExistsError' ||
+        err?.message?.includes('exists')
+      ) {
         logger.info('Kafka topic "chat-messages" already exists');
         return;
       }
@@ -80,40 +94,73 @@ const ensureTopicsExist = async (retries = 5, delayMs = 2000): Promise<void> => 
       }
     }
   }
-  logger.warn('Kafka admin topic creation bypassed; continuing with consumer subscription.');
+  logger.warn(
+    'Kafka admin topic creation bypassed; continuing with consumer subscription.'
+  );
 };
 
 export const startKafkaConsumer = async (io: SocketIOServer) => {
   await ensureTopicsExist();
 
-  consumer = kafka.consumer({
-    groupId: `chat-backend-${Date.now()}`,
-    retry: {
-      initialRetryTime: 1000,
-      retries: 10,
-      maxRetryTime: 60000,
-    },
-  });
+  const baseGroupId = process.env.KAFKA_GROUP_ID || 'chat-backend-group';
+  const instanceId =
+    process.env.HOSTNAME ||
+    process.env.POD_NAME ||
+    os.hostname() ||
+    Math.random().toString(36).substring(2, 9);
+  const groupId = `${baseGroupId}-${instanceId}`;
 
-  consumer.on(consumer.events.DISCONNECT, () => {
-    logger.warn('Kafka Consumer disconnected');
-  });
+  let retries = 15;
+  let isConnected = false;
 
-  consumer.on(consumer.events.CRASH, (event) => {
-    logger.error('Kafka Consumer crashed:', event.payload.error);
-  });
+  while (retries > 0 && !isConnected) {
+    if (consumer) {
+      try {
+        await consumer.disconnect();
+      } catch {}
+      consumer = null;
+    }
 
-  let retries = 10;
-  while (retries > 0) {
+    const currentConsumer = kafka.consumer({
+      groupId,
+      sessionTimeout: 30000,
+      rebalanceTimeout: 60000,
+      heartbeatInterval: 3000,
+      allowAutoTopicCreation: true,
+      retry: {
+        initialRetryTime: 1000,
+        retries: 10,
+        maxRetryTime: 30000,
+      },
+    });
+
+    currentConsumer.on(currentConsumer.events.DISCONNECT, () => {
+      logger.warn('Kafka Consumer disconnected');
+    });
+
+    currentConsumer.on(currentConsumer.events.CRASH, (event) => {
+      logger.error('Kafka Consumer crashed:', event.payload.error);
+      setTimeout(() => {
+        logger.info('Attempting to restart crashed Kafka Consumer...');
+        startKafkaConsumer(io).catch((err) =>
+          logger.error('Failed to restart Kafka Consumer:', err)
+        );
+      }, 5000);
+    });
+
     try {
-      await consumer.connect();
-      await consumer.subscribe({
+      await currentConsumer.connect();
+      await currentConsumer.subscribe({
         topic: 'chat-messages',
         fromBeginning: false,
       });
-      logger.info('Kafka Consumer connected and subscribed to chat-messages');
 
-      await consumer.run({
+      consumer = currentConsumer;
+      logger.info(
+        `Kafka Consumer connected and subscribed to chat-messages (groupId: ${groupId})`
+      );
+
+      await currentConsumer.run({
         eachMessage: async ({
           topic,
           partition,
@@ -126,8 +173,6 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
           if (!message.value) return;
           try {
             const payload = JSON.parse(message.value.toString());
-            // Payload should be the formattedMessage
-            // Emit to the receiver's room and the sender's room
             io.to(`user:${payload.receiverId}`).emit(
               'receive_message',
               payload
@@ -138,12 +183,12 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
           }
         },
       });
-      break;
-    } catch (error) {
+
+      isConnected = true;
+    } catch (error: any) {
       retries--;
       logger.error(
-        `Failed to start Kafka Consumer (${retries} retries left):`,
-        error
+        `Failed to start Kafka Consumer (${retries} retries left): ${error?.message || error}`
       );
       if (retries === 0) {
         logger.error('Exhausted all retries for Kafka Consumer.');
@@ -153,4 +198,3 @@ export const startKafkaConsumer = async (io: SocketIOServer) => {
     }
   }
 };
-

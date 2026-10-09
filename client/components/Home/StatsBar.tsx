@@ -46,8 +46,8 @@ export function StatsBar() {
   const stats = [
     { value: 5000, suffix: '+', label: 'Alumni Worldwide' },
     { value: 200, suffix: '+', label: 'Top Recruiters' },
-    { value: 42, suffix: ' LPA', label: 'Highest Package' },
-    { value: 27, suffix: '', label: 'Years of Legacy' },
+    { value: 72, suffix: ' LPA', label: 'Highest Package' },
+    { value: 30, suffix: '+', label: 'Years of Legacy' },
   ];
 
   return (

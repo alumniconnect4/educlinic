@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { Search, Menu, Plus, Home } from 'lucide-react';
+import {
+  Search,
+  Menu,
+  Plus,
+  Home,
+  Sparkles,
+  X,
+  TrendingUp,
+} from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { getAvatarUrl } from '../../lib/utils';
@@ -16,6 +24,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+
+  const isProfileIncomplete = Boolean(
+    currentUser &&
+    (!currentUser.bio ||
+      !currentUser.socialLink ||
+      (!currentUser.avatarUrl && !currentUser.avatar))
+  );
 
   React.useEffect(() => {
     if (!isTyping) return;
@@ -83,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1.5 sm:gap-4">
           <a
             href={import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000/'}
             className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-primary transition-colors px-3 py-1.5 rounded-full text-sm font-semibold border border-gray-200"
@@ -103,19 +118,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
 
           <Button
             size="icon"
-            className="sm:hidden h-8 w-8 rounded-md bg-primary/10  text-black"
+            className="sm:hidden h-8 w-8 rounded-md bg-primary/10 text-black"
             onClick={() => navigate('/create-post')}
           >
-            <Plus className="h-4 w-4 stroke-2 " />
+            <Plus className="h-4 w-4 stroke-2" />
           </Button>
 
           <Link to="/profile">
             <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent hover:ring-primary transition-all">
               <AvatarImage
-                src={getAvatarUrl(
-                  currentUser?.name,
-                  currentUser?.avatarUrl || currentUser?.avatar
-                )}
+                src={getAvatarUrl(currentUser)}
                 alt={currentUser?.name}
               />
               <AvatarFallback>

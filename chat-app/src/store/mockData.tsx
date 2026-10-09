@@ -226,11 +226,29 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
                 ? msg.receiver?.name || 'User'
                 : msg.sender?.name || 'User';
 
+            const partnerAvatarUrl =
+              msg.senderId === currentUser.id
+                ? msg.receiver?.avatarUrl
+                : msg.sender?.avatarUrl;
+
+            const partnerIsDeveloper =
+              msg.senderId === currentUser.id
+                ? (msg.receiver as any)?.isDeveloper
+                : (msg.sender as any)?.isDeveloper;
+
+            const partnerRole =
+              msg.senderId === currentUser.id
+                ? (msg.receiver as any)?.role
+                : (msg.sender as any)?.role;
+
             const newChat: Chat = {
               id: partnerId,
               participant: {
                 id: partnerId,
                 name: partnerName,
+                avatarUrl: partnerAvatarUrl,
+                isDeveloper: partnerIsDeveloper,
+                role: partnerRole,
               },
               messages: [msg],
               lastMessage: msg,
@@ -526,12 +544,37 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const startDirectMessage = (partnerUser: User): Chat => {
+    const avatarUrl = partnerUser.avatarUrl || partnerUser.avatar;
     const existing = chats.find((c) => c.id === partnerUser.id);
-    if (existing) return existing;
+    if (existing) {
+      const updatedExisting: Chat = {
+        ...existing,
+        participant: {
+          ...existing.participant,
+          ...partnerUser,
+          avatarUrl:
+            avatarUrl ||
+            existing.participant.avatarUrl ||
+            existing.participant.avatar,
+          avatar:
+            avatarUrl ||
+            existing.participant.avatarUrl ||
+            existing.participant.avatar,
+        },
+      };
+      setChats((prev) =>
+        prev.map((c) => (c.id === partnerUser.id ? updatedExisting : c))
+      );
+      return updatedExisting;
+    }
 
     const newChat: Chat = {
       id: partnerUser.id,
-      participant: partnerUser,
+      participant: {
+        ...partnerUser,
+        avatarUrl: avatarUrl,
+        avatar: avatarUrl,
+      },
       messages: [],
       unreadCount: 0,
     };
@@ -915,17 +958,24 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         setCurrentUser(data.user);
         if (data.user) {
           setConnectUsersCache((prev) =>
-            prev.map((u) => (u.id === data.user.id ? { ...u, ...data.user } : u))
+            prev.map((u) =>
+              u.id === data.user.id ? { ...u, ...data.user } : u
+            )
           );
           setPosts((prev) =>
             prev.map((post) => {
               const isAuthor =
-                post.author?.id === data.user.id || post.createdBy?.id === data.user.id;
+                post.author?.id === data.user.id ||
+                post.createdBy?.id === data.user.id;
               if (!isAuthor) return post;
               return {
                 ...post,
-                author: post.author ? { ...post.author, ...data.user } : undefined,
-                createdBy: post.createdBy ? { ...post.createdBy, ...data.user } : undefined,
+                author: post.author
+                  ? { ...post.author, ...data.user }
+                  : undefined,
+                createdBy: post.createdBy
+                  ? { ...post.createdBy, ...data.user }
+                  : undefined,
               };
             })
           );

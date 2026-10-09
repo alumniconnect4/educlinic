@@ -1,10 +1,12 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import AnalyticsDetail from './pages/AnalyticsDetail';
 import ProtectedRoute from './components/ProtectedRoute';
+import SuperAdminRoute from './components/SuperAdminRoute';
 import AdminLayout from './components/layout/AdminLayout';
+import { useAuthStore } from './store/useAuthStore';
 
 // User Management
 import ManageUsersLayout from './pages/users/ManageUsersLayout';
@@ -19,6 +21,14 @@ import Gallery from './pages/Gallery';
 import HelpTickets from './pages/HelpTickets';
 import Settings from './pages/Settings';
 import Guide from './pages/Guide';
+
+const UsersIndexRedirect = () => {
+  const user = useAuthStore((state) => state.user);
+  if (user?.role === 'SUPER_ADMIN') {
+    return <Navigate to="/users/admins" replace />;
+  }
+  return <Navigate to="/users/alumni-students" replace />;
+};
 
 const App = () => {
   return (
@@ -52,8 +62,15 @@ const App = () => {
 
           {/* Manage Users (Nested) */}
           <Route path="users" element={<ManageUsersLayout />}>
-            <Route index element={<ManageAdmins />} />
-            <Route path="admins" element={<ManageAdmins />} />
+            <Route index element={<UsersIndexRedirect />} />
+            <Route
+              path="admins"
+              element={
+                <SuperAdminRoute>
+                  <ManageAdmins />
+                </SuperAdminRoute>
+              }
+            />
             <Route path="alumni-students" element={<ManageAlumniStudents />} />
             <Route path="pending-requests" element={<PendingRequestsPage />} />
           </Route>

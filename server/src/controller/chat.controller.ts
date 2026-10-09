@@ -9,6 +9,31 @@ import {
 } from '../config/cache.js';
 import { parsePgInt } from '../utils/validation.js';
 
+const formatCloudinaryAvatar = (
+  url?: string | null,
+  size = 160
+): string | null => {
+  if (!url) return null;
+  if (url.includes('res.cloudinary.com') && url.includes('/upload/')) {
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex !== -1) {
+      const prefix = url.substring(0, uploadIndex + 8);
+      const rest = url.substring(uploadIndex + 8);
+      const transform = `c_fill,g_face,w_${size},h_${size},q_auto,f_auto/`;
+      if (
+        rest.startsWith('c_fill') ||
+        rest.startsWith('w_') ||
+        rest.startsWith('c_scale') ||
+        rest.startsWith('c_crop')
+      ) {
+        return prefix + transform + rest.replace(/^[^/]+\//, '');
+      }
+      return prefix + transform + rest;
+    }
+  }
+  return url;
+};
+
 export const getConversations = async (
   req: Request,
   res: Response
@@ -84,6 +109,8 @@ export const getConversations = async (
                   role: true,
                   schoolCategory: true,
                   avatarUrl: true,
+                  isDeveloper: true,
+                  isVerified: true,
                 },
               },
               receiver: {
@@ -94,6 +121,8 @@ export const getConversations = async (
                   role: true,
                   schoolCategory: true,
                   avatarUrl: true,
+                  isDeveloper: true,
+                  isVerified: true,
                 },
               },
             },
@@ -110,10 +139,15 @@ export const getConversations = async (
             },
           });
 
-          const participant =
+          const rawParticipant =
             lastMsg.senderId === currentUserId
               ? lastMsg.receiver
               : lastMsg.sender;
+
+          const participant = {
+            ...rawParticipant,
+            avatarUrl: formatCloudinaryAvatar(rawParticipant.avatarUrl, 160),
+          };
 
           return {
             id: partnerId,
@@ -158,12 +192,8 @@ export const getMessagesWithUser = async (
   try {
     const currentUserId = req.user!.id;
     const partnerId = parsePgInt(req.params.partnerId);
-    const cursor = req.query.cursor
-      ? parsePgInt(req.query.cursor)
-      : undefined;
-    const limit = req.query.limit
-      ? parsePgInt(req.query.limit, 30) || 30
-      : 30;
+    const cursor = req.query.cursor ? parsePgInt(req.query.cursor) : undefined;
+    const limit = req.query.limit ? parsePgInt(req.query.limit, 30) || 30 : 30;
 
     if (!partnerId) {
       res.status(400).json({ message: 'Invalid partner user ID' });
@@ -298,7 +328,9 @@ export const sendMessageHttp = async (
     const content = req.body.content;
 
     if (!receiverId || !content?.trim()) {
-      res.status(400).json({ message: 'Valid receiver ID and content are required' });
+      res
+        .status(400)
+        .json({ message: 'Valid receiver ID and content are required' });
       return;
     }
 
@@ -382,7 +414,9 @@ export const editMessageHttp = async (
     const { content } = req.body;
 
     if (!messageId || !content?.trim()) {
-      res.status(400).json({ message: 'Valid message ID and content are required' });
+      res
+        .status(400)
+        .json({ message: 'Valid message ID and content are required' });
       return;
     }
 

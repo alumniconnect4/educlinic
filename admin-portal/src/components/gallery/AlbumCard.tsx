@@ -82,25 +82,33 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
             </div>
           </div>
 
-          {/* Photo count line */}
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-2">
-            <Images className="w-4 h-4 text-gray-400 shrink-0" />
-            <span>
-              {imageCount > 0
-                ? `${imageCount} Photo${imageCount !== 1 ? 's' : ''} in this Album`
-                : 'No photos yet'}
-            </span>
-          </div>
+          {/* Photo count line & Linked Event */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 mb-2">
+            <div className="flex items-center gap-1.5">
+              <Images className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <span>
+                {imageCount > 0
+                  ? `${imageCount} Photo${imageCount !== 1 ? 's' : ''}`
+                  : 'No photos yet'}
+              </span>
+            </div>
 
-          {/* Description */}
-          {album.description && (
-            <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-              {album.description}
-            </p>
-          )}
+            {/* Linked event */}
+            {album.events && album.events.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-gray-300">|</span>
+                <div className="flex items-center gap-1">
+                  <span className="font-semibold text-slate-700">Event:</span>
+                  <span className="bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-medium px-2 py-0.5 rounded">
+                    {album.events[0].name}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* ── Action Buttons — Red View Album + Light Slate Add Images ── */}
+        {/* ── Action Buttons ── */}
         <div className="pt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"

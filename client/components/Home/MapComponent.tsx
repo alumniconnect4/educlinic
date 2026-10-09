@@ -1,13 +1,21 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+type ClusterLike = {
+  getChildCount: () => number;
+};
+
 const setupLeafletIcons = () => {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  const defaultIconPrototype = L.Icon.Default.prototype as typeof L.Icon.Default.prototype & {
+    _getIconUrl?: () => string;
+  };
+
+  delete defaultIconPrototype._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconRetinaUrl:
       'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -29,7 +37,7 @@ const customIcon =
       })
     : null;
 
-const createClusterCustomIcon = function (cluster: any) {
+const createClusterCustomIcon = (cluster: ClusterLike) => {
   const count = cluster.getChildCount();
   let size = 'w-8 h-8 text-xs';
   let bgColor = 'bg-[#00a8e8]/90';
@@ -65,15 +73,34 @@ const alumniLocations = [
   { id: 8, city: 'Dubai', longitude: 55.2708, latitude: 25.2048 },
 ];
 
-export default function MapComponent() {
-  const [mounted, setMounted] = useState(false);
+const mapTileUrl =
+  process.env.NEXT_PUBLIC_MAP_TILE_URL ??
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
+const generateMarkerPositions = (
+  count: number,
+  baseLatitude: number,
+  baseLongitude: number,
+  latitudeStep: number,
+  longitudeStep: number
+) =>
+  Array.from({ length: count }, (_, index) => [
+    baseLatitude + (index % 10) * latitudeStep,
+    baseLongitude + (index % 10) * longitudeStep,
+  ] as [number, number]);
+
+const p1Positions = generateMarkerPositions(13, 24.0, 54.0, 0.15, 0.1);
+const p2Positions = generateMarkerPositions(24, 19.0, 72.0, 0.12, 0.08);
+const p3Positions = generateMarkerPositions(145, 30.0, 75.0, 0.18, 0.09);
+const p4Positions = generateMarkerPositions(20, 17.0, 78.0, 0.2, 0.11);
+const p5Positions = generateMarkerPositions(10, 23.0, 88.0, 0.16, 0.1);
+
+export default function MapComponent() {
   useEffect(() => {
     setupLeafletIcons();
-    setMounted(true);
   }, []);
 
-  if (!mounted || !customIcon) return null;
+  if (!customIcon) return null;
 
   return (
     <MapContainer
@@ -84,8 +111,8 @@ export default function MapComponent() {
       style={{ width: '100%', height: '100%', zIndex: 0 }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url={mapTileUrl}
       />
 
       <MarkerClusterGroup
@@ -110,38 +137,38 @@ export default function MapComponent() {
           </Marker>
         ))}
 
-        {Array.from({ length: 13 }).map((_, i) => (
+        {p1Positions.map((position, i) => (
           <Marker
             key={`p1-${i}`}
-            position={[24.0 + Math.random() * 2, 54.0 + Math.random() * 2]}
+            position={position}
             icon={customIcon}
           />
         ))}
-        {Array.from({ length: 24 }).map((_, i) => (
+        {p2Positions.map((position, i) => (
           <Marker
             key={`p2-${i}`}
-            position={[19.0 + Math.random() * 2, 72.0 + Math.random() * 2]}
+            position={position}
             icon={customIcon}
           />
         ))}
-        {Array.from({ length: 145 }).map((_, i) => (
+        {p3Positions.map((position, i) => (
           <Marker
             key={`p3-${i}`}
-            position={[30.0 + Math.random() * 3, 75.0 + Math.random() * 3]}
+            position={position}
             icon={customIcon}
           />
         ))}
-        {Array.from({ length: 20 }).map((_, i) => (
+        {p4Positions.map((position, i) => (
           <Marker
             key={`p4-${i}`}
-            position={[17.0 + Math.random() * 3, 78.0 + Math.random() * 3]}
+            position={position}
             icon={customIcon}
           />
         ))}
-        {Array.from({ length: 10 }).map((_, i) => (
+        {p5Positions.map((position, i) => (
           <Marker
             key={`p5-${i}`}
-            position={[23.0 + Math.random() * 2, 88.0 + Math.random() * 2]}
+            position={position}
             icon={customIcon}
           />
         ))}

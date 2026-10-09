@@ -7,6 +7,7 @@ import {
   Users,
   Code2,
   X,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -27,6 +28,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const { currentUser } = useStore();
 
+  const isProfileIncomplete = Boolean(
+    currentUser &&
+    (!currentUser.bio ||
+      !currentUser.socialLink ||
+      (!currentUser.avatarUrl && !currentUser.avatar))
+  );
+
   const mainNavItems = [
     { name: 'Home', icon: Home, path: '/' },
     { name: 'Connect', icon: Users, path: '/connect' },
@@ -35,25 +43,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const popularTags = [
-    'campus',
-    'events',
-    'coding',
-    'sports',
-    'placements',
-    'hackathon',
-    'clubs',
-    'interview',
-    'experience',
-    'roadmap',
-    'information',
-    'ai',
-    'discussions',
-    'projects',
-    'internships',
-    'research',
-    'opportunities',
-    'help',
-    'announcements',
+    'Campus',
+    'Events',
+    'Coding',
+    'Sports',
+    'Placements',
+    'Hackathon',
+    'Clubs',
+    'Interview',
+    'Experience',
+    'Roadmap',
+    'Information',
+    'AI',
+    'Discussions',
+    'Projects',
+    'Internships',
+    'Research',
+    'Opportunities',
+    'Help',
+    'Announcements',
   ];
 
   React.useEffect(() => {
@@ -71,11 +79,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Mobile overlay */}
       <div
-        className={`fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300 ${
-          isOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-background/80 backdrop-blur-md z-40 md:hidden transition-opacity duration-300 ${isOpen
+          ? 'opacity-100 pointer-events-auto'
+          : 'opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
       />
 
@@ -95,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden
         `}
       >
-        <div className="flex md:hidden items-center justify-between mb-4 pb-2 border-b border-border/60">
+        <div className="flex md:hidden items-center justify-between mb-3 pb-2 border-b border-border/60">
           <span className="font-bold text-lg">Menu</span>
           <Button
             variant="ghost"
@@ -106,6 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <X className="h-5 w-5" />
           </Button>
         </div>
+
         {!currentUser && (
           <div className="bg-card border border-border/80 rounded-md p-4 space-y-3 shadow-2xs">
             <h2 className="font-bold text-base leading-tight">
@@ -150,11 +158,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <Button
                 key={item.name}
                 variant="ghost"
-                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${
-                  isActive
-                    ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
-                    : 'text-foreground/90'
-                }`}
+                className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${isActive
+                  ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
+                  : 'text-foreground/90'
+                  }`}
                 onClick={() => {
                   navigate(item.path);
                   onClose?.();
@@ -164,7 +171,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className="mr-3 h-5 w-5 shrink-0"
                   strokeWidth={isActive ? 2.2 : 1.75}
                 />
-                <span className="truncate">{item.name}</span>
+                <span className="truncate flex-1 text-left">{item.name}</span>
+                {item.name === 'My Profile' && isProfileIncomplete && (
+                  <span className="ml-auto px-1.5 py-0.5 text-[10px] font-bold rounded-full  text-blue-800 border-blue-800 border-1">
+                    Incomplete
+                  </span>
+                )}
               </Button>
             );
           })}
@@ -186,7 +198,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 className="flex items-center justify-between px-3 py-1.5 rounded-md text-foreground/80 hover:text-[#3b49df] hover:bg-[#3b49df]/10 transition-colors group cursor-pointer"
               >
-                <span className="font-mono text-sm group-hover:underline">
+                <span className="font-mono text-[16px] font-bold group-hover:underline">
                   #{tag}
                 </span>
               </div>
@@ -197,7 +209,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="px-3 pt-4 border-t border-border/60 text-xs text-muted-foreground space-y-2 leading-relaxed">
           <p className="flex items-center gap-1">
             <Code2 className="h-3.5 w-3.5 text-[#3b49df]" />
-            <span>EduClinic &copy; {new Date().getFullYear()}</span>
+            <span>Alumni-Connect &copy; {new Date().getFullYear()}</span>
           </p>
           <p>Built for our college community.</p>
         </div>
