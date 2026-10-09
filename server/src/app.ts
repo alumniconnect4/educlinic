@@ -41,6 +41,8 @@ export const isOriginAllowed = (origin?: string): boolean => {
 
     if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
     if (hostname.endsWith('.vercel.app')) return true;
+    if (hostname === 'bfgiconnect.com' || hostname.endsWith('.bfgiconnect.com'))
+      return true;
     if (hostname === 'h4x.co.in' || hostname.endsWith('.h4x.co.in'))
       return true;
     if (hostname === 'ikeshav.in' || hostname.endsWith('.ikeshav.in'))
