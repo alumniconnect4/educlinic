@@ -28,6 +28,9 @@ export const isOriginAllowed = (origin?: string): boolean => {
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:5174',
+    'https://bfgiconnect.com',
+    'https://app.bfgiconnect.com',
+    'https://admin.bfgiconnect.com'
   ];
 
   if (allowedOrigins.includes(origin)) return true;
