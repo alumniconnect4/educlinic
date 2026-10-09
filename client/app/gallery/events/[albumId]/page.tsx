@@ -1,7 +1,53 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import AlbumViewClient from '@/components/Gallery/AlbumViewClient';
 import { notFound } from 'next/navigation';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ albumId: string }>;
+}): Promise<Metadata> {
+  const { albumId } = await params;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const numericId = parseInt(albumId, 10);
+
+  if (!isNaN(numericId) && apiUrl) {
+    try {
+      const res = await fetch(`${apiUrl}/gallery/${numericId}`, {
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.album) {
+          const album = data.album;
+          return {
+            title: `${album.name} - Photo Album`,
+            description:
+              album.description ||
+              `View photos and event moments from ${album.name} at Baba Farid Group of Institutions.`,
+            openGraph: {
+              title: `${album.name} | BFGI Connect`,
+              description:
+                album.description ||
+                `Browse photos from ${album.name} at Baba Farid Group of Institutions.`,
+              images: album.coverImageUrl ? [album.coverImageUrl] : ['/logo1.png'],
+            },
+          };
+        }
+      }
+    } catch {
+      // Ignore error and fall through
+    }
+  }
+
+  return {
+    title: 'Photo Album',
+    description:
+      'View photo albums and memorable moments from Baba Farid Group of Institutions.',
+  };
+}
 
 export default async function AlbumPage({
   params,

@@ -1,18 +1,22 @@
 import React from 'react';
-import axios from 'axios';
+import type { Metadata } from 'next';
 import EventsClient from './EventsClient';
 
-interface Event {
-  id: number;
-  name: string;
-  description: string | null;
-  organizedBy: string;
-  place: string;
-  eventType: string;
-  visibility: string;
-  startDate: string;
-  endDate: string;
-}
+export const metadata: Metadata = {
+  title: 'Alumni Events & Reunions',
+  description:
+    'Discover and register for the latest BFGI workshops, alumni reunions, guest lectures, and professional gatherings. Reconnect with peers and expand your BFGI network.',
+  openGraph: {
+    title: 'Alumni Events & Reunions | BFGI Connect',
+    description:
+      'Join upcoming alumni meets, webinars, and networking conferences organized by Baba Farid Group of Institutions.',
+    url: 'https://bfgiconnect.com/events',
+    images: ['/logo1.png'],
+  },
+  alternates: {
+    canonical: 'https://bfgiconnect.com/events',
+  },
+};
 
 export default function EventsPage() {
   return (
