@@ -13,6 +13,10 @@ const AuthForm = () => {
   const [idCardUrl, setIdCardUrl] = useState<string>('');
   const [degreeUrl, setDegreeUrl] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [course, setCourse] = useState<string>('');
+  const [phoneError, setPhoneError] = useState<string>('');
+  const [courseError, setCourseError] = useState<string>('');
   const [previewModal, setPreviewModal] = useState<{
     url: string;
     title: string;
@@ -103,11 +107,46 @@ const AuthForm = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setPhoneError('');
+    setCourseError('');
     setIsLoading(true);
 
     try {
       if (activeTab === 'register') {
         const role = e.target.role.value as 'USER' | 'ALUMNI';
+
+        // Validate phone number: required + strip formatting, check 10-15 digits
+        if (!phoneNumber.trim()) {
+          const msg = 'Phone number is required.';
+          setPhoneError(msg);
+          toast.error(msg);
+          setIsLoading(false);
+          return;
+        }
+        const sanitized = phoneNumber.replace(/[\s\-\(\)\+]/g, '');
+        if (!/^\d{10,15}$/.test(sanitized)) {
+          const msg = 'Phone number must be a valid number with 10 to 15 digits.';
+          setPhoneError(msg);
+          toast.error(msg);
+          setIsLoading(false);
+          return;
+        }
+
+        // Validate course: required + max 50 characters
+        if (!course.trim()) {
+          const msg = 'Course is required.';
+          setCourseError(msg);
+          toast.error(msg);
+          setIsLoading(false);
+          return;
+        }
+        if (course.trim().length > 50) {
+          const msg = 'Course name must be 50 characters or less.';
+          setCourseError(msg);
+          toast.error(msg);
+          setIsLoading(false);
+          return;
+        }
 
         if (role === 'USER' && !idCardUrl) {
           setError('Student registration requires uploading an ID Card.');
@@ -135,6 +174,8 @@ const AuthForm = () => {
             password: e.target.password.value,
             role,
             schoolCategory: e.target.schoolCategory.value,
+            phoneNumber: phoneNumber.trim() || undefined,
+            course: course.trim() || undefined,
             avatarUrl: avatarUrl || undefined,
             idCardUrl,
             degreeUrl,
@@ -146,6 +187,8 @@ const AuthForm = () => {
         setIdCardUrl('');
         setDegreeUrl('');
         setAvatarUrl('');
+        setPhoneNumber('');
+        setCourse('');
         if (res.data.user?.isVerified === false) {
           setSuccess(
             'Registration request submitted! Your account is pending administrator review and approval. An administrator will verify your application soon.'
@@ -315,6 +358,59 @@ const AuthForm = () => {
                         School of Pharmacy
                       </option>
                     </select>
+                  </div>
+                </div>
+
+                {/* Phone Number and Course */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Phone Number <span className="text-[#d60000]">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        setPhoneNumber(e.target.value);
+                        setPhoneError('');
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-md border ${phoneError ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : 'border-gray-300 focus:ring-[#d60000] focus:border-[#d60000]'} focus:ring-1 outline-none transition-all bg-white`}
+                      placeholder="9876543210"
+                      maxLength={15}
+                      required={activeTab === 'register'}
+                    />
+                    {phoneError && (
+                      <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Course <span className="text-[#d60000]">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={course}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 50) {
+                          setCourse(e.target.value);
+                          setCourseError('');
+                        }
+                      }}
+                      className={`w-full px-4 py-2.5 rounded-md border ${courseError ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : 'border-gray-300 focus:ring-[#d60000] focus:border-[#d60000]'} focus:ring-1 outline-none transition-all bg-white text-sm`}
+                      placeholder="e.g. B.Tech CSE"
+                      maxLength={50}
+                      required={activeTab === 'register'}
+                    />
+                    <div className="flex justify-between items-center mt-1">
+                      {courseError ? (
+                        <p className="text-xs text-red-500">{courseError}</p>
+                      ) : (
+                        <span />
+                      )}
+                      <span className={`text-[10px] ${course.length >= 45 ? 'text-red-400' : 'text-gray-400'}`}>
+                        {course.length}/50
+                      </span>
+                    </div>
                   </div>
                 </div>
 

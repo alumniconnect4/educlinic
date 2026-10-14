@@ -24,6 +24,8 @@ interface UserRecord {
   avatarUrl?: string;
   idCardUrl?: string;
   degreeUrl?: string;
+  phoneNumber?: string;
+  course?: string;
   isVerified: boolean;
   createdAt: string;
 }
@@ -597,6 +599,24 @@ export default function PendingRequestsPage() {
                         day: 'numeric',
                       }
                     )}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-1">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider block text-[10px]">
+                    Phone Number
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedRequest.phoneNumber || <span className="text-gray-400 italic font-normal">Not provided</span>}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-1">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider block text-[10px]">
+                    Course
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedRequest.course || <span className="text-gray-400 italic font-normal">Not provided</span>}
                   </span>
                 </div>
               </div>

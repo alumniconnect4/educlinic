@@ -834,6 +834,8 @@ export const getPendingRequests = async (req: Request, res: Response) => {
           avatarUrl: true,
           idCardUrl: true,
           degreeUrl: true,
+          phoneNumber: true,
+          course: true,
           createdAt: true,
         },
         orderBy: {
