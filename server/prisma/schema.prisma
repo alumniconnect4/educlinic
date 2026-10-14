@@ -61,6 +61,8 @@ model User {
   password         String
   role             UserRole        @default(USER)
   schoolCategory   SchoolCategory?
+  phoneNumber      String?
+  course           String?         @db.VarChar(50)
   avatarUrl        String?
   bio              String?
   gender           String?

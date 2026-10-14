@@ -22,13 +22,30 @@ export const register = async (req: Request, res: Response) => {
       password,
       role,
       schoolCategory,
+      phoneNumber,
+      course,
       avatarUrl,
       idCardUrl,
       degreeUrl,
     } = req.body;
 
-    if (!name || !email || !password || !role || !schoolCategory) {
+    if (!name || !email || !password || !role || !schoolCategory || !phoneNumber || !course) {
       return res.status(400).json({ message: 'All text fields are required' });
+    }
+
+    // Validate phone number: must be 10-15 digits
+    const sanitizedPhone = String(phoneNumber).replace(/[\s\-\(\)\+]/g, '');
+    if (!/^\d{10,15}$/.test(sanitizedPhone)) {
+      return res.status(400).json({
+        message: 'Phone number must be a valid number with 10 to 15 digits.',
+      });
+    }
+
+    // Validate course: max 50 characters
+    if (String(course).length > 50) {
+      return res.status(400).json({
+        message: 'Course name must be 50 characters or less.',
+      });
     }
 
     if (role === 'USER' && !idCardUrl) {
@@ -72,6 +89,8 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         role,
         schoolCategory,
+        phoneNumber: phoneNumber ? String(phoneNumber).replace(/[\s\-\(\)\+]/g, '') : null,
+        course: course ? String(course).trim().slice(0, 50) : null,
         avatarUrl: initialAvatarUrl,
         idCardUrl: initialIdCardUrl,
         degreeUrl: initialDegreeUrl,
