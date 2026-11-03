@@ -8,13 +8,21 @@ const envSchema = z.object({
     .enum(['DEVELOPMENT', 'PRODUCTION', 'TEST'])
     .default('DEVELOPMENT'),
 
-  HOST: z.string('HOST is required').default('localhost'),
+  HOST: z.string('HOST is required').default('0.0.0.0'),
   PORT: z
     .string('PORT is required')
     .default('5000')
     .transform((val) => Number(val)),
 
   DATABASE_URL: z.string('DATABASE_URL is required').nonempty(),
+
+  CLOUDINARY_CLOUD_NAME: z
+    .string('CLOUDINARY_CLOUD_NAME is required')
+    .nonempty(),
+  CLOUDINARY_API_KEY: z.string('CLOUDINARY_API_KEY is required').nonempty(),
+  CLOUDINARY_API_SECRET: z
+    .string('CLOUDINARY_API_SECRET is required')
+    .nonempty(),
 
   JWT_ACCESS_SECRET: z.string('JWT_ACCESS_SECRET is required').min(10),
 

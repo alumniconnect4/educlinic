@@ -6,7 +6,10 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-lora), ui-serif, Georgia, serif;
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,24 +51,24 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --background: rgb(255 255 255);
+  --foreground: rgb(35 31 27);
+  --card: rgb(255 255 255);
+  --card-foreground: rgb(35 31 27);
+  --popover: rgb(255 255 255);
+  --popover-foreground: rgb(35 31 27);
+  --primary: rgb(166 32 37);
+  --primary-foreground: rgb(255 253 250);
+  --secondary: rgb(24 34 54);
+  --secondary-foreground: rgb(248 246 240);
+  --muted: rgb(240 236 228);
+  --muted-foreground: rgb(112 104 94);
+  --accent: rgb(240 236 228);
+  --accent-foreground: rgb(35 31 27);
+  --destructive: rgb(166 32 37);
+  --border: rgb(226 220 209);
+  --input: rgb(226 220 209);
+  --ring: rgb(166 32 37);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -80,6 +83,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --navy: rgb(24 34 54);
+  --navy-foreground: rgb(248 246 240);
 }
 
 .dark {
@@ -120,10 +125,29 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  @keyframes marquee-seamless {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+
+  .animate-marquee {
+    animation: marquee-seamless 40s linear infinite;
+    min-width: 100%;
   }
 }

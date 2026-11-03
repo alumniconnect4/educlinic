@@ -1,0 +1,1141 @@
+import type { Request, Response } from 'express';
+import { prisma } from '../config/db.js';
+import bcrypt from 'bcryptjs';
+import { generateToken } from '../utils/token.js';
+import { config } from '../config/index.js';
+import cloudinary from '../config/cloudinary.js';
+import {
+  deleteUserCache,
+  deleteSession,
+  getCache,
+  setCache,
+  generateAdminUserListCacheKey,
+  invalidateUsersCache,
+} from '../config/cache.js';
+import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
+import { enqueueUserImageUpload } from '../services/queue.service.js';
+
+export const loginAdmin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Credentials doesn't match" });
+    }
+
+    if (user.role != 'SUPER_ADMIN' && user.role != 'ADMIN') {
+      return res
+        .status(400)
+        .json({ message: 'You are not authorized to perform this action' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Credentials doesn't match" });
+    }
+
+    const token = generateToken({ id: user.id, role: user.role });
+
+    res.cookie('token', token, {
+      ...config.cookieOptions,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+    });
+
+    return res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        schoolCategory: user.schoolCategory,
+        avatarUrl: user.avatarUrl,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    const sessionId = req.cookies?.sessionId;
+    if (sessionId) {
+      await deleteSession(sessionId);
+    }
+    res.clearCookie('token', config.cookieOptions);
+    res.clearCookie('sessionId', config.cookieOptions);
+    res.json({ message: 'User logged out successfully' });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+export const getAdmins = async (req: Request, res: Response) => {
+  try {
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      return res
+        .status(403)
+        .json({ message: 'Forbidden: Only Super Admin can view all admins' });
+    }
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 8;
+    const search = (req.query.search as string) || '';
+    const schoolFilter =
+      (req.query.school as string) ||
+      (req.query.schoolCategory as string) ||
+      'ALL';
+    const skip = (page - 1) * limit;
+
+    const cacheKey = generateAdminUserListCacheKey(
+      'admins',
+      page,
+      limit,
+      undefined,
+      search,
+      schoolFilter
+    );
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
+
+    // @ts-ignore - Prisma mode typing
+    const whereClause: any = {
+      role: {
+        in: ['ADMIN', 'SUPER_ADMIN'],
+      },
+      ...(schoolFilter && schoolFilter !== 'ALL'
+        ? schoolFilter === 'UNASSIGNED'
+          ? { schoolCategory: null }
+          : { schoolCategory: schoolFilter }
+        : {}),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    const [admins, total] = await Promise.all([
+      prisma.user.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          schoolCategory: true,
+          avatarUrl: true,
+          bio: true,
+          gender: true,
+          socialLink: true,
+          isVerified: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where: whereClause }),
+    ]);
+
+    const responsePayload = {
+      data: admins,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    return res.status(200).json(responsePayload);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const createAdmin = async (req: Request, res: Response) => {
+  try {
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      return res
+        .status(403)
+        .json({ message: 'Forbidden: Only Super Admin can create admins' });
+    }
+
+    const {
+      name,
+      email,
+      password,
+      role,
+      schoolCategory,
+      avatarUrl,
+      bio,
+      gender,
+      socialLink,
+    } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    if (role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
+      return res.status(400).json({ message: 'Invalid role specified' });
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: 'User with this email already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const isAvatarBase64 = isBase64Image(avatarUrl);
+    const finalAvatarUrl = isAvatarBase64
+      ? DEFAULT_AVATAR_URL
+      : avatarUrl?.trim() || DEFAULT_AVATAR_URL;
+
+    const newAdmin = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        isVerified: true,
+        avatarUrl: finalAvatarUrl,
+        ...(schoolCategory ? { schoolCategory } : {}),
+        ...(bio ? { bio } : {}),
+        ...(gender ? { gender } : {}),
+        ...(socialLink ? { socialLink } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        bio: true,
+        gender: true,
+        socialLink: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (isAvatarBase64) {
+      await enqueueUserImageUpload(
+        newAdmin.id,
+        avatarUrl,
+        'avatarUrl',
+        'admin_avatars'
+      );
+    }
+
+    await invalidateUsersCache();
+
+    return res
+      .status(201)
+      .json({ message: 'Admin created successfully', user: newAdmin });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateAdmin = async (req: Request, res: Response) => {
+  try {
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      return res
+        .status(403)
+        .json({ message: 'Forbidden: Only Super Admin can update admins' });
+    }
+
+    const id = parseInt(req.params.id as string);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid Admin ID' });
+    }
+
+    const {
+      name,
+      email,
+      password,
+      role,
+      schoolCategory,
+      avatarUrl,
+      bio,
+      gender,
+      socialLink,
+      isVerified,
+    } = req.body;
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (role && (role === 'ADMIN' || role === 'SUPER_ADMIN'))
+      updateData.role = role;
+    if (schoolCategory !== undefined)
+      updateData.schoolCategory = schoolCategory || null;
+
+    if (avatarUrl !== undefined) {
+      if (isBase64Image(avatarUrl)) {
+        await enqueueUserImageUpload(
+          id,
+          avatarUrl,
+          'avatarUrl',
+          'admin_avatars'
+        );
+      } else {
+        updateData.avatarUrl =
+          avatarUrl.trim() !== '' ? avatarUrl.trim() : DEFAULT_AVATAR_URL;
+      }
+    }
+
+    if (bio !== undefined) updateData.bio = bio || null;
+    if (gender !== undefined) updateData.gender = gender || null;
+    if (socialLink !== undefined) updateData.socialLink = socialLink || null;
+    if (isVerified !== undefined) updateData.isVerified = Boolean(isVerified);
+    if (password && password.trim() !== '') {
+      updateData.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    const updatedAdmin = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        bio: true,
+        gender: true,
+        socialLink: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await deleteUserCache(updatedAdmin.email);
+    await invalidateUsersCache();
+
+    return res
+      .status(200)
+      .json({ message: 'Admin updated successfully', user: updatedAdmin });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteAdmin = async (req: Request, res: Response) => {
+  try {
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      return res
+        .status(403)
+        .json({ message: 'Forbidden: Only Super Admin can delete admins' });
+    }
+
+    const id = parseInt(req.params.id as string);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid Admin ID' });
+    }
+
+    if (req.user?.id === id) {
+      return res
+        .status(400)
+        .json({ message: 'You cannot delete your own account' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { email: true },
+    });
+
+    await prisma.user.delete({
+      where: { id },
+    });
+
+    if (user?.email) {
+      await deleteUserCache(user.email);
+    }
+    await invalidateUsersCache();
+
+    return res.status(200).json({ message: 'Admin deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// ==================== ALUMNI & STUDENTS MANAGEMENT ==================== //
+
+export const getAlumniStudents = async (req: Request, res: Response) => {
+  try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 8;
+    const search = (req.query.search as string) || '';
+    const roleFilter = (req.query.role as string) || 'ALL';
+    const schoolParam =
+      (req.query.school as string) ||
+      (req.query.schoolCategory as string) ||
+      'ALL';
+    const targetSchool = isSuperAdmin
+      ? schoolParam !== 'ALL'
+        ? schoolParam
+        : undefined
+      : adminSchool || undefined;
+
+    const skip = (page - 1) * limit;
+
+    const cacheKey = generateAdminUserListCacheKey(
+      'alumnistudents',
+      page,
+      limit,
+      roleFilter,
+      search,
+      isSuperAdmin ? schoolParam || 'ALL' : adminSchool || 'UNASSIGNED'
+    );
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
+
+    const roleCondition =
+      roleFilter === 'USER'
+        ? ['USER']
+        : roleFilter === 'ALUMNI'
+          ? ['ALUMNI']
+          : ['USER', 'ALUMNI'];
+
+    const whereClause: any = {
+      role: { in: roleCondition },
+      isVerified: true,
+      ...(isSuperAdmin
+        ? targetSchool
+          ? targetSchool === 'UNASSIGNED'
+            ? { schoolCategory: null }
+            : { schoolCategory: targetSchool }
+          : {}
+        : { schoolCategory: (adminSchool as any) || null }),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          schoolCategory: true,
+          avatarUrl: true,
+          idCardUrl: true,
+          degreeUrl: true,
+          bio: true,
+          gender: true,
+          socialLink: true,
+          isVerified: true,
+          isDeveloper: true,
+          developerTitle: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where: whereClause }),
+    ]);
+
+    const responsePayload = {
+      data: users,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    return res.status(200).json(responsePayload);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const createAlumniStudent = async (req: Request, res: Response) => {
+  try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+    const { name, email, password, role, schoolCategory, avatarUrl } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res
+        .status(400)
+        .json({ message: 'All required fields must be provided' });
+    }
+
+    if (role !== 'USER' && role !== 'ALUMNI') {
+      return res
+        .status(400)
+        .json({ message: 'Role must be Student (USER) or Alumni (ALUMNI)' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You do not have an assigned school to manage students',
+        });
+      }
+      if (schoolCategory && schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only create students/alumni for your assigned school',
+        });
+      }
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: 'User with this email already exists' });
+    }
+
+    const finalSchool = isSuperAdmin
+      ? (schoolCategory || null)
+      : adminSchool;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const isAvatarBase64 = isBase64Image(avatarUrl);
+    const finalAvatarUrl = isAvatarBase64
+      ? DEFAULT_AVATAR_URL
+      : avatarUrl?.trim() || DEFAULT_AVATAR_URL;
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        isVerified: true, // Admin created accounts are pre-approved
+        avatarUrl: finalAvatarUrl,
+        ...(finalSchool ? { schoolCategory: finalSchool } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        isVerified: true,
+        createdAt: true,
+      },
+    });
+
+    if (isAvatarBase64) {
+      await enqueueUserImageUpload(
+        newUser.id,
+        avatarUrl,
+        'avatarUrl',
+        'avatars'
+      );
+    }
+
+    await invalidateUsersCache();
+
+    return res
+      .status(201)
+      .json({ message: 'User created successfully', user: newUser });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateAlumniStudent = async (req: Request, res: Response) => {
+  try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
+    const id = parseInt(req.params.id as string);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid User ID' });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, schoolCategory: true, email: true },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (existingUser.role !== 'USER' && existingUser.role !== 'ALUMNI') {
+      return res.status(403).json({ message: 'Forbidden: Cannot modify admin accounts' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || existingUser.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only update students/alumni from your assigned school',
+        });
+      }
+    }
+
+    const {
+      name,
+      email,
+      password,
+      role,
+      schoolCategory,
+      avatarUrl,
+      idCardUrl,
+      degreeUrl,
+      bio,
+      gender,
+      socialLink,
+      isVerified,
+      isDeveloper,
+      developerTitle,
+    } = req.body;
+
+    if (!isSuperAdmin && schoolCategory !== undefined && schoolCategory !== adminSchool) {
+      return res.status(403).json({
+        message: 'Forbidden: You cannot change a student’s school to another school',
+      });
+    }
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (role && (role === 'USER' || role === 'ALUMNI')) updateData.role = role;
+    if (schoolCategory !== undefined)
+      updateData.schoolCategory = isSuperAdmin ? (schoolCategory || null) : adminSchool;
+
+    if (avatarUrl !== undefined) {
+      if (isBase64Image(avatarUrl)) {
+        await enqueueUserImageUpload(id, avatarUrl, 'avatarUrl', 'avatars');
+      } else {
+        updateData.avatarUrl =
+          avatarUrl.trim() !== '' ? avatarUrl.trim() : DEFAULT_AVATAR_URL;
+      }
+    }
+
+    if (idCardUrl !== undefined) {
+      if (isBase64Image(idCardUrl)) {
+        await enqueueUserImageUpload(id, idCardUrl, 'idCardUrl', 'id_cards');
+      } else {
+        updateData.idCardUrl = idCardUrl || null;
+      }
+    }
+
+    if (degreeUrl !== undefined) {
+      if (isBase64Image(degreeUrl)) {
+        await enqueueUserImageUpload(id, degreeUrl, 'degreeUrl', 'degrees');
+      } else {
+        updateData.degreeUrl = degreeUrl || null;
+      }
+    }
+
+    if (bio !== undefined) updateData.bio = bio || null;
+    if (gender !== undefined) updateData.gender = gender || null;
+    if (socialLink !== undefined) updateData.socialLink = socialLink || null;
+    if (isVerified !== undefined) updateData.isVerified = Boolean(isVerified);
+    if (isDeveloper !== undefined)
+      updateData.isDeveloper = Boolean(isDeveloper);
+    if (developerTitle !== undefined)
+      updateData.developerTitle = developerTitle || null;
+
+    if (password && password.trim() !== '') {
+      updateData.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        idCardUrl: true,
+        degreeUrl: true,
+        bio: true,
+        gender: true,
+        socialLink: true,
+        isVerified: true,
+        isDeveloper: true,
+        developerTitle: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    await deleteUserCache(updatedUser.email);
+    await invalidateUsersCache();
+
+    return res
+      .status(200)
+      .json({ message: 'User updated successfully', user: updatedUser });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteAlumniStudent = async (req: Request, res: Response) => {
+  try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
+    const id = parseInt(req.params.id as string);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid User ID' });
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, schoolCategory: true, email: true },
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (targetUser.role !== 'USER' && targetUser.role !== 'ALUMNI') {
+      return res.status(403).json({ message: 'Forbidden: Cannot delete admin accounts' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || targetUser.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only delete students/alumni from your assigned school',
+        });
+      }
+    }
+
+    await prisma.user.delete({
+      where: { id },
+    });
+
+    if (targetUser.email) {
+      await deleteUserCache(targetUser.email);
+    }
+    await invalidateUsersCache();
+
+    return res.status(200).json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// ==================== PENDING REGISTRATION REQUESTS ==================== //
+
+export const getPendingRequests = async (req: Request, res: Response) => {
+  try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 8;
+    const search = (req.query.search as string) || '';
+    const roleFilter = (req.query.role as string) || 'ALL';
+    const targetSchool = isSuperAdmin
+      ? ((req.query.school as string) || (req.query.schoolCategory as string) || undefined)
+      : (adminSchool || undefined);
+
+    const skip = (page - 1) * limit;
+
+    const cacheKey = generateAdminUserListCacheKey(
+      'pending',
+      page,
+      limit,
+      roleFilter,
+      search,
+      targetSchool || (isSuperAdmin ? 'ALL' : 'UNASSIGNED')
+    );
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+      return res.status(200).json(cachedData);
+    }
+
+    const roleCondition =
+      roleFilter === 'USER'
+        ? ['USER']
+        : roleFilter === 'ALUMNI'
+          ? ['ALUMNI']
+          : ['USER', 'ALUMNI'];
+
+    const whereClause: any = {
+      isVerified: false,
+      role: { in: roleCondition },
+      ...(isSuperAdmin
+        ? (targetSchool ? { schoolCategory: targetSchool } : {})
+        : { schoolCategory: (adminSchool as any) || null }),
+      ...(search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    const [pendingUsers, total] = await Promise.all([
+      prisma.user.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          schoolCategory: true,
+          avatarUrl: true,
+          idCardUrl: true,
+          degreeUrl: true,
+          phoneNumber: true,
+          course: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where: whereClause }),
+    ]);
+
+    const responsePayload = {
+      data: pendingUsers,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+    await setCache(cacheKey, responsePayload, 300);
+
+    return res.status(200).json(responsePayload);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const approvePendingRequest = async (req: Request, res: Response) => {
+  try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
+    const id = parseInt(req.params.id as string);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid Request ID' });
+    }
+
+    const applicant = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, schoolCategory: true, isVerified: true, email: true },
+    });
+
+    if (!applicant) {
+      return res.status(404).json({ message: 'Registration request not found' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || applicant.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only approve registration requests from your assigned school',
+        });
+      }
+    }
+
+    const approvedUser = await prisma.user.update({
+      where: { id },
+      data: { isVerified: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        isVerified: true,
+      },
+    });
+
+    await deleteUserCache(approvedUser.email);
+    await invalidateUsersCache();
+
+    return res
+      .status(200)
+      .json({ message: 'Registration request approved', user: approvedUser });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const declinePendingRequest = async (req: Request, res: Response) => {
+  try {
+    const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
+    const adminSchool = req.user?.schoolCategory;
+
+    const id = parseInt(req.params.id as string);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid Request ID' });
+    }
+
+    const applicant = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, schoolCategory: true, email: true },
+    });
+
+    if (!applicant) {
+      return res.status(404).json({ message: 'Registration request not found' });
+    }
+
+    if (!isSuperAdmin) {
+      if (!adminSchool || applicant.schoolCategory !== adminSchool) {
+        return res.status(403).json({
+          message: 'Forbidden: You can only decline registration requests from your assigned school',
+        });
+      }
+    }
+
+    await prisma.user.delete({
+      where: { id },
+    });
+
+    if (applicant.email) {
+      await deleteUserCache(applicant.email);
+    }
+    await invalidateUsersCache();
+
+    return res.status(200).json({ message: 'Registration request declined' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getAdminProfile = async (req: Request, res: Response) => {
+  try {
+    const id = req.user?.id;
+    if (!id) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        bio: true,
+        gender: true,
+        socialLink: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    return res.status(200).json({ user });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateAdminProfile = async (req: Request, res: Response) => {
+  try {
+    const id = req.user?.id;
+    if (!id) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { name, email, avatarUrl, bio, gender, socialLink } = req.body;
+
+    if (email) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email,
+          NOT: { id },
+        },
+      });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email is already taken' });
+      }
+    }
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (avatarUrl !== undefined) {
+      if (isBase64Image(avatarUrl)) {
+        await enqueueUserImageUpload(
+          id,
+          avatarUrl,
+          'avatarUrl',
+          'admin_avatars'
+        );
+      } else {
+        updateData.avatarUrl = avatarUrl;
+      }
+    }
+    if (bio !== undefined) updateData.bio = bio;
+    if (gender !== undefined) updateData.gender = gender;
+    if (socialLink !== undefined) updateData.socialLink = socialLink;
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        schoolCategory: true,
+        avatarUrl: true,
+        bio: true,
+        gender: true,
+        socialLink: true,
+        isVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    await deleteUserCache(updatedUser.email);
+    await invalidateUsersCache();
+
+    return res
+      .status(200)
+      .json({ message: 'Profile updated successfully', user: updatedUser });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const changeAdminPassword = async (req: Request, res: Response) => {
+  try {
+    const id = req.user?.id;
+    if (!id) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: 'Current and new passwords are required' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: 'Incorrect current password' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+    await deleteUserCache(user.email);
+    await invalidateUsersCache();
+
+    return res.status(200).json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const uploadAdminImage = async (req: Request, res: Response) => {
+  try {
+    const id = req.user?.id;
+    if (!id) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ message: 'Image data is required' });
+    }
+
+    try {
+      const cloudinaryUpload = await cloudinary.uploader.upload(image, {
+        folder: 'admin_avatars',
+      });
+      return res.status(200).json({ url: cloudinaryUpload.secure_url });
+    } catch (cloudinaryErr) {
+      console.error(
+        'Cloudinary upload error in uploadAdminImage:',
+        cloudinaryErr
+      );
+      return res.status(500).json({
+        message: 'Cloudinary image upload failed',
+      });
+    }
+  } catch (err) {
+    console.error('General admin upload error:', err);
+    return res.status(500).json({ message: 'Image upload failed' });
+  }
+};

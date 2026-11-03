@@ -4,10 +4,10 @@ import MainNav from './MainNav';
 
 const Navbar = () => {
   return (
-    <header className="w-full flex flex-col">
+    <>
       <TopBar />
       <MainNav />
-    </header>
+    </>
   );
 };
 
