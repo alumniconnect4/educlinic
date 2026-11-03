@@ -15,8 +15,11 @@ const AuthForm = () => {
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [course, setCourse] = useState<string>('');
+  const [batchFrom, setBatchFrom] = useState<string>('');
+  const [batchTo, setBatchTo] = useState<string>('');
   const [phoneError, setPhoneError] = useState<string>('');
   const [courseError, setCourseError] = useState<string>('');
+  const [batchError, setBatchError] = useState<string>('');
   const [previewModal, setPreviewModal] = useState<{
     url: string;
     title: string;
@@ -109,6 +112,7 @@ const AuthForm = () => {
     setSuccess('');
     setPhoneError('');
     setCourseError('');
+    setBatchError('');
     setIsLoading(true);
 
     try {
@@ -148,6 +152,33 @@ const AuthForm = () => {
           return;
         }
 
+        // Validate batch if provided (optional)
+        if (batchFrom.trim() && batchFrom.trim().length > 30) {
+          const msg = 'Batch (From) must be 30 characters or less.';
+          setBatchError(msg);
+          toast.error(msg);
+          setIsLoading(false);
+          return;
+        }
+        if (batchTo.trim() && batchTo.trim().length > 30) {
+          const msg = 'Batch (To) must be 30 characters or less.';
+          setBatchError(msg);
+          toast.error(msg);
+          setIsLoading(false);
+          return;
+        }
+        if (batchFrom.trim() && batchTo.trim()) {
+          const fromYear = parseInt(batchFrom.trim(), 10);
+          const toYear = parseInt(batchTo.trim(), 10);
+          if (!isNaN(fromYear) && !isNaN(toYear) && fromYear > toYear) {
+            const msg = 'Batch "From" year cannot be later than "To" year.';
+            setBatchError(msg);
+            toast.error(msg);
+            setIsLoading(false);
+            return;
+          }
+        }
+
         if (role === 'USER' && !idCardUrl) {
           setError('Student registration requires uploading an ID Card.');
           toast.error('Student registration requires uploading an ID Card.');
@@ -176,6 +207,8 @@ const AuthForm = () => {
             schoolCategory: e.target.schoolCategory.value,
             phoneNumber: phoneNumber.trim() || undefined,
             course: course.trim() || undefined,
+            batchFrom: batchFrom.trim() || null,
+            batchTo: batchTo.trim() || null,
             avatarUrl: avatarUrl || undefined,
             idCardUrl,
             degreeUrl,
@@ -189,6 +222,9 @@ const AuthForm = () => {
         setAvatarUrl('');
         setPhoneNumber('');
         setCourse('');
+        setBatchFrom('');
+        setBatchTo('');
+        setBatchError('');
         if (res.data.user?.isVerified === false) {
           setSuccess(
             'Registration request submitted! Your account is pending administrator review and approval. An administrator will verify your application soon.'
@@ -412,6 +448,57 @@ const AuthForm = () => {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Batch (From and To) */}
+                <div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Batch (From){' '}
+                        <span className="text-xs font-normal text-gray-400">
+                          (Optional)
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={batchFrom}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 30) {
+                            setBatchFrom(e.target.value);
+                            setBatchError('');
+                          }
+                        }}
+                        className={`w-full px-4 py-2.5 rounded-md border ${batchError ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : 'border-gray-300 focus:ring-[#d60000] focus:border-[#d60000]'} focus:ring-1 outline-none transition-all bg-white text-sm`}
+                        placeholder="e.g. 2020"
+                        maxLength={30}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Batch (To){' '}
+                        <span className="text-xs font-normal text-gray-400">
+                          (Optional)
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={batchTo}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 30) {
+                            setBatchTo(e.target.value);
+                            setBatchError('');
+                          }
+                        }}
+                        className={`w-full px-4 py-2.5 rounded-md border ${batchError ? 'border-red-400 focus:ring-red-400 focus:border-red-400' : 'border-gray-300 focus:ring-[#d60000] focus:border-[#d60000]'} focus:ring-1 outline-none transition-all bg-white text-sm`}
+                        placeholder="e.g. 2024"
+                        maxLength={30}
+                      />
+                    </div>
+                  </div>
+                  {batchError && (
+                    <p className="text-xs text-red-500 mt-1">{batchError}</p>
+                  )}
                 </div>
 
                 {/* Profile Avatar Upload (Compulsory) */}

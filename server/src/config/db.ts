@@ -49,6 +49,16 @@ export const ensureDatabaseSchema = async (): Promise<void> => {
           END IF;
         END $$;
 
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'User') THEN
+            ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phoneNumber" TEXT;
+            ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "course" VARCHAR(50);
+            ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "batchFrom" VARCHAR(30);
+            ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "batchTo" VARCHAR(30);
+          END IF;
+        END $$;
+
         CREATE TABLE IF NOT EXISTS "_AlbumToEvent" (
             "A" INTEGER NOT NULL,
             "B" INTEGER NOT NULL,

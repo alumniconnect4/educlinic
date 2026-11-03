@@ -63,6 +63,8 @@ model User {
   schoolCategory   SchoolCategory?
   phoneNumber      String?
   course           String?         @db.VarChar(50)
+  batchFrom        String?         @db.VarChar(30)
+  batchTo          String?         @db.VarChar(30)
   avatarUrl        String?
   bio              String?
   gender           String?

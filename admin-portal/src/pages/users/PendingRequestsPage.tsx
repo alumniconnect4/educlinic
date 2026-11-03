@@ -26,6 +26,8 @@ interface UserRecord {
   degreeUrl?: string;
   phoneNumber?: string;
   course?: string;
+  batchFrom?: string | null;
+  batchTo?: string | null;
   isVerified: boolean;
   createdAt: string;
 }
@@ -617,6 +619,24 @@ export default function PendingRequestsPage() {
                   </span>
                   <span className="font-semibold text-slate-800">
                     {selectedRequest.course || <span className="text-gray-400 italic font-normal">Not provided</span>}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-1">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider block text-[10px]">
+                    Batch (From)
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedRequest.batchFrom || <span className="text-gray-400 italic font-normal">Not provided</span>}
+                  </span>
+                </div>
+
+                <div className="p-2.5 bg-gray-50 rounded border border-gray-200 space-y-1">
+                  <span className="text-gray-400 font-bold uppercase tracking-wider block text-[10px]">
+                    Batch (To)
+                  </span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedRequest.batchTo || <span className="text-gray-400 italic font-normal">Not provided</span>}
                   </span>
                 </div>
               </div>

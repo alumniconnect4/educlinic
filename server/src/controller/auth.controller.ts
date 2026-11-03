@@ -24,6 +24,8 @@ export const register = async (req: Request, res: Response) => {
       schoolCategory,
       phoneNumber,
       course,
+      batchFrom,
+      batchTo,
       avatarUrl,
       idCardUrl,
       degreeUrl,
@@ -47,6 +49,15 @@ export const register = async (req: Request, res: Response) => {
         message: 'Course name must be 50 characters or less.',
       });
     }
+
+    const sanitizedBatchFrom =
+      batchFrom && String(batchFrom).trim()
+        ? String(batchFrom).trim().slice(0, 30)
+        : null;
+    const sanitizedBatchTo =
+      batchTo && String(batchTo).trim()
+        ? String(batchTo).trim().slice(0, 30)
+        : null;
 
     if (role === 'USER' && !idCardUrl) {
       return res.status(400).json({
@@ -91,6 +102,8 @@ export const register = async (req: Request, res: Response) => {
         schoolCategory,
         phoneNumber: phoneNumber ? String(phoneNumber).replace(/[\s\-\(\)\+]/g, '') : null,
         course: course ? String(course).trim().slice(0, 50) : null,
+        batchFrom: sanitizedBatchFrom,
+        batchTo: sanitizedBatchTo,
         avatarUrl: initialAvatarUrl,
         idCardUrl: initialIdCardUrl,
         degreeUrl: initialDegreeUrl,
@@ -136,6 +149,9 @@ export const register = async (req: Request, res: Response) => {
           role: newUser.role,
           schoolCategory: newUser.schoolCategory,
           avatarUrl: newUser.avatarUrl,
+          course: newUser.course,
+          batchFrom: newUser.batchFrom,
+          batchTo: newUser.batchTo,
           isVerified: false,
         },
       });
@@ -155,6 +171,9 @@ export const register = async (req: Request, res: Response) => {
         role: newUser.role,
         schoolCategory: newUser.schoolCategory,
         avatarUrl: newUser.avatarUrl,
+        course: newUser.course,
+        batchFrom: newUser.batchFrom,
+        batchTo: newUser.batchTo,
         isVerified: true,
       },
     });

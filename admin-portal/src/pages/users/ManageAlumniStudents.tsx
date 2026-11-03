@@ -28,6 +28,10 @@ interface UserRecord {
   email: string;
   role: 'USER' | 'ALUMNI' | 'ADMIN' | 'SUPER_ADMIN';
   schoolCategory?: string;
+  phoneNumber?: string;
+  course?: string;
+  batchFrom?: string | null;
+  batchTo?: string | null;
   avatarUrl?: string;
   idCardUrl?: string;
   degreeUrl?: string;
@@ -987,6 +991,38 @@ export default function ManageAlumniStudents() {
                     </span>
                     <span className="font-semibold text-slate-800">
                       {formatSchool(viewingUser.schoolCategory)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Phone Number
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {viewingUser.phoneNumber || 'Not provided'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Course
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {viewingUser.course || 'Not provided'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Batch (From)
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {viewingUser.batchFrom || 'Not provided'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 font-semibold uppercase block text-[10px] tracking-wider mb-0.5">
+                      Batch (To)
+                    </span>
+                    <span className="font-semibold text-slate-800">
+                      {viewingUser.batchTo || 'Not provided'}
                     </span>
                   </div>
                   <div>
