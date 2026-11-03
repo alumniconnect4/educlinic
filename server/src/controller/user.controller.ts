@@ -63,7 +63,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
       }
     }
 
-    const whereClause: any = {};
+    const whereClause: any = {
+      isVerified: true,
+    };
     let followingIdsSet = new Set<number>();
 
     if (excludeDevs && !search) {
@@ -138,7 +140,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
       avatarUrl: formatCloudinaryAvatar(u.avatarUrl, 160),
       isFollowed: followingIdsSet.has(u.id),
       isVerified: Boolean(
-        u.isDeveloper || u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'
+        u.isVerified || u.isDeveloper || u.role === 'ADMIN' || u.role === 'SUPER_ADMIN'
       ),
     }));
 
@@ -172,6 +174,7 @@ export const getDevelopers = async (req: Request, res: Response) => {
     const developers = await prisma.user.findMany({
       where: {
         isDeveloper: true,
+        isVerified: true,
       },
       select: {
         id: true,
@@ -251,6 +254,7 @@ export const getUserById = async (req: Request, res: Response) => {
         ...user,
         avatarUrl: formatCloudinaryAvatar(user.avatarUrl, 400),
         isVerified: Boolean(
+          user.isVerified ||
           user.isDeveloper ||
           user.role === 'ADMIN' ||
           user.role === 'SUPER_ADMIN'

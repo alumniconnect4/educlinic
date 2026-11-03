@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore, getAuthHeaders } from '../store/mockData';
 import { getAvatarUrl } from '../lib/utils';
@@ -67,6 +67,7 @@ export const DeveloperBadge: React.FC<{
 );
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const USERS_PER_PAGE = 16;
 
 export const ConnectPage: React.FC = () => {
   const {
@@ -84,6 +85,9 @@ export const ConnectPage: React.FC = () => {
     'ALL'
   );
   const [users, setUsers] = useState<ConnectUser[]>(connectUsersCache);
+  const [currentSkip, setCurrentSkip] = useState<number>(0);
+  const currentSkipRef = useRef<number>(0);
+  const totalUsersRef = useRef<number>(connectTotalCache || 0);
   const [developers, setDevelopers] = useState<ConnectUser[]>([]);
   const [shuffledDevelopers, setShuffledDevelopers] = useState<ConnectUser[]>(
     []
@@ -105,8 +109,9 @@ export const ConnectPage: React.FC = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        const list: ConnectUser[] =
-          data.developers || (Array.isArray(data) ? data : []);
+        const list: ConnectUser[] = (
+          data.developers || (Array.isArray(data) ? data : [])
+        ).filter((u: ConnectUser) => u.isVerified !== false);
         setDevelopers(list);
         const shuffled = [...list].sort(() => Math.random() - 0.5);
         setShuffledDevelopers(shuffled);
@@ -128,12 +133,17 @@ export const ConnectPage: React.FC = () => {
 
   // Fetch user directory
   const fetchUsers = useCallback(
-    async (search: string, role: string, refresh = false) => {
+    async (
+      search: string,
+      role: string,
+      targetSkip = 0,
+      refresh = false
+    ): Promise<void> => {
       try {
         setLoading(true);
         const queryParams = new URLSearchParams({
-          limit: '16',
-          skip: '0',
+          limit: String(USERS_PER_PAGE),
+          skip: String(targetSkip),
           ...(!search ? { excludeDevs: 'true' } : {}),
           ...(role !== 'ALL' ? { role } : {}),
           ...(search ? { search } : {}),
@@ -148,18 +158,23 @@ export const ConnectPage: React.FC = () => {
         if (!res.ok) throw new Error('Failed to fetch users');
 
         const data = await res.json();
-        const fetchedUsers: ConnectUser[] = data.users || [];
+        const fetchedUsers: ConnectUser[] = (data.users || []).filter(
+          (u: ConnectUser) => u.isVerified !== false
+        );
         const fetchedTotal = data.total || 0;
 
-        // When refreshing without an active search term, randomize the display order to show fresh discovery
-        const finalUsers =
-          !search && refresh
-            ? [...fetchedUsers].sort(() => Math.random() - 0.5)
-            : fetchedUsers;
+        // If a non-zero offset returned 0 users, wrap back to the first bunch
+        if (fetchedUsers.length === 0 && targetSkip > 0) {
+          return fetchUsers(search, role, 0, refresh);
+        }
 
-        setUsers(finalUsers);
-        if (!search && role === 'ALL') {
-          setConnectUsersCache(finalUsers);
+        setUsers(fetchedUsers);
+        setCurrentSkip(targetSkip);
+        currentSkipRef.current = targetSkip;
+        totalUsersRef.current = fetchedTotal;
+
+        if (!search && role === 'ALL' && targetSkip === 0) {
+          setConnectUsersCache(fetchedUsers);
           setConnectTotalCache(fetchedTotal);
         }
       } catch (err) {
@@ -176,9 +191,9 @@ export const ConnectPage: React.FC = () => {
     fetchDevelopers();
   }, [fetchDevelopers]);
 
-  // Fetch users when search query or role filter changes
+  // Fetch users when search query or role filter changes (reset offset to 0)
   useEffect(() => {
-    fetchUsers(debouncedSearch, roleFilter);
+    fetchUsers(debouncedSearch, roleFilter, 0);
   }, [fetchUsers, debouncedSearch, roleFilter]);
 
   // Lock body scroll when developer directory modal is open
@@ -194,7 +209,16 @@ export const ConnectPage: React.FC = () => {
   }, [showDevModal]);
 
   const handleRefreshPeople = () => {
-    fetchUsers(debouncedSearch, roleFilter, true);
+    if (developers.length > 0) {
+      setShuffledDevelopers([...developers].sort(() => Math.random() - 0.5));
+    }
+
+    let nextSkip = currentSkipRef.current + USERS_PER_PAGE;
+    if (totalUsersRef.current > 0 && nextSkip >= totalUsersRef.current) {
+      nextSkip = 0;
+    }
+
+    fetchUsers(debouncedSearch, roleFilter, nextSkip, true);
   };
 
   const handleFollowToggle = async (
@@ -255,17 +279,21 @@ export const ConnectPage: React.FC = () => {
 
   const displayedDevelopers = (
     shuffledDevelopers.length > 0 ? shuffledDevelopers : developers
-  ).slice(0, 4);
+  )
+    .filter((d) => d.isVerified !== false)
+    .slice(0, 4);
   const filteredDevModalList = developers.filter(
     (d) =>
-      d.name.toLowerCase().includes(devModalSearch.toLowerCase()) ||
-      (d.developerTitle &&
-        d.developerTitle.toLowerCase().includes(devModalSearch.toLowerCase()))
+      d.isVerified !== false &&
+      (d.name.toLowerCase().includes(devModalSearch.toLowerCase()) ||
+        (d.developerTitle &&
+          d.developerTitle.toLowerCase().includes(devModalSearch.toLowerCase())))
   );
 
   // Exclude developers from the general users grid unless searching
-  const displayedGeneralUsers =
-    debouncedSearch.trim() !== '' ? users : users.filter((u) => !u.isDeveloper);
+  const displayedGeneralUsers = (
+    debouncedSearch.trim() !== '' ? users : users.filter((u) => !u.isDeveloper)
+  ).filter((u) => u.isVerified !== false);
 
   return (
     <div className="space-y-8 pb-8">
