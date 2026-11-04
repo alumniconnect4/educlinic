@@ -9,19 +9,26 @@ import {
   type UserRole as UserRoleEnum,
 } from '../../generated/prisma/enums.js';
 
-type AuthenticatedUser = Pick<
+export type AuthenticatedUser = Pick<
   User,
   | 'id'
   | 'name'
   | 'email'
   | 'role'
   | 'schoolCategory'
+  | 'phoneNumber'
+  | 'course'
+  | 'batchFrom'
+  | 'batchTo'
+  | 'isVerified'
   | 'bio'
   | 'gender'
   | 'socialLink'
   | 'createdAt'
 > & {
   avatarUrl?: string | null;
+  isDeveloper?: boolean;
+  developerTitle?: string | null;
 };
 
 const roleRank: Record<UserRoleEnum, number> = {
@@ -129,6 +136,11 @@ export const authMiddleware =
           email: true,
           role: true,
           schoolCategory: true,
+          phoneNumber: true,
+          course: true,
+          batchFrom: true,
+          batchTo: true,
+          isVerified: true,
           avatarUrl: true,
           bio: true,
           gender: true,

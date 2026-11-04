@@ -345,7 +345,53 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { name, bio, gender, socialLink, avatarUrl } = req.body;
+    const {
+      name,
+      bio,
+      gender,
+      socialLink,
+      avatarUrl,
+      phoneNumber,
+      course,
+      batchFrom,
+      batchTo,
+      schoolCategory,
+    } = req.body;
+
+    if (course && typeof course === 'string' && course.length > 50) {
+      return res
+        .status(400)
+        .json({ message: 'Course must be 50 characters or less' });
+    }
+    if (batchFrom && typeof batchFrom === 'string' && batchFrom.length > 30) {
+      return res
+        .status(400)
+        .json({ message: 'Batch (From) must be 30 characters or less' });
+    }
+    if (batchTo && typeof batchTo === 'string' && batchTo.length > 30) {
+      return res
+        .status(400)
+        .json({ message: 'Batch (To) must be 30 characters or less' });
+    }
+    if (phoneNumber && typeof phoneNumber === 'string' && phoneNumber.length > 20) {
+      return res
+        .status(400)
+        .json({ message: 'Phone number must be 20 characters or less' });
+    }
+
+    const validSchoolCategories = [
+      'School_of_Engineering',
+      'School_of_Sciences',
+      'School_of_Agriculture',
+      'School_of_Business_Studies',
+      'School_of_Commerce',
+      'School_of_Management',
+      'School_of_Computer_Applications',
+      'School_of_Humanities',
+      'School_of_Education',
+      'School_of_Law',
+      'School_of_Pharmacy',
+    ];
 
     const isAvatarBase64 = isBase64Image(avatarUrl);
     let finalAvatarUrl = isAvatarBase64 ? undefined : avatarUrl;
@@ -359,6 +405,9 @@ export const updateProfile = async (req: Request, res: Response) => {
       );
     }
 
+    const isAdmin =
+      req.user?.role === 'ADMIN' || req.user?.role === 'SUPER_ADMIN';
+
     const updatedUser = await prisma.user.update({
       where: { id: currentUserId },
       data: {
@@ -367,6 +416,24 @@ export const updateProfile = async (req: Request, res: Response) => {
         bio,
         gender,
         socialLink,
+        ...(phoneNumber !== undefined && {
+          phoneNumber: phoneNumber ? String(phoneNumber).trim() : null,
+        }),
+        ...(course !== undefined && {
+          course: course ? String(course).trim() : null,
+        }),
+        ...(batchFrom !== undefined && {
+          batchFrom: batchFrom ? String(batchFrom).trim() : null,
+        }),
+        ...(batchTo !== undefined && {
+          batchTo: batchTo ? String(batchTo).trim() : null,
+        }),
+        ...(isAdmin &&
+          schoolCategory !== undefined && {
+            schoolCategory: validSchoolCategories.includes(schoolCategory)
+              ? (schoolCategory as any)
+              : null,
+          }),
       },
       select: {
         id: true,
@@ -374,6 +441,11 @@ export const updateProfile = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        phoneNumber: true,
+        course: true,
+        batchFrom: true,
+        batchTo: true,
+        isVerified: true,
         avatarUrl: true,
         bio: true,
         gender: true,

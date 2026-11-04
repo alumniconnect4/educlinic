@@ -8,6 +8,7 @@ import { useUserStore, UserStore } from '@/store/useUserStore';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { toast as hotToast } from 'react-hot-toast';
+import { FaRegUserCircle } from 'react-icons/fa';
 
 type RouteItem = {
   name: string;
@@ -94,6 +95,7 @@ const MainNav = () => {
   const isAuthenticated = useUserStore(
     (state: UserStore) => state.isAuthenticated
   );
+  const user = useUserStore((state: UserStore) => state.user);
 
   // Dynamic route measurement & overflow calculation
   const calculateVisibleCount = useCallback(() => {
@@ -401,27 +403,38 @@ const MainNav = () => {
         >
           <div className="hidden sm:block">
             {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-3.5 py-1.5 md:px-4 md:py-2 rounded flex items-center justify-center space-x-2 font-medium text-sm transition shadow-xs ${
-                  isLoggingOut
-                    ? 'opacity-75 cursor-not-allowed'
-                    : 'cursor-pointer'
-                }`}
-              >
-                {isLoggingOut ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Logging out...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Logout</span>
-                    <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <Link
+                  href="/profile"
+                  className="text-gray-700 hover:text-[#d60000] p-1.5 md:p-2 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer"
+                  title="My Profile"
+                  aria-label="My Profile"
+                >
+                  <FaRegUserCircle size={24} />
+                </Link>
+
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className={`bg-[#d60000] hover:bg-[#b30000] text-white px-3.5 py-1.5 md:px-4 md:py-2 rounded flex items-center justify-center space-x-2 font-medium text-xs md:text-sm transition shadow-xs ${
+                    isLoggingOut
+                      ? 'opacity-75 cursor-not-allowed'
+                      : 'cursor-pointer'
+                  }`}
+                >
+                  {isLoggingOut ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Logging out...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Logout</span>
+                      <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
             ) : (
               <Link
                 href="/auth"
@@ -432,6 +445,18 @@ const MainNav = () => {
               </Link>
             )}
           </div>
+
+          {/* Mobile Profile Icon Shortcut */}
+          {isAuthenticated && (
+            <Link
+              href="/profile"
+              className="sm:hidden text-gray-700 hover:text-[#d60000] p-1.5 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer shrink-0"
+              title="My Profile"
+              aria-label="My Profile"
+            >
+              <FaRegUserCircle size={22} />
+            </Link>
+          )}
 
           {/* Hamburger Button (shown on mobile or dynamically when desktop routes overflow) */}
           {(hasOverflow || visibleCount === 0 || !isMounted) && (
@@ -587,37 +612,48 @@ const MainNav = () => {
         </div>
 
         {/* Pinned Bottom CTA Section */}
-        <div className="p-4 border-t border-gray-100 bg-white shrink-0 shadow-md sticky bottom-0 z-[80]">
+        <div className="p-4 border-t border-gray-100 bg-white shrink-0 shadow-md sticky bottom-0 z-[80] space-y-2">
           {isAuthenticated ? (
-            <button
-              onClick={async () => {
-                await handleLogout();
-                setIsMenuOpen(false);
-              }}
-              disabled={isLoggingOut}
-              className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm ${
-                isLoggingOut
-                  ? 'opacity-75 cursor-not-allowed'
-                  : 'cursor-pointer'
-              }`}
-            >
-              {isLoggingOut ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  <span>Logging out...</span>
-                </>
-              ) : (
-                <>
-                  <span>Logout</span>
-                  <ArrowRight size={18} />
-                </>
-              )}
-            </button>
+            <>
+              <Link
+                href="/profile"
+                onClick={() => setIsMenuOpen(false)}
+                className="w-full bg-white hover:bg-red-50/60 border border-gray-200 hover:border-[#d60000] text-gray-800 px-4 py-2.5 rounded flex items-center justify-center space-x-2 font-semibold transition cursor-pointer shadow-2xs"
+              >
+                <FaRegUserCircle size={18} className="text-[#d60000]" />
+                <span>My Profile</span>
+              </Link>
+
+              <button
+                onClick={async () => {
+                  await handleLogout();
+                  setIsMenuOpen(false);
+                }}
+                disabled={isLoggingOut}
+                className={`bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-2.5 rounded flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm ${
+                  isLoggingOut
+                    ? 'opacity-75 cursor-not-allowed'
+                    : 'cursor-pointer'
+                }`}
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <span>Logging out...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Logout</span>
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
+            </>
           ) : (
             <Link
               href="/auth"
               onClick={() => setIsMenuOpen(false)}
-              className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded-lg flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm cursor-pointer text-center"
+              className="bg-[#d60000] hover:bg-[#b30000] text-white px-4 py-3 rounded flex items-center justify-center space-x-2 font-semibold w-full transition shadow-sm cursor-pointer text-center"
             >
               <span>Join Network</span>
               <ArrowRight size={18} />
