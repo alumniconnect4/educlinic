@@ -117,6 +117,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
         name: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         bio: true,
         isVerified: true,
@@ -219,6 +221,8 @@ export const getUserById = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         bio: true,
         gender: true,
@@ -341,7 +345,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { name, bio, gender, socialLink, avatarUrl } = req.body;
+    const { name, bio, gender, socialLink, avatarUrl, batchStart, batchEnd } = req.body;
 
     const isAvatarBase64 = isBase64Image(avatarUrl);
     let finalAvatarUrl = isAvatarBase64 ? undefined : avatarUrl;
@@ -355,21 +359,34 @@ export const updateProfile = async (req: Request, res: Response) => {
       );
     }
 
+    const updateData: any = {
+      ...(name && { name }),
+      ...(finalAvatarUrl !== undefined && { avatarUrl: finalAvatarUrl }),
+      bio,
+      gender,
+      socialLink,
+    };
+
+    if (batchStart !== undefined) {
+      const parsedStart = batchStart ? new Date(batchStart) : null;
+      updateData.batchStart = parsedStart && !isNaN(parsedStart.getTime()) ? parsedStart : null;
+    }
+    if (batchEnd !== undefined) {
+      const parsedEnd = batchEnd ? new Date(batchEnd) : null;
+      updateData.batchEnd = parsedEnd && !isNaN(parsedEnd.getTime()) ? parsedEnd : null;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: currentUserId },
-      data: {
-        ...(name && { name }),
-        ...(finalAvatarUrl !== undefined && { avatarUrl: finalAvatarUrl }),
-        bio,
-        gender,
-        socialLink,
-      },
+      data: updateData,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         bio: true,
         gender: true,

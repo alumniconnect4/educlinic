@@ -234,6 +234,8 @@ export const createAdmin = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         bio: true,
         gender: true,
@@ -329,6 +331,8 @@ export const updateAdmin = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         bio: true,
         gender: true,
@@ -503,7 +507,7 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
   try {
     const isSuperAdmin = req.user?.role === 'SUPER_ADMIN';
     const adminSchool = req.user?.schoolCategory;
-    const { name, email, password, role, schoolCategory, avatarUrl } = req.body;
+    const { name, email, password, role, schoolCategory, avatarUrl, batchStart, batchEnd } = req.body;
 
     if (!name || !email || !password || !role) {
       return res
@@ -547,6 +551,9 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
       ? DEFAULT_AVATAR_URL
       : avatarUrl?.trim() || DEFAULT_AVATAR_URL;
 
+    const parsedBatchStart = batchStart ? new Date(batchStart) : null;
+    const parsedBatchEnd = batchEnd ? new Date(batchEnd) : null;
+
     const newUser = await prisma.user.create({
       data: {
         name,
@@ -556,6 +563,8 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         isVerified: true, // Admin created accounts are pre-approved
         avatarUrl: finalAvatarUrl,
         ...(finalSchool ? { schoolCategory: finalSchool } : {}),
+        batchStart: parsedBatchStart && !isNaN(parsedBatchStart.getTime()) ? parsedBatchStart : null,
+        batchEnd: parsedBatchEnd && !isNaN(parsedBatchEnd.getTime()) ? parsedBatchEnd : null,
       },
       select: {
         id: true,
@@ -563,6 +572,8 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         isVerified: true,
         createdAt: true,
@@ -635,6 +646,8 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
       isVerified,
       isDeveloper,
       developerTitle,
+      batchStart,
+      batchEnd,
     } = req.body;
 
     if (!isSuperAdmin && schoolCategory !== undefined && schoolCategory !== adminSchool) {
@@ -684,6 +697,15 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
     if (developerTitle !== undefined)
       updateData.developerTitle = developerTitle || null;
 
+    if (batchStart !== undefined) {
+      const parsedStart = batchStart ? new Date(batchStart) : null;
+      updateData.batchStart = parsedStart && !isNaN(parsedStart.getTime()) ? parsedStart : null;
+    }
+    if (batchEnd !== undefined) {
+      const parsedEnd = batchEnd ? new Date(batchEnd) : null;
+      updateData.batchEnd = parsedEnd && !isNaN(parsedEnd.getTime()) ? parsedEnd : null;
+    }
+
     if (password && password.trim() !== '') {
       updateData.password = await bcrypt.hash(password.trim(), 10);
     }
@@ -697,6 +719,8 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         idCardUrl: true,
         degreeUrl: true,
@@ -972,6 +996,8 @@ export const getAdminProfile = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         bio: true,
         gender: true,
@@ -1042,6 +1068,8 @@ export const updateAdminProfile = async (req: Request, res: Response) => {
         email: true,
         role: true,
         schoolCategory: true,
+        batchStart: true,
+        batchEnd: true,
         avatarUrl: true,
         bio: true,
         gender: true,

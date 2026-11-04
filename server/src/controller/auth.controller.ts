@@ -24,6 +24,8 @@ export const register = async (req: Request, res: Response) => {
       schoolCategory,
       phoneNumber,
       course,
+      batchStart,
+      batchEnd,
       avatarUrl,
       idCardUrl,
       degreeUrl,
@@ -82,6 +84,9 @@ export const register = async (req: Request, res: Response) => {
     const initialIdCardUrl = isIdCardBase64 ? null : idCardUrl || null;
     const initialDegreeUrl = isDegreeBase64 ? null : degreeUrl || null;
 
+    const parsedBatchStart = batchStart ? new Date(batchStart) : null;
+    const parsedBatchEnd = batchEnd ? new Date(batchEnd) : null;
+
     const newUser = await prisma.user.create({
       data: {
         name,
@@ -91,6 +96,8 @@ export const register = async (req: Request, res: Response) => {
         schoolCategory,
         phoneNumber: phoneNumber ? String(phoneNumber).replace(/[\s\-\(\)\+]/g, '') : null,
         course: course ? String(course).trim().slice(0, 50) : null,
+        batchStart: parsedBatchStart && !isNaN(parsedBatchStart.getTime()) ? parsedBatchStart : null,
+        batchEnd: parsedBatchEnd && !isNaN(parsedBatchEnd.getTime()) ? parsedBatchEnd : null,
         avatarUrl: initialAvatarUrl,
         idCardUrl: initialIdCardUrl,
         degreeUrl: initialDegreeUrl,
@@ -135,6 +142,8 @@ export const register = async (req: Request, res: Response) => {
           email: newUser.email,
           role: newUser.role,
           schoolCategory: newUser.schoolCategory,
+          batchStart: newUser.batchStart,
+          batchEnd: newUser.batchEnd,
           avatarUrl: newUser.avatarUrl,
           isVerified: false,
         },
@@ -154,6 +163,8 @@ export const register = async (req: Request, res: Response) => {
         email: newUser.email,
         role: newUser.role,
         schoolCategory: newUser.schoolCategory,
+        batchStart: newUser.batchStart,
+        batchEnd: newUser.batchEnd,
         avatarUrl: newUser.avatarUrl,
         isVerified: true,
       },

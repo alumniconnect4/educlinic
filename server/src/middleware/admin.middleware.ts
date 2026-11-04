@@ -5,20 +5,7 @@ import { getSession } from '../config/cache.js';
 import { prisma } from '../config/db.js';
 import type { User } from '../../generated/prisma/browser.js';
 
-type AuthenticatedUser = Pick<
-  User,
-  | 'id'
-  | 'name'
-  | 'email'
-  | 'role'
-  | 'schoolCategory'
-  | 'bio'
-  | 'gender'
-  | 'socialLink'
-  | 'isDeveloper'
-  | 'developerTitle'
-  | 'createdAt'
->;
+import type { AuthenticatedUser } from './auth.js';
 
 export const adminMiddleware = async (
   req: Request,

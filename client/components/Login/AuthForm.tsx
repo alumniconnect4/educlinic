@@ -15,6 +15,8 @@ const AuthForm = () => {
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [course, setCourse] = useState<string>('');
+  const [batchStart, setBatchStart] = useState<string>('');
+  const [batchEnd, setBatchEnd] = useState<string>('');
   const [phoneError, setPhoneError] = useState<string>('');
   const [courseError, setCourseError] = useState<string>('');
   const [previewModal, setPreviewModal] = useState<{
@@ -176,6 +178,8 @@ const AuthForm = () => {
             schoolCategory: e.target.schoolCategory.value,
             phoneNumber: phoneNumber.trim() || undefined,
             course: course.trim() || undefined,
+            batchStart: batchStart ? new Date(batchStart).toISOString() : undefined,
+            batchEnd: batchEnd ? new Date(batchEnd).toISOString() : undefined,
             avatarUrl: avatarUrl || undefined,
             idCardUrl,
             degreeUrl,
@@ -189,6 +193,8 @@ const AuthForm = () => {
         setAvatarUrl('');
         setPhoneNumber('');
         setCourse('');
+        setBatchStart('');
+        setBatchEnd('');
         if (res.data.user?.isVerified === false) {
           setSuccess(
             'Registration request submitted! Your account is pending administrator review and approval. An administrator will verify your application soon.'
@@ -411,6 +417,33 @@ const AuthForm = () => {
                         {course.length}/50
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Batch Duration (Start & End - Optional) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Batch Start <span className="text-xs text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={batchStart}
+                      onChange={(e) => setBatchStart(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Batch End <span className="text-xs text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={batchEnd}
+                      min={batchStart || undefined}
+                      onChange={(e) => setBatchEnd(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-md border border-gray-300 focus:ring-1 focus:ring-[#d60000] focus:border-[#d60000] outline-none transition-all bg-white text-sm"
+                    />
                   </div>
                 </div>
 
