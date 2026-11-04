@@ -31,7 +31,17 @@ export const register = async (req: Request, res: Response) => {
       degreeUrl,
     } = req.body;
 
-    if (!name || !email || !password || !role || !schoolCategory || !phoneNumber || !course) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !role ||
+      !schoolCategory ||
+      !phoneNumber ||
+      !course ||
+      !batchFrom ||
+      !batchTo
+    ) {
       return res.status(400).json({ message: 'All text fields are required' });
     }
 
@@ -50,14 +60,24 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    const sanitizedBatchFrom =
-      batchFrom && String(batchFrom).trim()
-        ? String(batchFrom).trim().slice(0, 30)
-        : null;
-    const sanitizedBatchTo =
-      batchTo && String(batchTo).trim()
-        ? String(batchTo).trim().slice(0, 30)
-        : null;
+    // Validate batchFrom & batchTo
+    const trimmedBatchFrom = String(batchFrom).trim();
+    const trimmedBatchTo = String(batchTo).trim();
+
+    if (!trimmedBatchFrom || !trimmedBatchTo) {
+      return res.status(400).json({
+        message: 'Batch (From) and Batch (To) are required.',
+      });
+    }
+
+    if (trimmedBatchFrom.length > 30 || trimmedBatchTo.length > 30) {
+      return res.status(400).json({
+        message: 'Batch fields must be 30 characters or less.',
+      });
+    }
+
+    const sanitizedBatchFrom = trimmedBatchFrom.slice(0, 30);
+    const sanitizedBatchTo = trimmedBatchTo.slice(0, 30);
 
     if (role === 'USER' && !idCardUrl) {
       return res.status(400).json({

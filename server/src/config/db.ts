@@ -56,6 +56,15 @@ export const ensureDatabaseSchema = async (): Promise<void> => {
             ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "course" VARCHAR(50);
             ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "batchFrom" VARCHAR(30);
             ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "batchTo" VARCHAR(30);
+
+            -- Ensure any user records with empty or whitespace-only batch fields are explicitly NULL
+            UPDATE "User"
+            SET "batchFrom" = NULL
+            WHERE "batchFrom" IS NOT NULL AND TRIM("batchFrom") = '';
+
+            UPDATE "User"
+            SET "batchTo" = NULL
+            WHERE "batchTo" IS NOT NULL AND TRIM("batchTo") = '';
           END IF;
         END $$;
 
