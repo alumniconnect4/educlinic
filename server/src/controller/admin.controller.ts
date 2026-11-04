@@ -441,13 +441,13 @@ export const getAlumniStudents = async (req: Request, res: Response) => {
     const whereClause: any = {
       role: { in: roleCondition },
       isVerified: true,
-      ...(isSuperAdmin
+      ...(isSuperAdmin || !adminSchool
         ? targetSchool
           ? targetSchool === 'UNASSIGNED'
             ? { schoolCategory: null }
             : { schoolCategory: targetSchool }
           : {}
-        : { schoolCategory: (adminSchool as any) || null }),
+        : { schoolCategory: adminSchool }),
       ...(search
         ? {
             OR: [
@@ -525,12 +525,7 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         .json({ message: 'Role must be Student (USER) or Alumni (ALUMNI)' });
     }
 
-    if (!isSuperAdmin) {
-      if (!adminSchool) {
-        return res.status(403).json({
-          message: 'Forbidden: You do not have an assigned school to manage students',
-        });
-      }
+    if (!isSuperAdmin && adminSchool) {
       if (schoolCategory && schoolCategory !== adminSchool) {
         return res.status(403).json({
           message: 'Forbidden: You can only create students/alumni for your assigned school',
@@ -545,7 +540,7 @@ export const createAlumniStudent = async (req: Request, res: Response) => {
         .json({ message: 'User with this email already exists' });
     }
 
-    const finalSchool = isSuperAdmin
+    const finalSchool = isSuperAdmin || !adminSchool
       ? (schoolCategory || null)
       : adminSchool;
 
@@ -620,8 +615,8 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Forbidden: Cannot modify admin accounts' });
     }
 
-    if (!isSuperAdmin) {
-      if (!adminSchool || existingUser.schoolCategory !== adminSchool) {
+    if (!isSuperAdmin && adminSchool) {
+      if (existingUser.schoolCategory && existingUser.schoolCategory !== adminSchool) {
         return res.status(403).json({
           message: 'Forbidden: You can only update students/alumni from your assigned school',
         });
@@ -645,7 +640,7 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
       developerTitle,
     } = req.body;
 
-    if (!isSuperAdmin && schoolCategory !== undefined && schoolCategory !== adminSchool) {
+    if (!isSuperAdmin && adminSchool && schoolCategory !== undefined && schoolCategory !== adminSchool) {
       return res.status(403).json({
         message: 'Forbidden: You cannot change a student’s school to another school',
       });
@@ -656,7 +651,7 @@ export const updateAlumniStudent = async (req: Request, res: Response) => {
     if (email !== undefined) updateData.email = email;
     if (role && (role === 'USER' || role === 'ALUMNI')) updateData.role = role;
     if (schoolCategory !== undefined)
-      updateData.schoolCategory = isSuperAdmin ? (schoolCategory || null) : adminSchool;
+      updateData.schoolCategory = (isSuperAdmin || !adminSchool) ? (schoolCategory || null) : adminSchool;
 
     if (avatarUrl !== undefined) {
       if (isBase64Image(avatarUrl)) {
@@ -753,8 +748,8 @@ export const deleteAlumniStudent = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Forbidden: Cannot delete admin accounts' });
     }
 
-    if (!isSuperAdmin) {
-      if (!adminSchool || targetUser.schoolCategory !== adminSchool) {
+    if (!isSuperAdmin && adminSchool) {
+      if (targetUser.schoolCategory && targetUser.schoolCategory !== adminSchool) {
         return res.status(403).json({
           message: 'Forbidden: You can only delete students/alumni from your assigned school',
         });
@@ -817,9 +812,9 @@ export const getPendingRequests = async (req: Request, res: Response) => {
     const whereClause: any = {
       isVerified: false,
       role: { in: roleCondition },
-      ...(isSuperAdmin
+      ...(isSuperAdmin || !adminSchool
         ? (targetSchool ? { schoolCategory: targetSchool } : {})
-        : { schoolCategory: (adminSchool as any) || null }),
+        : { schoolCategory: adminSchool }),
       ...(search
         ? {
             OR: [
@@ -891,8 +886,8 @@ export const approvePendingRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Registration request not found' });
     }
 
-    if (!isSuperAdmin) {
-      if (!adminSchool || applicant.schoolCategory !== adminSchool) {
+    if (!isSuperAdmin && adminSchool) {
+      if (applicant.schoolCategory && applicant.schoolCategory !== adminSchool) {
         return res.status(403).json({
           message: 'Forbidden: You can only approve registration requests from your assigned school',
         });
@@ -943,8 +938,8 @@ export const declinePendingRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Registration request not found' });
     }
 
-    if (!isSuperAdmin) {
-      if (!adminSchool || applicant.schoolCategory !== adminSchool) {
+    if (!isSuperAdmin && adminSchool) {
+      if (applicant.schoolCategory && applicant.schoolCategory !== adminSchool) {
         return res.status(403).json({
           message: 'Forbidden: You can only decline registration requests from your assigned school',
         });

@@ -16,6 +16,19 @@ const LoginPage = () => {
   const wasAlreadyAuthenticated = useRef(authenticated);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('sessionExpired') === 'true') {
+        useUserStore.getState().clearUser();
+        toast.error('Your session has expired. Please log in again.', {
+          toastId: 'session-expired-error',
+        });
+        const newUrl = window.location.pathname;
+        window.history.replaceState(null, '', newUrl);
+        return;
+      }
+    }
+
     if (authenticated) {
       router.push('/');
       if (wasAlreadyAuthenticated.current) {

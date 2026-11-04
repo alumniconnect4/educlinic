@@ -35,6 +35,8 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthenticatedUser;
+      sessionId?: string | undefined;
+      token?: string | undefined;
     }
   }
 }
@@ -61,31 +63,56 @@ export const authMiddleware =
       const isJwt = (t?: string) =>
         typeof t === 'string' && t.split('.').length === 3;
 
-      const sessionId =
-        cookieSessionId || (!isJwt(bearerToken) ? bearerToken : undefined);
-      const token =
-        cookieToken || (isJwt(bearerToken) ? bearerToken : undefined);
-
       let userId: number | undefined;
+      let matchedSessionId: string | undefined;
+      let matchedToken: string | undefined;
 
-      if (sessionId) {
-        const session = await getSession(sessionId);
-        if (session) {
-          userId = session.id;
+      // 1. Explicit Authorization Header takes precedence over ambient cookies
+      if (bearerToken) {
+        if (isJwt(bearerToken)) {
+          try {
+            const decoded = jwt.verify(bearerToken, env.JWT_ACCESS_SECRET) as {
+              id: number;
+              role: string;
+            };
+            if (decoded && decoded.id) {
+              userId = decoded.id;
+              matchedToken = bearerToken;
+            }
+          } catch (jwtErr) {
+            // Expected auth failure for invalid/expired JWT tokens
+          }
+        } else {
+          const session = await getSession(bearerToken);
+          if (session && session.id) {
+            userId = session.id;
+            matchedSessionId = bearerToken;
+          }
         }
       }
 
-      if (!userId && token) {
+      // 2. Fall back to cookieToken if bearer didn't resolve
+      if (!userId && cookieToken && isJwt(cookieToken)) {
         try {
-          const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as {
+          const decoded = jwt.verify(cookieToken, env.JWT_ACCESS_SECRET) as {
             id: number;
             role: string;
           };
           if (decoded && decoded.id) {
             userId = decoded.id;
+            matchedToken = cookieToken;
           }
         } catch (jwtErr) {
           // Expected auth failure for invalid/expired JWT tokens
+        }
+      }
+
+      // 3. Fall back to cookieSessionId
+      if (!userId && cookieSessionId) {
+        const session = await getSession(cookieSessionId);
+        if (session && session.id) {
+          userId = session.id;
+          matchedSessionId = cookieSessionId;
         }
       }
 
@@ -126,6 +153,8 @@ export const authMiddleware =
       }
 
       req.user = user;
+      req.sessionId = matchedSessionId;
+      req.token = matchedToken;
       next();
     } catch (err) {
       console.log(err);

@@ -1,46 +1,75 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
 const AlumniPage = () => {
-  const isAuthenticated = useUserStore((state) => state.isAuthenticated);
   const router = useRouter();
+  const [statusText, setStatusText] = useState('Verifying alumni access...');
 
   useEffect(() => {
-    if (isAuthenticated) {
-      const baseUrl = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
-      if (baseUrl !== '/') {
-        const session =
-          useUserStore.getState().sessionId ||
-          (typeof window !== 'undefined'
-            ? localStorage.getItem('sessionId')
-            : null);
-        try {
-          const url = new URL(baseUrl);
-          if (session) {
-            url.searchParams.set('session', session);
+    let isCancelled = false;
+
+    const performRedirect = async () => {
+      try {
+        const session = await useUserStore
+          .getState()
+          .validateOrRefreshSession();
+
+        if (isCancelled) return;
+
+        if (session) {
+          const baseUrl = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
+          if (baseUrl !== '/') {
+            try {
+              const url = new URL(baseUrl);
+              url.searchParams.set('session', session);
+              setStatusText('Redirecting to Alumni Platform...');
+              window.location.href = url.toString();
+              return;
+            } catch (err) {
+              window.location.href = baseUrl;
+              return;
+            }
+          } else {
+            router.push('/');
           }
-          window.location.href = url.toString();
-        } catch (err) {
-          window.location.href = baseUrl;
+        } else {
+          toast.error(
+            'Session expired or login required. Please sign in to connect with Alumni.',
+            {
+              toastId: 'alumni-login-error',
+            }
+          );
+          router.push('/auth');
         }
-      } else {
-        window.location.href = '/';
+      } catch (err) {
+        if (!isCancelled) {
+          toast.error('Failed to verify credentials. Please sign in again.', {
+            toastId: 'alumni-login-error',
+          });
+          router.push('/auth');
+        }
       }
-    } else {
-      toast.error('Login first to connect with Alumni', {
-        toastId: 'alumni-login-error',
-      });
-      router.push('/');
-    }
-  }, [isAuthenticated, router]);
+    };
+
+    performRedirect();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [router]);
 
   return (
-    <div className="flex items-center justify-center h-screen text-2xl font-bold">
-      Redirecting...
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4 text-center">
+      <Loader2 className="w-10 h-10 animate-spin text-[#d60000]" />
+      <p className="text-xl font-semibold text-gray-800">{statusText}</p>
+      <p className="text-sm text-gray-500">
+        Please wait while we establish your secure session.
+      </p>
     </div>
   );
 };

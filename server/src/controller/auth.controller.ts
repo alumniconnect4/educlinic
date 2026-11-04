@@ -291,7 +291,19 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
-    res.json({ user });
+
+    let sessionId = req.sessionId;
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      await storeSession(sessionId, { id: user.id, role: user.role });
+      res.cookie('sessionId', sessionId, { ...config.cookieOptions });
+    }
+
+    res.json({
+      user,
+      sessionId,
+      token: req.token,
+    });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: 'Internal Server Error' });

@@ -44,22 +44,34 @@ export const adminMiddleware = async (
     const isJwt = (t?: string) =>
       typeof t === 'string' && t.split('.').length === 3;
 
-    const token = cookieToken || (isJwt(bearerToken) ? bearerToken : undefined);
-    const sessionId =
-      cookieSessionId || (!isJwt(bearerToken) ? bearerToken : undefined);
-
     let userId: number | undefined;
 
-    if (sessionId) {
-      const session = await getSession(sessionId);
-      if (session && session.id) {
-        userId = session.id;
+    // 1. Explicit Authorization Header takes precedence over ambient cookies
+    if (bearerToken) {
+      if (isJwt(bearerToken)) {
+        try {
+          const decoded = jwt.verify(bearerToken, env.JWT_ACCESS_SECRET) as {
+            id: number;
+            role: string;
+          };
+          if (decoded && decoded.id) {
+            userId = decoded.id;
+          }
+        } catch (err) {
+          // Expected auth failure for invalid/expired JWT
+        }
+      } else {
+        const session = await getSession(bearerToken);
+        if (session && session.id) {
+          userId = session.id;
+        }
       }
     }
 
-    if (!userId && token) {
+    // 2. Fall back to cookieToken (admin JWT cookie) if no bearerToken was provided
+    if (!userId && cookieToken && isJwt(cookieToken)) {
       try {
-        const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as {
+        const decoded = jwt.verify(cookieToken, env.JWT_ACCESS_SECRET) as {
           id: number;
           role: string;
         };
@@ -67,7 +79,15 @@ export const adminMiddleware = async (
           userId = decoded.id;
         }
       } catch (err) {
-        // Expected auth failure for invalid/expired JWT
+        // Expected auth failure for invalid/expired JWT cookie
+      }
+    }
+
+    // 3. Fall back to cookieSessionId if still not resolved
+    if (!userId && cookieSessionId) {
+      const session = await getSession(cookieSessionId);
+      if (session && session.id) {
+        userId = session.id;
       }
     }
 

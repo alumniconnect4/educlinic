@@ -9,6 +9,7 @@ export interface UserStore {
   clearUser: () => void;
   setIsAuthenticated: (isAuthenticated: boolean) => void;
   fetchUser: () => Promise<void>;
+  validateOrRefreshSession: () => Promise<string | null>;
 }
 
 export const useUserStore = create<UserStore>()((set, get) => ({
@@ -54,9 +55,14 @@ export const useUserStore = create<UserStore>()((set, get) => ({
           ? localStorage.getItem('sessionId')
           : null;
 
+      const headers: Record<string, string> = storedSession
+        ? { Authorization: `Bearer ${storedSession}` }
+        : {};
+
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
         {
+          headers,
           withCredentials: true,
         }
       );
@@ -73,6 +79,44 @@ export const useUserStore = create<UserStore>()((set, get) => ({
       });
     } catch (err) {
       get().clearUser();
+    }
+  },
+
+  validateOrRefreshSession: async (): Promise<string | null> => {
+    try {
+      const storedSession =
+        get().sessionId ||
+        (typeof window !== 'undefined'
+          ? localStorage.getItem('sessionId')
+          : null);
+
+      const headers: Record<string, string> = storedSession
+        ? { Authorization: `Bearer ${storedSession}` }
+        : {};
+
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/me`,
+        {
+          headers,
+          withCredentials: true,
+        }
+      );
+
+      const validSession = res.data?.sessionId || storedSession;
+      if (validSession && typeof window !== 'undefined') {
+        localStorage.setItem('sessionId', validSession);
+      }
+
+      set({
+        user: res.data.user,
+        sessionId: validSession,
+        isAuthenticated: true,
+      });
+
+      return validSession || null;
+    } catch (err) {
+      get().clearUser();
+      return null;
     }
   },
 }));

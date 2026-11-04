@@ -5,38 +5,42 @@ import Link from 'next/link';
 import { Bell, X } from 'lucide-react';
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'react-toastify';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function FloatingBell() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(true);
   const { isAuthenticated } = useUserStore();
 
   if (pathname === '/auth') return null;
 
-  const handleIsLoggined = () => {
-    if (isAuthenticated) {
-      const baseUrl = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
-      if (baseUrl !== '/') {
-        const session =
-          useUserStore.getState().sessionId ||
-          (typeof window !== 'undefined'
-            ? localStorage.getItem('sessionId')
-            : null);
-        try {
-          const url = new URL(baseUrl);
-          if (session) {
+  const handleIsLoggined = async () => {
+    try {
+      const session = await useUserStore
+        .getState()
+        .validateOrRefreshSession();
+
+      if (session) {
+        const baseUrl = process.env.NEXT_PUBLIC_ALUMNI_URL || '/';
+        if (baseUrl !== '/') {
+          try {
+            const url = new URL(baseUrl);
             url.searchParams.set('session', session);
+            window.location.href = url.toString();
+          } catch (err) {
+            window.location.href = baseUrl;
           }
-          window.location.href = url.toString();
-        } catch (err) {
-          window.location.href = baseUrl;
+        } else {
+          window.location.href = '/';
         }
       } else {
-        window.location.href = '/';
+        toast.error('Login is required to connect with Alumni.');
+        router.push('/auth');
       }
-    } else {
-      toast.error('Login is required..');
+    } catch (err) {
+      toast.error('Login is required to connect with Alumni.');
+      router.push('/auth');
     }
   };
 

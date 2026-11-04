@@ -249,7 +249,9 @@ const AuthForm = () => {
           );
           setActiveTab('login');
         } else {
-          useUserStore.getState().setUser(res.data.user);
+          useUserStore
+            .getState()
+            .setUser(res.data.user, res.data.sessionId);
           toast.success('Registered successfully! Logging you in...');
           router.push('/');
         }

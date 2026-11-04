@@ -13,8 +13,8 @@ export const handleChatAuthError = () => {
   const clientUrl = import.meta.env.VITE_CLIENT_URL || 'http://localhost:3000';
   const cleanUrl = clientUrl.replace(/\/$/, '');
   const redirectTarget = cleanUrl.endsWith('/auth')
-    ? cleanUrl
-    : `${cleanUrl}/auth`;
+    ? `${cleanUrl}?sessionExpired=true`
+    : `${cleanUrl}/auth?sessionExpired=true`;
 
   window.location.href = redirectTarget;
 };
