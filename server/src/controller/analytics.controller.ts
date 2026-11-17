@@ -56,6 +56,7 @@ export const getRoleSchoolStats = async (req: Request, res: Response) => {
       School_of_Education: 0,
       School_of_Law: 0,
       School_of_Pharmacy: 0,
+      Baba_Farid_Senior_Secondary_School: 0,
       'Not Specified': 0,
     };
 

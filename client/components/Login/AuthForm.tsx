@@ -410,6 +410,9 @@ const AuthForm = () => {
                       <option value="School_of_Pharmacy">
                         School of Pharmacy
                       </option>
+                      <option value="Baba_Farid_Senior_Secondary_School">
+                        Baba Farid Senior Secondary School
+                      </option>
                     </select>
                   </div>
                 </div>

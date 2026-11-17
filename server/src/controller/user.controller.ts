@@ -391,6 +391,7 @@ export const updateProfile = async (req: Request, res: Response) => {
       'School_of_Education',
       'School_of_Law',
       'School_of_Pharmacy',
+      'Baba_Farid_Senior_Secondary_School',
     ];
 
     const isAvatarBase64 = isBase64Image(avatarUrl);

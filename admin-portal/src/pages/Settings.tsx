@@ -47,6 +47,10 @@ const SCHOOL_CATEGORIES = [
   { value: 'School_of_Education', label: 'School of Education' },
   { value: 'School_of_Law', label: 'School of Law' },
   { value: 'School_of_Pharmacy', label: 'School of Pharmacy' },
+  {
+    value: 'Baba_Farid_Senior_Secondary_School',
+    label: 'Baba Farid Senior Secondary School',
+  },
 ];
 
 export default function Settings() {
