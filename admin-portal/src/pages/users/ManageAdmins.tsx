@@ -51,9 +51,13 @@ const SCHOOL_OPTIONS = [
     value: 'School_of_Computer_Applications',
   },
   { label: 'School of Humanities', value: 'School_of_Humanities' },
-  { label: 'School of Education', value: 'School_of_Education' },
+  { label: 'School_of_Education', value: 'School_of_Education' },
   { label: 'School of Law', value: 'School_of_Law' },
   { label: 'School of Pharmacy', value: 'School_of_Pharmacy' },
+  {
+    label: 'Baba Farid Senior Secondary School',
+    value: 'Baba_Farid_Senior_Secondary_School',
+  },
 ];
 
 export default function ManageAdmins() {

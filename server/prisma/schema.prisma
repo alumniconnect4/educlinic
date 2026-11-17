@@ -31,6 +31,7 @@ enum SchoolCategory {
   School_of_Education
   School_of_Law
   School_of_Pharmacy
+  Baba_Farid_Senior_Secondary_School
 }
 
 enum EventType {

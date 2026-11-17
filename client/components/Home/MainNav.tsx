@@ -50,6 +50,10 @@ const navigation: RouteItem[] = [
       { name: 'School of Education', path: 'https://www.bfcedu.com/' },
       { name: 'School of Law', path: 'https://babafaridcollegeoflaw.com/' },
       { name: 'School of Pharmacy', path: 'https://www.bfcp.in/' },
+      {
+        name: 'Baba Farid Senior Secondary School',
+        path: 'https://www.bfsss.com/',
+      },
     ],
   },
   { name: 'Events', path: '/events' },

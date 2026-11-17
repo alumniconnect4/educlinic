@@ -39,6 +39,7 @@ export const ensureDatabaseSchema = async (): Promise<void> => {
           ELSE
             ALTER TYPE "SchoolCategory" ADD VALUE IF NOT EXISTS 'School_of_Commerce';
             ALTER TYPE "SchoolCategory" ADD VALUE IF NOT EXISTS 'School_of_Management';
+            ALTER TYPE "SchoolCategory" ADD VALUE IF NOT EXISTS 'Baba_Farid_Senior_Secondary_School';
           END IF;
         END $$;
 
