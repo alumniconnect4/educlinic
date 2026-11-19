@@ -54,11 +54,10 @@ export const PostAuthorCard: React.FC<PostAuthorCardProps> = ({
           <Button
             onClick={onFollowToggle}
             disabled={followLoading}
-            className={`w-full font-medium mb-4 rounded-md ${
-              isFollowing
-                ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300'
-                : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white'
-            }`}
+            className={`w-full font-medium mb-4 rounded-md ${isFollowing
+              ? 'bg-muted text-foreground border border-border/80 hover:bg-red-50 hover:text-red-600 hover:border-red-300'
+              : 'bg-[#3b49df] hover:bg-[#2f3ab2] text-white'
+              }`}
           >
             {isFollowing ? (
               <>
@@ -71,9 +70,11 @@ export const PostAuthorCard: React.FC<PostAuthorCardProps> = ({
           </Button>
         )}
 
-        <p className="text-sm text-muted-foreground mb-4 leading-relaxed break-words whitespace-pre-wrap">
-          {authorUser?.bio}
-        </p>
+        {authorUser?.bio && (
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed break-words whitespace-pre-wrap">
+            {authorUser.bio}
+          </p>
+        )}
 
         <div className="space-y-2 text-xs text-muted-foreground border-t border-border/40 pt-4">
           <div className="flex items-center gap-2">
@@ -82,9 +83,9 @@ export const PostAuthorCard: React.FC<PostAuthorCardProps> = ({
               Joined BFGI network on{' '}
               {(authorUser as any)?.createdAt
                 ? new Date((authorUser as any).createdAt).toLocaleDateString(
-                    'en-US',
-                    { month: 'short', day: 'numeric', year: 'numeric' }
-                  )
+                  'en-US',
+                  { month: 'short', day: 'numeric', year: 'numeric' }
+                )
                 : 'Jan 15, 2024'}
             </span>
           </div>

@@ -16,7 +16,10 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
 
 export default function AlumniMap() {
   return (
-    <section className="bg-white py-12 md:py-20 w-full border-t border-gray-100">
+    <section
+      data-tour="alumni-map"
+      className="bg-white py-12 md:py-20 w-full border-t border-gray-100"
+    >
       <div className="w-full px-4 md:px-8 lg:px-16 xl:px-32">
         <div className="flex flex-col items-center justify-center text-center mb-10">
           <h2 className="text-3xl font-semibold text-gray-900">

@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { ArrowRight, Menu, X, ChevronDown, Loader2 } from 'lucide-react';
+import { ArrowRight, Menu, X, ChevronDown, Loader2, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUserStore, UserStore } from '@/store/useUserStore';
@@ -9,6 +9,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { toast as hotToast } from 'react-hot-toast';
 import { FaRegUserCircle } from 'react-icons/fa';
+import { startOnboardingTour } from '@/components/OnboardingTour';
 
 type RouteItem = {
   name: string;
@@ -209,6 +210,19 @@ const MainNav = () => {
     }
   }, [isMenuOpen, pathname]);
 
+  useEffect(() => {
+    const handleOpenDrawer = () => setIsMenuOpen(true);
+    const handleCloseDrawer = () => setIsMenuOpen(false);
+
+    window.addEventListener('open-mobile-nav', handleOpenDrawer);
+    window.addEventListener('close-mobile-nav', handleCloseDrawer);
+
+    return () => {
+      window.removeEventListener('open-mobile-nav', handleOpenDrawer);
+      window.removeEventListener('close-mobile-nav', handleCloseDrawer);
+    };
+  }, []);
+
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
@@ -331,7 +345,10 @@ const MainNav = () => {
         </div>
 
         {/* Visible Desktop Navigation Links */}
-        <div className="hidden md:flex items-center space-x-2 md:space-x-3 lg:space-x-4 xl:space-x-5">
+        <div
+          data-tour="nav-explore"
+          className="hidden md:flex items-center space-x-2 md:space-x-3 lg:space-x-4 xl:space-x-5"
+        >
           {visibleItems.map((item) => {
             const isActive = item.path
               ? pathname === item.path
@@ -342,6 +359,13 @@ const MainNav = () => {
                 {item.path ? (
                   <Link
                     href={item.path}
+                    data-tour={
+                      item.name === 'Events'
+                        ? 'nav-events'
+                        : item.name === 'Alumni'
+                          ? 'nav-alumni'
+                          : undefined
+                    }
                     onClick={
                       item.path.startsWith('http')
                         ? (e) => handleLinkClick(e, item.path!, item.name)
@@ -408,8 +432,20 @@ const MainNav = () => {
           <div className="hidden sm:block">
             {isAuthenticated ? (
               <div className="flex items-center space-x-2 sm:space-x-3">
+                <button
+                  onClick={() => startOnboardingTour()}
+                  data-tour="replay-tour"
+                  className="text-gray-600 hover:text-[#d60000] p-1.5 md:p-2 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer text-xs font-semibold gap-1"
+                  title="Explore Feature Tour"
+                  aria-label="Explore Feature Tour"
+                >
+                  <HelpCircle size={20} />
+                  <span className="hidden xl:inline">Tour</span>
+                </button>
+
                 <Link
                   href="/profile"
+                  data-tour="user-profile"
                   className="text-gray-700 hover:text-[#d60000] p-1.5 md:p-2 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer"
                   title="My Profile"
                   aria-label="My Profile"
@@ -440,27 +476,49 @@ const MainNav = () => {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/auth"
-                className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-3.5 py-1.5 md:px-4 md:py-2 rounded flex items-center justify-center space-x-2 font-medium text-sm transition shadow-xs"
-              >
-                <span>Login</span>
-                <ArrowRight size={16} />
-              </Link>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => startOnboardingTour()}
+                  className="text-gray-600 hover:text-[#d60000] p-1.5 md:p-2 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer text-xs font-semibold gap-1"
+                  title="Explore Feature Tour"
+                  aria-label="Explore Feature Tour"
+                >
+                  <HelpCircle size={19} />
+                  <span className="hidden xl:inline">Tour</span>
+                </button>
+                <Link
+                  href="/auth"
+                  className="bg-[#d60000] hover:bg-[#b30000] text-white cursor-pointer px-3.5 py-1.5 md:px-4 md:py-2 rounded flex items-center justify-center space-x-2 font-medium text-sm transition shadow-xs"
+                >
+                  <span>Login</span>
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
             )}
           </div>
 
-          {/* Mobile Profile Icon Shortcut */}
-          {isAuthenticated && (
-            <Link
-              href="/profile"
-              className="sm:hidden text-gray-700 hover:text-[#d60000] p-1.5 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer shrink-0"
-              title="My Profile"
-              aria-label="My Profile"
+          {/* Mobile Profile & Tour Shortcut */}
+          <div className="sm:hidden flex items-center space-x-1">
+            <button
+              onClick={() => startOnboardingTour()}
+              className="text-gray-700 hover:text-[#d60000] p-1.5 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer shrink-0"
+              title="Explore Feature Tour"
+              aria-label="Explore Feature Tour"
             >
-              <FaRegUserCircle size={22} />
-            </Link>
-          )}
+              <HelpCircle size={20} />
+            </button>
+            {isAuthenticated && (
+              <Link
+                href="/profile"
+                data-tour="user-profile-mobile"
+                className="text-gray-700 hover:text-[#d60000] p-1.5 rounded hover:bg-red-50/60 transition-colors flex items-center justify-center cursor-pointer shrink-0"
+                title="My Profile"
+                aria-label="My Profile"
+              >
+                <FaRegUserCircle size={22} />
+              </Link>
+            )}
+          </div>
 
           {/* Hamburger Button (shown on mobile or dynamically when desktop routes overflow) */}
           {(hasOverflow || visibleCount === 0 || !isMounted) && (
@@ -531,6 +589,13 @@ const MainNav = () => {
                 {item.path ? (
                   <Link
                     href={item.path}
+                    data-tour={
+                      item.name === 'Alumni'
+                        ? 'mobile-nav-alumni'
+                        : item.name === 'Events'
+                          ? 'mobile-nav-events'
+                          : undefined
+                    }
                     className={`text-base font-medium py-2.5 px-3.5 rounded-lg transition-colors duration-200 flex items-center justify-between ${
                       isDirectActive
                         ? 'bg-red-50 text-[#d60000] font-semibold'
@@ -617,6 +682,17 @@ const MainNav = () => {
 
         {/* Pinned Bottom CTA Section */}
         <div className="p-4 border-t border-gray-100 bg-white shrink-0 shadow-md sticky bottom-0 z-[80] space-y-2">
+          <button
+            onClick={() => {
+              setIsMenuOpen(false);
+              setTimeout(() => startOnboardingTour(), 300);
+            }}
+            className="w-full bg-white hover:bg-red-50/60 border border-gray-200 hover:border-[#d60000] text-gray-800 px-4 py-2.5 rounded flex items-center justify-center space-x-2 font-semibold transition cursor-pointer shadow-2xs text-sm"
+          >
+            <HelpCircle size={18} className="text-[#d60000]" />
+            <span>Explore Feature Tour</span>
+          </button>
+
           {isAuthenticated ? (
             <>
               <Link

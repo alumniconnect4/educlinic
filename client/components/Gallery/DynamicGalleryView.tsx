@@ -183,9 +183,19 @@ export default function DynamicGalleryView({
 
       {/* Grid Content */}
       {isLoading ? (
-        <div className="py-24 flex flex-col items-center justify-center gap-3 text-gray-400">
-          <Loader2 className="w-8 h-8 animate-spin text-[#a62025]" />
-          <span className="text-sm font-medium">Loading campus gallery...</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-xl overflow-hidden shadow-xs border border-gray-150 flex flex-col animate-pulse"
+            >
+              <div className="aspect-[4/3] w-full bg-gray-200" />
+              <div className="p-4 flex flex-col gap-2 border-t border-gray-100">
+                <div className="h-4 bg-gray-200 rounded-md w-4/5" />
+                <div className="h-3 bg-gray-200 rounded-md w-1/3 mt-1" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredItems.length === 0 ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
