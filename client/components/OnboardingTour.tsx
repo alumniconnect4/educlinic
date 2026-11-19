@@ -38,12 +38,12 @@ const MOBILE_TOUR_STEPS: DriveStep[] = [
   },
 ];
 
-// Comprehensive tour for tablet and desktop workspaces
+// 2-step focused tour for tablet and desktop workspaces (Alumni & Events)
 const DESKTOP_TOUR_STEPS: DriveStep[] = [
   {
     element: '[data-tour="nav-alumni"]',
     popover: {
-      title: 'Alumni Community Feed & Chat',
+      title: 'Alumni Community & Feed',
       description:
         'Connect directly with students, alumni, and faculty. Share community posts, follow peers, and engage in real-time direct chats.',
       side: 'bottom',
@@ -53,51 +53,11 @@ const DESKTOP_TOUR_STEPS: DriveStep[] = [
   {
     element: '[data-tour="nav-events"]',
     popover: {
-      title: 'Upcoming Events & Meetups',
+      title: 'Campus & Alumni Events',
       description:
         'Browse all upcoming campus reunions, tech symposiums, webinars, and cultural fests with one-click registrations.',
       side: 'bottom',
       align: 'start',
-    },
-  },
-  {
-    element: '[data-tour="upcoming-events"]',
-    popover: {
-      title: 'Events Showcase Hub',
-      description:
-        'Quickly toggle between upcoming and past campus events, view organizer details, and secure your event spot.',
-      side: 'top',
-      align: 'center',
-    },
-  },
-  {
-    element: '[data-tour="alumni-map"]',
-    popover: {
-      title: 'Worldwide Alumni Map',
-      description:
-        'Discover where BFGI alumni live and work around the globe on our interactive worldwide network map.',
-      side: 'top',
-      align: 'center',
-    },
-  },
-  {
-    element: '[data-tour="user-profile"]',
-    popover: {
-      title: 'Your Profile & Credentials',
-      description:
-        'Keep your education records, batch year, bio, pronouns, and social links up to date to build your alumni presence.',
-      side: 'bottom',
-      align: 'end',
-    },
-  },
-  {
-    element: '[data-tour="ai-chatbot"]',
-    popover: {
-      title: 'Meet Reyna, Your AI Assistant',
-      description:
-        'Need instant assistance with event dates, admissions, or alumni networking? Reyna is available 24/7.',
-      side: 'left',
-      align: 'end',
     },
   },
 ];

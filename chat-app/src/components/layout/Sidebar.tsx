@@ -8,10 +8,12 @@ import {
   Code2,
   X,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/mockData';
+import { startChatSidebarTour } from '../tour/ChatSidebarTour';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -36,10 +38,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   );
 
   const mainNavItems = [
-    { name: 'Home', icon: Home, path: '/' },
-    { name: 'Connect', icon: Users, path: '/connect' },
-    { name: 'Direct Messages', icon: MessageSquare, path: '/chat' },
-    { name: 'My Profile', icon: UserIcon, path: '/profile' },
+    { name: 'Home', icon: Home, path: '/', tourId: 'sidebar-feed' },
+    { name: 'Connect', icon: Users, path: '/connect', tourId: 'sidebar-connect' },
+    { name: 'Direct Messages', icon: MessageSquare, path: '/chat', tourId: 'sidebar-chat' },
+    { name: 'My Profile', icon: UserIcon, path: '/profile', tourId: 'sidebar-profile' },
   ];
 
   const popularTags = [
@@ -157,6 +159,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <Button
                 key={item.name}
+                data-tour={item.tourId}
                 variant="ghost"
                 className={`justify-start w-full font-normal h-10 px-3 hover:bg-[#3b49df]/10 hover:text-[#3b49df] transition-colors rounded-md ${isActive
                   ? 'font-bold bg-[#3b49df]/10 text-[#3b49df]'
@@ -182,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </nav>
 
-        <div className="pt-2">
+        <div className="pt-2" data-tour="sidebar-trending">
           <div className="flex items-center justify-between px-3 mb-2">
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Trending Topics
@@ -204,6 +207,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Sidebar Tour Replay Button */}
+        <div className="px-3 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              startChatSidebarTour();
+            }}
+            className="w-full text-xs text-muted-foreground hover:text-[#3b49df] hover:border-[#3b49df]/50 border-dashed border-border/80 gap-1.5 h-8 justify-center cursor-pointer transition-colors"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            <span>Tour Features</span>
+          </Button>
         </div>
 
         <div className="px-3 pt-4 border-t border-border/60 text-xs text-muted-foreground space-y-2 leading-relaxed">

@@ -156,3 +156,114 @@
     @apply flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer;
   }
 }
+
+/* =========================================================================
+   CHAT APP DRIVER.JS TOUR STYLES
+   ========================================================================= */
+.driver-popover.chat-tour-popover {
+  border-radius: 12px;
+  padding: 16px 18px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  max-width: 320px;
+  font-family: inherit;
+  color: #171717;
+  z-index: 1000000000;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+  padding-right: 20px;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-description {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-footer {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-progress-text {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-footer-btn {
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-next-btn {
+  background-color: #3b49df;
+  color: #ffffff;
+  border: 1px solid #2f3ab2;
+  box-shadow: 0 1px 3px rgba(59, 73, 223, 0.3);
+}
+
+.driver-popover.chat-tour-popover .driver-popover-next-btn:hover {
+  background-color: #2f3ab2;
+  color: #ffffff;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-prev-btn {
+  background-color: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-prev-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-close-btn {
+  color: #9ca3af;
+  font-size: 18px;
+  top: 12px;
+  right: 12px;
+  transition: color 0.2s ease;
+}
+
+.driver-popover.chat-tour-popover .driver-popover-close-btn:hover {
+  color: #111827;
+}
+
+/* Mobile compact tour */
+.driver-popover.chat-tour-mobile {
+  max-width: 270px !important;
+  padding: 12px 14px !important;
+}
+
+.driver-popover.chat-tour-mobile .driver-popover-title {
+  font-size: 14px !important;
+}
+
+.driver-popover.chat-tour-mobile .driver-popover-description {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* Ensure active element in sidebar is visible above mobile backdrop */
+aside .driver-active-element,
+nav .driver-active-element {
+  position: relative !important;
+  z-index: 10000001 !important;
+}
