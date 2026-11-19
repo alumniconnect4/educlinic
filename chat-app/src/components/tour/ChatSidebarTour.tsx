@@ -139,7 +139,7 @@ export const ChatSidebarTour: React.FC = () => {
 
     // Auto-trigger for first-time visitors after a short delay
     const hasCompleted = localStorage.getItem('has_completed_chat_tour');
-    let autoTimer: NodeJS.Timeout | null = null;
+    let autoTimer: ReturnType<typeof setTimeout> | null = null;
     if (!hasCompleted) {
       autoTimer = setTimeout(() => {
         runTour();
