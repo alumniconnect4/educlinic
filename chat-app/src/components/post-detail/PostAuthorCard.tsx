@@ -71,7 +71,7 @@ export const PostAuthorCard: React.FC<PostAuthorCardProps> = ({
           </Button>
         )}
 
-        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+        <p className="text-sm text-muted-foreground mb-4 leading-relaxed break-words whitespace-pre-wrap">
           {authorUser?.bio}
         </p>
 
