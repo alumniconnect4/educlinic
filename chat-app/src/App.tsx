@@ -11,6 +11,7 @@ import { PostDetailPage } from './pages/PostDetailPage';
 import { ConnectPage } from './pages/ConnectPage';
 
 import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { ChatSidebarTour } from './components/tour/ChatSidebarTour';
 
 const Layout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -19,6 +20,19 @@ const Layout = () => {
   const isPostDetail = location.pathname.startsWith('/post/');
   const isChat = location.pathname === '/chat';
   const isConnect = location.pathname === '/connect';
+
+  React.useEffect(() => {
+    const handleOpen = () => setIsMobileMenuOpen(true);
+    const handleClose = () => setIsMobileMenuOpen(false);
+
+    window.addEventListener('open-chat-sidebar', handleOpen);
+    window.addEventListener('close-chat-sidebar', handleClose);
+
+    return () => {
+      window.removeEventListener('open-chat-sidebar', handleOpen);
+      window.removeEventListener('close-chat-sidebar', handleClose);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
@@ -39,6 +53,8 @@ const Layout = () => {
         </main>
         <RightSidebar />
       </div>
+
+      <ChatSidebarTour />
     </div>
   );
 };

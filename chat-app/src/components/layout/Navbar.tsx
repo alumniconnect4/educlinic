@@ -7,6 +7,7 @@ import {
   Sparkles,
   X,
   TrendingUp,
+  HelpCircle,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -14,6 +15,7 @@ import { getAvatarUrl } from '../../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useStore } from '../../store/mockData';
 import { Link, useNavigate } from 'react-router-dom';
+import { startChatSidebarTour } from '../tour/ChatSidebarTour';
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -122,6 +124,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
             onClick={() => navigate('/create-post')}
           >
             <Plus className="h-4 w-4 stroke-2" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={startChatSidebarTour}
+            title="Explore Features Tour"
+            aria-label="Features Tour"
+          >
+            <HelpCircle className="h-4 w-4" />
           </Button>
 
           <Link to="/profile">

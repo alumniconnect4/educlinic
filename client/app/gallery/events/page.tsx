@@ -81,19 +81,34 @@ export default function EventsGallery() {
       <section className="py-16">
         <div className="container mx-auto px-4 max-w-7xl">
           {loading ? (
-            <div className="py-20 flex flex-col items-center justify-center gap-3 text-gray-500">
-              <Loader2 className="w-8 h-8 animate-spin text-[#b91c1c]" />
-              <span className="text-sm font-semibold">
-                Loading gallery albums...
-              </span>
+            <div className="flex flex-col gap-6 max-w-5xl mx-auto">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col sm:flex-row bg-white shadow-sm border border-gray-100 rounded-lg overflow-hidden w-full animate-pulse"
+                >
+                  <div className="w-full sm:w-1/3 min-h-[200px] sm:min-h-[220px] bg-gray-200" />
+                  <div className="p-6 sm:p-8 flex flex-col justify-between w-full sm:w-2/3">
+                    <div>
+                      <div className="h-6 bg-gray-200 rounded-md w-3/4 mb-3" />
+                      <div className="h-4 bg-gray-200 rounded-md w-1/3 mb-6" />
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="h-10 bg-gray-200 rounded-md w-32" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : albums.length === 0 ? (
-            <div className="py-20 text-center border-2 border-dashed border-gray-200 rounded-xl bg-white max-w-2xl mx-auto p-8">
-              <Images className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <div className="py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-white max-w-2xl mx-auto p-8 shadow-2xs">
+              <div className="w-14 h-14 rounded-full bg-red-50 text-[#b91c1c] flex items-center justify-center mx-auto mb-3.5 shadow-2xs">
+                <Images className="w-7 h-7" />
+              </div>
               <h3 className="text-lg font-bold text-gray-800">
                 No Albums Found
               </h3>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-md mx-auto">
                 New photo albums uploaded via the admin portal will appear here
                 automatically.
               </p>

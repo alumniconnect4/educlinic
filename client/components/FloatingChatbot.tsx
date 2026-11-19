@@ -265,6 +265,7 @@ export default function FloatingChatbot() {
       </div>
 
       <div
+        data-tour="ai-chatbot"
         className={`fixed bottom-6 right-6 z-50 transition-all duration-700 ${isOpen ? 'translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
       >
         <div className="relative">

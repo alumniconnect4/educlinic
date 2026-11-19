@@ -252,6 +252,7 @@ const AuthForm = () => {
           useUserStore
             .getState()
             .setUser(res.data.user, res.data.sessionId);
+          sessionStorage.setItem('just_logged_in', 'true');
           toast.success('Registered successfully! Logging you in...');
           router.push('/');
         }
@@ -267,6 +268,7 @@ const AuthForm = () => {
 
         e.target.reset();
         useUserStore.getState().setUser(res.data.user, res.data.sessionId);
+        sessionStorage.setItem('just_logged_in', 'true');
         toast.success('Logged in successfully!');
         router.push('/');
       }
