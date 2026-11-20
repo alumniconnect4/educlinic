@@ -11,12 +11,14 @@ import {
   Ban,
   Share2,
   GraduationCap,
+  Eye,
 } from 'lucide-react';
 import { getAvatarUrl } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/mockData';
 import { Toast } from '../ui/Toast';
 import { EditProfileModal } from './EditProfileModal';
+import { ProfilePictureModal } from './ProfilePictureModal';
 import { VerifiedBadge, DeveloperBadge } from '../../pages/ConnectPage';
 
 interface ProfileHeaderProps {
@@ -64,6 +66,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const handleShareProfile = async () => {
     try {
@@ -128,18 +131,29 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       <div className="px-4 sm:px-6 pb-6 relative pt-0">
         {/* Top bar: Avatar and Action buttons */}
         <div className="flex items-end justify-between -mt-10 sm:-mt-16 mb-4 gap-2 sm:gap-4">
-          <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-4 border-card ring-2 ring-border/50 shadow-md bg-card shrink-0">
-            <AvatarImage
-              src={getAvatarUrl(
-                profileUser.name,
-                profileUser.avatarUrl || profileUser.avatar
-              )}
-              className="object-cover"
-            />
-            <AvatarFallback className="text-xl sm:text-2xl font-bold bg-[#3b49df]/10 text-[#3b49df]">
-              {profileUser.name ? profileUser.name.substring(0, 2).toUpperCase() : 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <div
+            className="relative group cursor-pointer shrink-0 select-none"
+            onClick={() => setIsPreviewOpen(true)}
+            title="Click to view profile picture"
+          >
+            {/* Instagram story gradient ring on hover */}
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-300" />
+            <Avatar className="relative h-20 w-20 sm:h-28 sm:w-28 border-4 border-card ring-2 ring-border/50 shadow-md bg-card transition-all duration-200 group-hover:scale-105 group-hover:ring-rose-500/50">
+              <AvatarImage
+                src={getAvatarUrl(
+                  profileUser.name,
+                  profileUser.avatarUrl || profileUser.avatar
+                )}
+                className="object-cover"
+              />
+              <AvatarFallback className="text-xl sm:text-2xl font-bold bg-[#3b49df]/10 text-[#3b49df]">
+                {profileUser.name ? profileUser.name.substring(0, 2).toUpperCase() : 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+              <Eye className="h-5 w-5 sm:h-6 sm:w-6 drop-shadow" />
+            </div>
+          </div>
 
           <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 shrink-0 pb-1">
             {!isMe && (
@@ -398,6 +412,12 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         message={toastMessage}
         visible={showToast}
         onDismiss={() => setShowToast(false)}
+      />
+
+      <ProfilePictureModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        user={profileUser}
       />
 
       {isMe && (

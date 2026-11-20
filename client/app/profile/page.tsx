@@ -13,6 +13,7 @@ import {
   Lock,
   ExternalLink,
   Edit3,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useUserStore } from '@/store/useUserStore';
@@ -78,6 +79,7 @@ export default function ProfilePage() {
   const [socialLink, setSocialLink] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Crop modal states
   const [isCropOpen, setIsCropOpen] = useState(false);
@@ -313,8 +315,20 @@ export default function ProfilePage() {
           {/* ================= CENTERED HEADER ================= */}
           <div className="p-6 sm:p-8 flex flex-col items-center justify-center border-b border-gray-200 bg-white text-center">
             {/* User Photo */}
-            <div className="relative group">
-              <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shadow-2xs">
+            <div
+              className={`relative group ${!isEditing && avatarUrl ? 'cursor-pointer select-none' : ''}`}
+              onClick={() => {
+                if (!isEditing && avatarUrl) {
+                  setIsPreviewOpen(true);
+                }
+              }}
+              title={!isEditing && avatarUrl ? 'Click to preview profile picture' : undefined}
+            >
+              {/* Instagram story gradient ring on hover */}
+              {!isEditing && avatarUrl && (
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-300" />
+              )}
+              <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shadow-2xs transition-all duration-200 group-hover:scale-102">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -330,6 +344,12 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
+
+              {!isEditing && avatarUrl && (
+                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                  <Eye className="h-6 w-6 drop-shadow" />
+                </div>
+              )}
 
               {/* Edit Mode Camera overlay */}
               {isEditing && (
@@ -747,6 +767,36 @@ export default function ProfilePage() {
           }}
           onApplyCrop={handleApplyCroppedAvatar}
         />
+      )}
+
+      {/* Instagram-style Profile Picture Preview Modal */}
+      {isPreviewOpen && avatarUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 select-none animate-in fade-in duration-200"
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          {/* Clean Close Cross Button */}
+          <button
+            onClick={() => setIsPreviewOpen(false)}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white/90 hover:text-white transition-all cursor-pointer backdrop-blur-sm z-50 focus:outline-none"
+            title="Close (Esc)"
+            aria-label="Close"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {/* Pure Borderless Profile Picture */}
+          <div
+            className="relative w-72 h-72 sm:w-96 sm:h-96 md:w-[420px] md:h-[420px] aspect-square rounded-full overflow-hidden shadow-2xl bg-zinc-950 flex items-center justify-center animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={avatarUrl}
+              alt={name || user?.name || 'User'}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
       )}
     </div>
   );
