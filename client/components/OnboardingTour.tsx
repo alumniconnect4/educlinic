@@ -154,7 +154,7 @@ export default function OnboardingTour() {
       progressText: '{{current}} of {{total}}',
       nextBtnText: 'Next →',
       prevBtnText: '← Back',
-      doneBtnText: 'Finish Tour 🎉',
+      doneBtnText: 'Finish Tour',
       popoverClass: 'bfgi-tour-popover',
       steps: activeSteps,
       onDestroyed: () => {

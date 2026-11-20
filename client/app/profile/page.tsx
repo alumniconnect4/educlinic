@@ -156,12 +156,104 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
-  const handleAvatarFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type ? file.type.toLowerCase().trim() : '';
+
+    // Check for HEIC
+    if (
+      fileName.endsWith('.heic') ||
+      fileName.endsWith('.heif') ||
+      fileName.endsWith('.hif') ||
+      fileType.includes('heic') ||
+      fileType.includes('heif')
+    ) {
+      toast.error(
+        'HEIC format is not supported. Please choose an image in JPG, JPEG, PNG, or WebP format.'
+      );
+      e.target.value = '';
+      return;
+    }
+
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
+    const allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const ext = lastDotIndex !== -1 ? fileName.slice(lastDotIndex) : '';
+
+    if (!allowedExts.includes(ext) || (fileType && !allowedMimes.includes(fileType))) {
+      toast.error(
+        'Unsupported image format. Allowed formats are PNG, JPEG, JPG, and WebP.'
+      );
+      e.target.value = '';
+      return;
+    }
+
+    // Binary magic bytes inspection
+    try {
+      const slice = file.slice(0, 32);
+      const buffer = await slice.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      if (bytes.length < 4) {
+        toast.error('Invalid or empty image file.');
+        e.target.value = '';
+        return;
+      }
+
+      // Check ISOBMFF / HEIC
+      if (bytes.length >= 12) {
+        const ftyp = String.fromCharCode(...bytes.slice(4, 8));
+        if (ftyp === 'ftyp') {
+          toast.error(
+            'HEIC format is not supported. Please choose an image in JPG, JPEG, PNG, or WebP format.'
+          );
+          e.target.value = '';
+          return;
+        }
+      }
+
+      // Check PDF (%PDF)
+      if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+        toast.error('PDF files are not supported as profile photos.');
+        e.target.value = '';
+        return;
+      }
+
+      // JPEG / PNG / WebP check
+      const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+      const isPng =
+        bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+      const isWebp =
+        bytes[0] === 0x52 &&
+        bytes[1] === 0x49 &&
+        bytes[2] === 0x46 &&
+        bytes[3] === 0x46 &&
+        bytes.length >= 12 &&
+        bytes[8] === 0x57 &&
+        bytes[9] === 0x45 &&
+        bytes[10] === 0x42 &&
+        bytes[11] === 0x50;
+
+      if (!isJpeg && !isPng && !isWebp) {
+        toast.error(
+          'Unsupported image format. Allowed formats are PNG, JPEG, JPG, and WebP.'
+        );
+        e.target.value = '';
+        return;
+      }
+    } catch {
+      toast.error('Could not verify image format. Please try another image.');
+      e.target.value = '';
+      return;
+    }
+
     if (file.size > 15 * 1024 * 1024) {
       toast.error('Image is larger than 15MB. Please choose a smaller photo.');
+      e.target.value = '';
       return;
     }
 
@@ -365,7 +457,7 @@ export default function ProfilePage() {
               <input
                 id="portal-avatar-upload"
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept=".png,.jpg,.jpeg,.webp,image/jpeg,image/png,image/webp"
                 onChange={handleAvatarFileSelected}
                 className="hidden"
                 disabled={!isEditing}
