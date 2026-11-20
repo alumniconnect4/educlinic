@@ -13,6 +13,7 @@ import {
   Lock,
   ExternalLink,
   Edit3,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useUserStore } from '@/store/useUserStore';
@@ -78,6 +79,7 @@ export default function ProfilePage() {
   const [socialLink, setSocialLink] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Crop modal states
   const [isCropOpen, setIsCropOpen] = useState(false);
@@ -154,12 +156,104 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
-  const handleAvatarFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type ? file.type.toLowerCase().trim() : '';
+
+    // Check for HEIC
+    if (
+      fileName.endsWith('.heic') ||
+      fileName.endsWith('.heif') ||
+      fileName.endsWith('.hif') ||
+      fileType.includes('heic') ||
+      fileType.includes('heif')
+    ) {
+      toast.error(
+        'HEIC format is not supported. Please choose an image in JPG, JPEG, PNG, or WebP format.'
+      );
+      e.target.value = '';
+      return;
+    }
+
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
+    const allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const ext = lastDotIndex !== -1 ? fileName.slice(lastDotIndex) : '';
+
+    if (!allowedExts.includes(ext) || (fileType && !allowedMimes.includes(fileType))) {
+      toast.error(
+        'Unsupported image format. Allowed formats are PNG, JPEG, JPG, and WebP.'
+      );
+      e.target.value = '';
+      return;
+    }
+
+    // Binary magic bytes inspection
+    try {
+      const slice = file.slice(0, 32);
+      const buffer = await slice.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      if (bytes.length < 4) {
+        toast.error('Invalid or empty image file.');
+        e.target.value = '';
+        return;
+      }
+
+      // Check ISOBMFF / HEIC
+      if (bytes.length >= 12) {
+        const ftyp = String.fromCharCode(...bytes.slice(4, 8));
+        if (ftyp === 'ftyp') {
+          toast.error(
+            'HEIC format is not supported. Please choose an image in JPG, JPEG, PNG, or WebP format.'
+          );
+          e.target.value = '';
+          return;
+        }
+      }
+
+      // Check PDF (%PDF)
+      if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+        toast.error('PDF files are not supported as profile photos.');
+        e.target.value = '';
+        return;
+      }
+
+      // JPEG / PNG / WebP check
+      const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+      const isPng =
+        bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+      const isWebp =
+        bytes[0] === 0x52 &&
+        bytes[1] === 0x49 &&
+        bytes[2] === 0x46 &&
+        bytes[3] === 0x46 &&
+        bytes.length >= 12 &&
+        bytes[8] === 0x57 &&
+        bytes[9] === 0x45 &&
+        bytes[10] === 0x42 &&
+        bytes[11] === 0x50;
+
+      if (!isJpeg && !isPng && !isWebp) {
+        toast.error(
+          'Unsupported image format. Allowed formats are PNG, JPEG, JPG, and WebP.'
+        );
+        e.target.value = '';
+        return;
+      }
+    } catch {
+      toast.error('Could not verify image format. Please try another image.');
+      e.target.value = '';
+      return;
+    }
+
     if (file.size > 15 * 1024 * 1024) {
       toast.error('Image is larger than 15MB. Please choose a smaller photo.');
+      e.target.value = '';
       return;
     }
 
@@ -313,8 +407,20 @@ export default function ProfilePage() {
           {/* ================= CENTERED HEADER ================= */}
           <div className="p-6 sm:p-8 flex flex-col items-center justify-center border-b border-gray-200 bg-white text-center">
             {/* User Photo */}
-            <div className="relative group">
-              <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shadow-2xs">
+            <div
+              className={`relative group ${!isEditing && avatarUrl ? 'cursor-pointer select-none' : ''}`}
+              onClick={() => {
+                if (!isEditing && avatarUrl) {
+                  setIsPreviewOpen(true);
+                }
+              }}
+              title={!isEditing && avatarUrl ? 'Click to preview profile picture' : undefined}
+            >
+              {/* Instagram story gradient ring on hover */}
+              {!isEditing && avatarUrl && (
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 opacity-0 group-hover:opacity-100 blur-[2px] transition-all duration-300" />
+              )}
+              <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shadow-2xs transition-all duration-200 group-hover:scale-102">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -331,6 +437,12 @@ export default function ProfilePage() {
                 )}
               </div>
 
+              {!isEditing && avatarUrl && (
+                <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                  <Eye className="h-6 w-6 drop-shadow" />
+                </div>
+              )}
+
               {/* Edit Mode Camera overlay */}
               {isEditing && (
                 <label
@@ -345,7 +457,7 @@ export default function ProfilePage() {
               <input
                 id="portal-avatar-upload"
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept=".png,.jpg,.jpeg,.webp,image/jpeg,image/png,image/webp"
                 onChange={handleAvatarFileSelected}
                 className="hidden"
                 disabled={!isEditing}
@@ -747,6 +859,36 @@ export default function ProfilePage() {
           }}
           onApplyCrop={handleApplyCroppedAvatar}
         />
+      )}
+
+      {/* Instagram-style Profile Picture Preview Modal */}
+      {isPreviewOpen && avatarUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 select-none animate-in fade-in duration-200"
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          {/* Clean Close Cross Button */}
+          <button
+            onClick={() => setIsPreviewOpen(false)}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-white/90 hover:text-white transition-all cursor-pointer backdrop-blur-sm z-50 focus:outline-none"
+            title="Close (Esc)"
+            aria-label="Close"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          {/* Pure Borderless Profile Picture */}
+          <div
+            className="relative w-72 h-72 sm:w-96 sm:h-96 md:w-[420px] md:h-[420px] aspect-square rounded-full overflow-hidden shadow-2xl bg-zinc-950 flex items-center justify-center animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={avatarUrl}
+              alt={name || user?.name || 'User'}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -29,6 +29,183 @@ const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  const ALLOWED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
+  const ALLOWED_IMAGE_MIMES = [
+    'image/png',
+    'image/jpeg',
+    'image/jpg',
+    'image/webp',
+  ];
+
+  const checkImageMagicBytes = async (
+    file: File
+  ): Promise<{ valid: boolean; error?: string }> => {
+    try {
+      const slice = file.slice(0, 32);
+      const buffer = await slice.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+
+      if (bytes.length < 4) {
+        return { valid: false, error: 'Invalid or empty file.' };
+      }
+
+      // Check ISOBMFF / HEIC container (bytes 4-7 is "ftyp")
+      if (bytes.length >= 12) {
+        const ftyp = String.fromCharCode(...bytes.slice(4, 8));
+        if (ftyp === 'ftyp') {
+          const brand = String.fromCharCode(...bytes.slice(8, 12)).toLowerCase();
+          const heicBrands = [
+            'heic',
+            'heix',
+            'hevc',
+            'hevx',
+            'heim',
+            'heis',
+            'hevm',
+            'hevs',
+            'mif1',
+            'msf1',
+          ];
+          if (heicBrands.includes(brand)) {
+            return {
+              valid: false,
+              error:
+                'HEIC format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.',
+            };
+          }
+          return {
+            valid: false,
+            error:
+              'Unsupported image container format. Allowed formats are PNG, JPEG, JPG, and WebP.',
+          };
+        }
+      }
+
+      // Check PDF (%PDF -> 0x25, 0x50, 0x44, 0x46)
+      if (
+        bytes[0] === 0x25 &&
+        bytes[1] === 0x50 &&
+        bytes[2] === 0x44 &&
+        bytes[3] === 0x46
+      ) {
+        return {
+          valid: false,
+          error:
+            'PDF format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.',
+        };
+      }
+
+      // Check GIF (GIF87a / GIF89a -> 0x47, 0x49, 0x46)
+      if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+        return {
+          valid: false,
+          error:
+            'GIF format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.',
+        };
+      }
+
+      // Check BMP (BM -> 0x42, 0x4D)
+      if (bytes[0] === 0x42 && bytes[1] === 0x4d) {
+        return {
+          valid: false,
+          error:
+            'BMP format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.',
+        };
+      }
+
+      // Check TIFF (II*\0 or MM\0*)
+      if (
+        (bytes[0] === 0x49 && bytes[1] === 0x49 && bytes[2] === 0x2a && bytes[3] === 0x00) ||
+        (bytes[0] === 0x4d && bytes[1] === 0x4d && bytes[2] === 0x00 && bytes[3] === 0x2a)
+      ) {
+        return {
+          valid: false,
+          error:
+            'TIFF format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.',
+        };
+      }
+
+      // JPEG check: FF D8 FF
+      const isJpeg =
+        bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+
+      // PNG check: 89 50 4E 47 0D 0A 1A 0A
+      const isPng =
+        bytes[0] === 0x89 &&
+        bytes[1] === 0x50 &&
+        bytes[2] === 0x4e &&
+        bytes[3] === 0x47;
+
+      // WebP check: RIFF .... WEBP
+      const isWebp =
+        bytes[0] === 0x52 &&
+        bytes[1] === 0x49 &&
+        bytes[2] === 0x46 &&
+        bytes[3] === 0x46 &&
+        bytes.length >= 12 &&
+        bytes[8] === 0x57 &&
+        bytes[9] === 0x45 &&
+        bytes[10] === 0x42 &&
+        bytes[11] === 0x50;
+
+      if (isJpeg || isPng || isWebp) {
+        return { valid: true };
+      }
+
+      return {
+        valid: false,
+        error:
+          'Unsupported image format. Allowed formats are PNG, JPEG, JPG, and WebP.',
+      };
+    } catch {
+      return {
+        valid: false,
+        error: 'Could not inspect file format. Please try another image.',
+      };
+    }
+  };
+
+  const validateImageFile = (file: File): { valid: boolean; error?: string } => {
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type ? file.type.toLowerCase().trim() : '';
+
+    // Explicit check for HEIC/HEIF
+    if (
+      fileName.endsWith('.heic') ||
+      fileName.endsWith('.heif') ||
+      fileName.endsWith('.hif') ||
+      fileType.includes('heic') ||
+      fileType.includes('heif')
+    ) {
+      return {
+        valid: false,
+        error:
+          'HEIC format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.',
+      };
+    }
+
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const ext = lastDotIndex !== -1 ? fileName.slice(lastDotIndex) : '';
+
+    if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
+      return {
+        valid: false,
+        error:
+          'Unsupported image extension. Allowed formats are PNG, JPEG, JPG, and WebP.',
+      };
+    }
+
+    if (fileType && !ALLOWED_IMAGE_MIMES.includes(fileType)) {
+      return {
+        valid: false,
+        error:
+          'Unsupported image type. Allowed formats are PNG, JPEG, JPG, and WebP.',
+      };
+    }
+
+    return { valid: true };
+  };
+
   const compressImage = (
     file: File,
     maxWidth = 1280,
@@ -36,20 +213,21 @@ const AuthForm = () => {
     quality = 0.7
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
-      if (!file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-        return;
-      }
-
       const reader = new FileReader();
       reader.onload = (e) => {
+        const result = e.target?.result;
+        if (!result || typeof result !== 'string') {
+          return reject(new Error('Failed to read image data.'));
+        }
+
         const img = new Image();
         img.onload = () => {
           let width = img.width;
           let height = img.height;
+
+          if (width === 0 || height === 0) {
+            return reject(new Error('Invalid image dimensions.'));
+          }
 
           if (width > maxWidth || height > maxHeight) {
             if (width > height) {
@@ -66,16 +244,24 @@ const AuthForm = () => {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            return resolve(e.target?.result as string);
+            return reject(
+              new Error('Could not initialize image processing context.')
+            );
           }
           ctx.drawImage(img, 0, 0, width, height);
           const dataUrl = canvas.toDataURL('image/jpeg', quality);
           resolve(dataUrl);
         };
-        img.onerror = () => resolve(e.target?.result as string);
-        img.src = e.target?.result as string;
+        img.onerror = () => {
+          reject(
+            new Error(
+              'Failed to decode image. Please ensure the file is a valid image (PNG, JPG, or WebP) and not corrupted or in an unsupported format like HEIC.'
+            )
+          );
+        };
+        img.src = result;
       };
-      reader.onerror = reject;
+      reader.onerror = () => reject(new Error('Failed to read file.'));
       reader.readAsDataURL(file);
     });
   };
@@ -84,26 +270,60 @@ const AuthForm = () => {
     e: React.ChangeEvent<HTMLInputElement>,
     type: 'idCard' | 'degree' | 'avatar'
   ) => {
-    const file = e.target.files?.[0];
+    const inputElement = e.target;
+    const file = inputElement.files?.[0];
     if (!file) return;
 
+    // 1. Basic validation (extension & MIME)
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      const msg = validation.error!;
+      setError(msg);
+      toast.error(msg);
+      inputElement.value = '';
+      return;
+    }
+
+    // 2. Binary magic bytes inspection
+    const magicCheck = await checkImageMagicBytes(file);
+    if (!magicCheck.valid) {
+      const msg = magicCheck.error!;
+      setError(msg);
+      toast.error(msg);
+      inputElement.value = '';
+      return;
+    }
+
+    // 3. File size check (20MB)
     if (file.size > 20 * 1024 * 1024) {
       const msg = 'File size is too large. Please select a file under 20MB.';
       setError(msg);
       toast.error(msg);
+      inputElement.value = '';
       return;
     }
 
+    // 4. Image decoding & compression
     try {
       const compressedDataUrl = await compressImage(file);
+      if (
+        !compressedDataUrl ||
+        !compressedDataUrl.startsWith('data:image/jpeg')
+      ) {
+        throw new Error('Image could not be converted to a supported format.');
+      }
       if (type === 'idCard') setIdCardUrl(compressedDataUrl);
       if (type === 'degree') setDegreeUrl(compressedDataUrl);
       if (type === 'avatar') setAvatarUrl(compressedDataUrl);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to process image file', err);
-      toast.error('Failed to process file. Please try another image.');
+      const msg =
+        err?.message ||
+        'Failed to process file. Please ensure it is a valid image (PNG, JPG, or WebP).';
+      setError(msg);
+      toast.error(msg);
     }
-    e.target.value = '';
+    inputElement.value = '';
   };
 
   const handleSubmit = async (e: any) => {
@@ -208,6 +428,64 @@ const AuthForm = () => {
           toast.error(
             'Alumni registration requires uploading either an ID Card or Degree Certificate.'
           );
+          setIsLoading(false);
+          return;
+        }
+
+        const isValidImagePayload = (
+          url?: string | null,
+          fieldName = 'Image'
+        ): { valid: boolean; error?: string } => {
+          if (!url) return { valid: true };
+          const trimmed = url.trim();
+          if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+            const lower = trimmed.toLowerCase();
+            if (lower.includes('.heic') || lower.includes('.heif')) {
+              return {
+                valid: false,
+                error: `${fieldName}: HEIC format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.`,
+              };
+            }
+            return { valid: true };
+          }
+          if (
+            trimmed.startsWith('data:image/heic') ||
+            trimmed.startsWith('data:image/heif')
+          ) {
+            return {
+              valid: false,
+              error: `${fieldName}: HEIC format is not supported. Please upload an image in JPG, JPEG, PNG, or WebP format.`,
+            };
+          }
+          if (!/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(trimmed)) {
+            return {
+              valid: false,
+              error: `${fieldName}: Unsupported format. Only PNG, JPEG, JPG, and WebP images are supported.`,
+            };
+          }
+          return { valid: true };
+        };
+
+        const avatarCheck = isValidImagePayload(avatarUrl, 'Profile Avatar');
+        if (!avatarCheck.valid) {
+          setError(avatarCheck.error!);
+          toast.error(avatarCheck.error!);
+          setIsLoading(false);
+          return;
+        }
+
+        const idCardCheck = isValidImagePayload(idCardUrl, 'ID Card');
+        if (!idCardCheck.valid) {
+          setError(idCardCheck.error!);
+          toast.error(idCardCheck.error!);
+          setIsLoading(false);
+          return;
+        }
+
+        const degreeCheck = isValidImagePayload(degreeUrl, 'Degree Certificate');
+        if (!degreeCheck.valid) {
+          setError(degreeCheck.error!);
+          toast.error(degreeCheck.error!);
           setIsLoading(false);
           return;
         }
@@ -528,7 +806,7 @@ const AuthForm = () => {
 
                   <input
                     type="file"
-                    accept="image/*"
+                    accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                     onChange={(e) => handleFileUpload(e, 'avatar')}
                     className="hidden"
                     id="profile-avatar-upload"
@@ -606,7 +884,10 @@ const AuthForm = () => {
                       >
                         <Upload className="w-4 h-4 text-gray-400" />
                         <span className="text-xs text-gray-600 font-medium hover:text-[#d60000]">
-                          Click to upload Profile Avatar Image (JPG/PNG)
+                          Click to upload Profile Avatar (PNG, JPG, JPEG, WebP)
+                        </span>
+                        <span className="text-[10px] text-gray-400">
+                          HEIC format is not supported
                         </span>
                       </label>
                     </div>
@@ -624,7 +905,7 @@ const AuthForm = () => {
 
                       <input
                         type="file"
-                        accept="image/*"
+                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                         onChange={(e) => handleFileUpload(e, 'idCard')}
                         className="hidden"
                         id="student-id-upload"
@@ -704,7 +985,10 @@ const AuthForm = () => {
                           >
                             <Upload className="w-5 h-5 text-gray-400" />
                             <span className="text-xs text-gray-600 font-medium hover:text-[#d60000]">
-                              Click to upload Student ID Card (JPG/PNG)
+                              Click to upload Student ID Card (PNG, JPG, JPEG, WebP)
+                            </span>
+                            <span className="text-[10px] text-gray-400">
+                              HEIC format is not supported
                             </span>
                           </label>
                         </div>
@@ -721,14 +1005,14 @@ const AuthForm = () => {
 
                       <input
                         type="file"
-                        accept="image/*"
+                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                         onChange={(e) => handleFileUpload(e, 'idCard')}
                         className="hidden"
                         id="alumni-id-upload"
                       />
                       <input
                         type="file"
-                        accept="image/*"
+                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                         onChange={(e) => handleFileUpload(e, 'degree')}
                         className="hidden"
                         id="alumni-degree-upload"
@@ -866,7 +1150,7 @@ const AuthForm = () => {
                                 >
                                   <span className="text-[11px] text-gray-600 font-semibold hover:text-[#d60000] flex items-center justify-center gap-1">
                                     <Upload className="w-3.5 h-3.5 text-gray-400" />{' '}
-                                    Upload ID Card
+                                    Upload ID (PNG/JPG)
                                   </span>
                                 </label>
                               </div>
@@ -879,11 +1163,14 @@ const AuthForm = () => {
                                 >
                                   <span className="text-[11px] text-gray-600 font-semibold hover:text-[#d60000] flex items-center justify-center gap-1">
                                     <Upload className="w-3.5 h-3.5 text-gray-400" />{' '}
-                                    Upload Degree
+                                    Upload Degree (PNG/JPG)
                                   </span>
                                 </label>
                               </div>
                             )}
+                            <p className="text-[10px] text-gray-500 text-center col-span-2">
+                              Supported formats: PNG, JPG, JPEG, WebP. HEIC is not supported.
+                            </p>
                           </div>
                         )}
                       </div>

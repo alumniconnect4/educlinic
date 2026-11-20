@@ -220,6 +220,31 @@ export default function ManageAlumniStudents() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type ? file.type.toLowerCase().trim() : '';
+    if (
+      fileName.endsWith('.heic') ||
+      fileName.endsWith('.heif') ||
+      fileName.endsWith('.hif') ||
+      fileType.includes('heic') ||
+      fileType.includes('heif')
+    ) {
+      toast.error('HEIC format is not supported. Please upload a PNG, JPEG, JPG, or WebP image.');
+      e.target.value = '';
+      return;
+    }
+
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
+    const allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const ext = lastDotIndex !== -1 ? fileName.slice(lastDotIndex) : '';
+
+    if (!allowedExts.includes(ext) || (fileType && !allowedMimes.includes(fileType))) {
+      toast.error('Unsupported image format. Allowed formats are PNG, JPEG, JPG, and WebP.');
+      e.target.value = '';
+      return;
+    }
+
     if (file.size > 3 * 1024 * 1024) {
       toast.error('Image file size should be less than 3MB');
       return;
@@ -243,6 +268,31 @@ export default function ManageAlumniStudents() {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type ? file.type.toLowerCase().trim() : '';
+    if (
+      fileName.endsWith('.heic') ||
+      fileName.endsWith('.heif') ||
+      fileName.endsWith('.hif') ||
+      fileType.includes('heic') ||
+      fileType.includes('heif')
+    ) {
+      toast.error('HEIC format is not supported. Please upload a PNG, JPEG, JPG, or WebP image.');
+      e.target.value = '';
+      return;
+    }
+
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.webp'];
+    const allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    const lastDotIndex = fileName.lastIndexOf('.');
+    const ext = lastDotIndex !== -1 ? fileName.slice(lastDotIndex) : '';
+
+    if (!allowedExts.includes(ext) || (fileType && !allowedMimes.includes(fileType))) {
+      toast.error('Unsupported image format. Allowed formats are PNG, JPEG, JPG, and WebP.');
+      e.target.value = '';
+      return;
+    }
 
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Document file size should be less than 5MB');
@@ -529,7 +579,7 @@ export default function ManageAlumniStudents() {
                       Upload Avatar Image
                       <input
                         type="file"
-                        accept="image/*"
+                        accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                         className="hidden"
                         onChange={(e) => handleImageUpload(e, false)}
                       />
@@ -1425,7 +1475,7 @@ export default function ManageAlumniStudents() {
                           Upload New Image
                           <input
                             type="file"
-                            accept="image/*"
+                            accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                             className="hidden"
                             onChange={(e) => handleImageUpload(e, true)}
                           />
@@ -1564,7 +1614,7 @@ export default function ManageAlumniStudents() {
                               Change
                               <input
                                 type="file"
-                                accept="image/*"
+                                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                                 className="hidden"
                                 onChange={(e) =>
                                   handleDocUpload(e, 'idCardUrl')
@@ -1592,7 +1642,7 @@ export default function ManageAlumniStudents() {
                         Upload ID Card
                         <input
                           type="file"
-                          accept="image/*"
+                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                           className="hidden"
                           onChange={(e) => handleDocUpload(e, 'idCardUrl')}
                         />
@@ -1636,7 +1686,7 @@ export default function ManageAlumniStudents() {
                               Change
                               <input
                                 type="file"
-                                accept="image/*"
+                                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                                 className="hidden"
                                 onChange={(e) =>
                                   handleDocUpload(e, 'degreeUrl')
@@ -1664,7 +1714,7 @@ export default function ManageAlumniStudents() {
                         Upload Degree
                         <input
                           type="file"
-                          accept="image/*"
+                          accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
                           className="hidden"
                           onChange={(e) => handleDocUpload(e, 'degreeUrl')}
                         />

@@ -10,7 +10,7 @@ import { X, Sparkles } from 'lucide-react';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export const FeedPage: React.FC = () => {
-  const { users, currentUser, addComment, addPost } = useStore();
+  const { users, currentUser, addComment, addPost, posts, toggleLike, upsertPosts } = useStore();
   const [feedPosts, setFeedPosts] = useState<Post[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -38,6 +38,38 @@ export const FeedPage: React.FC = () => {
 
   const observerTarget = useRef<HTMLDivElement>(null);
 
+  // Keep feedPosts in sync whenever store posts change (e.g. liked on PostDetailPage or other views)
+  useEffect(() => {
+    if (posts.length > 0) {
+      setFeedPosts((prevFeedPosts) => {
+        let changed = false;
+        const next = prevFeedPosts.map((fp) => {
+          const matching = posts.find((p) => p.id === fp.id);
+          if (
+            matching &&
+            (matching.isLiked !== fp.isLiked ||
+              (matching._count?.likes ?? matching.likes) !==
+                (fp._count?.likes ?? fp.likes))
+          ) {
+            changed = true;
+            return {
+              ...fp,
+              isLiked: matching.isLiked,
+              _count: {
+                ...fp._count,
+                likes: matching._count?.likes ?? matching.likes ?? 0,
+                comments: matching._count?.comments ?? fp._count?.comments ?? 0,
+              },
+              likes: matching._count?.likes ?? matching.likes ?? 0,
+            };
+          }
+          return fp;
+        });
+        return changed ? next : prevFeedPosts;
+      });
+    }
+  }, [posts]);
+
   const handleComment = (postId: number) => {
     const content = commentInputs[postId];
     if (content && content.trim()) {
@@ -50,31 +82,26 @@ export const FeedPage: React.FC = () => {
     setFeedPosts((prev) =>
       prev.map((post) => {
         if (post.id === postId) {
-          const currentlyLiked = post.isLiked;
-          const count = post._count?.likes ?? 0;
+          const currentlyLiked = post.isLiked ?? false;
+          const count = post._count?.likes ?? post.likes ?? 0;
+          const nextLiked = !currentlyLiked;
+          const nextCount = currentlyLiked ? Math.max(0, count - 1) : count + 1;
           return {
             ...post,
-            isLiked: !currentlyLiked,
+            isLiked: nextLiked,
             _count: {
               ...post._count,
-              likes: currentlyLiked ? count - 1 : count + 1,
+              likes: nextCount,
               comments: post._count?.comments ?? 0,
             },
+            likes: nextCount,
           };
         }
         return post;
       })
     );
 
-    try {
-      await fetch(`${API_BASE}/posts/${postId}/like`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        credentials: 'include',
-      });
-    } catch (err) {
-      console.error(err);
-    }
+    await toggleLike(postId);
   };
 
   const fetchPosts = useCallback(
@@ -102,6 +129,7 @@ export const FeedPage: React.FC = () => {
             isInitial ? data.posts : [...prev, ...data.posts]
           );
           setHasMore(data.hasMore);
+          upsertPosts(data.posts);
         }
       } catch (err) {
         console.error(err);
@@ -110,7 +138,7 @@ export const FeedPage: React.FC = () => {
         setIsFetchingMore(false);
       }
     },
-    [activeTag, activeSearch]
+    [activeTag, activeSearch, upsertPosts]
   );
 
   useEffect(() => {

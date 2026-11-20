@@ -11,7 +11,7 @@ import {
 } from '../config/cache.js';
 import type { User } from '../../generated/prisma/browser.js';
 import { prisma } from '../config/db.js';
-import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
+import { DEFAULT_AVATAR_URL, isBase64Image, validateImageFormat } from '../utils/constants.js';
 import { enqueueUserImageUpload } from '../services/queue.service.js';
 
 export const register = async (req: Request, res: Response) => {
@@ -90,6 +90,26 @@ export const register = async (req: Request, res: Response) => {
         message:
           'Alumni registration requires either an ID Card or Degree Certificate upload.',
       });
+    }
+
+    // Validate image formats (strictly reject HEIC and require PNG, JPEG, JPG, or WebP)
+    if (avatarUrl) {
+      const avatarCheck = validateImageFormat(avatarUrl, 'Profile Avatar');
+      if (!avatarCheck.valid) {
+        return res.status(400).json({ message: avatarCheck.message });
+      }
+    }
+    if (idCardUrl) {
+      const idCardCheck = validateImageFormat(idCardUrl, 'ID Card');
+      if (!idCardCheck.valid) {
+        return res.status(400).json({ message: idCardCheck.message });
+      }
+    }
+    if (degreeUrl) {
+      const degreeCheck = validateImageFormat(degreeUrl, 'Degree Certificate');
+      if (!degreeCheck.valid) {
+        return res.status(400).json({ message: degreeCheck.message });
+      }
     }
 
     const user = await prisma.user.findUnique({

@@ -9,7 +9,7 @@ import {
 } from '../config/cache.js';
 import { parsePgInt } from '../utils/validation.js';
 import cloudinary from '../config/cloudinary.js';
-import { DEFAULT_AVATAR_URL, isBase64Image } from '../utils/constants.js';
+import { DEFAULT_AVATAR_URL, isBase64Image, validateImageFormat } from '../utils/constants.js';
 import { enqueueUserImageUpload } from '../services/queue.service.js';
 
 const formatCloudinaryAvatar = (
@@ -377,6 +377,13 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ message: 'Phone number must be 20 characters or less' });
+    }
+
+    if (avatarUrl) {
+      const avatarCheck = validateImageFormat(avatarUrl, 'Avatar');
+      if (!avatarCheck.valid) {
+        return res.status(400).json({ message: avatarCheck.message });
+      }
     }
 
     const validSchoolCategories = [
