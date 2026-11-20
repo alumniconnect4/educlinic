@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
   Heart,
@@ -27,6 +28,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   postOwnerId,
   depth = 0,
 }) => {
+  const navigate = useNavigate();
   const { addComment, deleteComment, currentUser } = useStore();
   const [showReplies, setShowReplies] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
@@ -38,6 +40,19 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     (comment as any)._count?.likes ?? 0
   );
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!comment.author?.id) {
+      navigate('/profile');
+      return;
+    }
+    if (currentUser?.id === comment.author.id) {
+      navigate('/profile');
+    } else {
+      navigate(`/profile?id=${comment.author.id}`);
+    }
+  };
 
   const [showMenu, setShowMenu] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -208,7 +223,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
       <div className="space-y-1.5 group">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Avatar className="h-8 w-8 shrink-0 border border-border/50">
+            <Avatar
+              className="h-8 w-8 shrink-0 border border-border/50 cursor-pointer transition-transform hover:scale-105"
+              onClick={handleAuthorClick}
+            >
               <AvatarImage
                 src={getAvatarUrl(
                   comment.author.name,
@@ -221,7 +239,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </Avatar>
 
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-sm text-foreground hover:text-[#3b49df] cursor-pointer transition-colors">
+              <span
+                className="font-semibold text-sm text-foreground hover:text-[#3b49df] cursor-pointer transition-colors"
+                onClick={handleAuthorClick}
+              >
                 {comment.author.name}
               </span>
               {currentUser?.id === comment.author.id && (
@@ -230,7 +251,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 </span>
               )}
               {postOwnerId && comment.author.id === postOwnerId && (
-                <span className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium px-1.5 py-0.5 rounded">
+                <span
+                  className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium px-1.5 py-0.5 rounded cursor-pointer"
+                  onClick={handleAuthorClick}
+                >
                   Author
                 </span>
               )}
@@ -303,7 +327,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
       {isReplying && (
         <div className="flex gap-2.5 pl-10 pt-1 animate-in slide-in-from-top-2 duration-150">
-          <Avatar className="h-7 w-7 shrink-0 border border-border/50 mt-1">
+          <Avatar
+            className="h-7 w-7 shrink-0 border border-border/50 mt-1 cursor-pointer transition-transform hover:scale-105"
+            onClick={() => navigate('/profile')}
+          >
             <AvatarImage
               src={getAvatarUrl(
                 currentUser?.name,

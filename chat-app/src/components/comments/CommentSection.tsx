@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore, getAuthHeaders } from '../../store/mockData';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
@@ -21,6 +22,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   postOwnerId,
   commentsCount,
 }) => {
+  const navigate = useNavigate();
   const { currentUser, addComment } = useStore();
   const [commentInput, setCommentInput] = useState('');
 
@@ -113,7 +115,10 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
       </div>
 
       <div className="flex gap-3 sm:gap-4">
-        <Avatar className="h-9 w-9 shrink-0 border border-border/60">
+        <Avatar
+          className="h-9 w-9 shrink-0 border border-border/60 cursor-pointer transition-transform hover:scale-105"
+          onClick={() => navigate('/profile')}
+        >
           <AvatarImage
             src={getAvatarUrl(
               currentUser?.name,

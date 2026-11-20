@@ -29,8 +29,14 @@ export const PostAuthorCard: React.FC<PostAuthorCardProps> = ({
       <div className="p-5 pt-0">
         <div className="flex items-end gap-3 -mt-8 mb-4">
           <Avatar
-            className="relative z-10 h-16 w-16 border-4 border-card bg-card shadow-xs cursor-pointer"
-            onClick={() => navigate('/profile')}
+            className="relative z-10 h-16 w-16 border-4 border-card bg-card shadow-xs cursor-pointer transition-transform hover:scale-105"
+            onClick={() => {
+              if (authorUser?.id) {
+                navigate(isMe ? '/profile' : `/profile?id=${authorUser.id}`);
+              } else {
+                navigate('/profile');
+              }
+            }}
           >
             <AvatarImage
               src={getAvatarUrl(
@@ -44,7 +50,13 @@ export const PostAuthorCard: React.FC<PostAuthorCardProps> = ({
           </Avatar>
           <h3
             className="font-bold text-xl text-foreground hover:text-[#3b49df] cursor-pointer transition-colors pb-0.5"
-            onClick={() => navigate('/profile')}
+            onClick={() => {
+              if (authorUser?.id) {
+                navigate(isMe ? '/profile' : `/profile?id=${authorUser.id}`);
+              } else {
+                navigate('/profile');
+              }
+            }}
           >
             {authorUser?.name || 'DEV Contributor'}
           </h3>

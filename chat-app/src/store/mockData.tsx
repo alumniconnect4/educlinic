@@ -14,6 +14,9 @@ interface StoreState {
   currentUser: User | null;
   users: User[];
   posts: Post[];
+  setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+  upsertPost: (post: Post) => void;
+  upsertPosts: (posts: Post[]) => void;
   chats: Chat[];
   isLoading: boolean;
   addPost: (
@@ -720,27 +723,57 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const toggleLike = async (postId: number) => {
-    try {
-      setPosts(
-        posts.map((post) => {
-          if (post.id === postId) {
-            const currentlyLiked = post.isLiked;
-            const count = post._count?.likes ?? 0;
-            return {
-              ...post,
-              isLiked: !currentlyLiked,
-              _count: {
-                ...post._count,
-                likes: currentlyLiked ? count - 1 : count + 1,
-                comments: post._count?.comments ?? 0,
-              },
-            };
-          }
-          return post;
-        })
-      );
+  const upsertPost = useCallback((post: Post) => {
+    setPosts((prev) => {
+      const idx = prev.findIndex((p) => p.id === post.id);
+      if (idx !== -1) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], ...post };
+        return next;
+      }
+      return [post, ...prev];
+    });
+  }, []);
 
+  const upsertPosts = useCallback((incomingPosts: Post[]) => {
+    setPosts((prev) => {
+      const incomingMap = new Map(incomingPosts.map((p) => [p.id, p]));
+      const updated = prev.map((p) => {
+        const inc = incomingMap.get(p.id);
+        if (inc) {
+          incomingMap.delete(p.id);
+          return { ...p, ...inc };
+        }
+        return p;
+      });
+      return [...updated, ...Array.from(incomingMap.values())];
+    });
+  }, []);
+
+  const toggleLike = async (postId: number) => {
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id === postId) {
+          const currentlyLiked = post.isLiked ?? false;
+          const count = post._count?.likes ?? post.likes ?? 0;
+          const nextLiked = !currentlyLiked;
+          const nextCount = currentlyLiked ? Math.max(0, count - 1) : count + 1;
+          return {
+            ...post,
+            isLiked: nextLiked,
+            _count: {
+              ...post._count,
+              likes: nextCount,
+              comments: post._count?.comments ?? post.comments?.length ?? 0,
+            },
+            likes: nextCount,
+          };
+        }
+        return post;
+      })
+    );
+
+    try {
       const res = await fetch(`${API_BASE}/posts/${postId}/like`, {
         method: 'POST',
         credentials: 'include',
@@ -748,17 +781,51 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       if (!res.ok) {
-        const postsRes = await fetch(`${API_BASE}/posts`, {
-          credentials: 'include',
-          headers: getAuthHeaders(),
-        });
-        if (postsRes.ok) {
-          const postsData = await postsRes.json();
-          setPosts(postsData.posts || postsData);
-        }
+        setPosts((prev) =>
+          prev.map((post) => {
+            if (post.id === postId) {
+              const currentlyLiked = post.isLiked ?? false;
+              const count = post._count?.likes ?? post.likes ?? 0;
+              const revertedLiked = !currentlyLiked;
+              const revertedCount = currentlyLiked ? Math.max(0, count - 1) : count + 1;
+              return {
+                ...post,
+                isLiked: revertedLiked,
+                _count: {
+                  ...post._count,
+                  likes: revertedCount,
+                  comments: post._count?.comments ?? post.comments?.length ?? 0,
+                },
+                likes: revertedCount,
+              };
+            }
+            return post;
+          })
+        );
       }
     } catch (err) {
-      console.error(err);
+      console.error('Failed to toggle post like:', err);
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id === postId) {
+            const currentlyLiked = post.isLiked ?? false;
+            const count = post._count?.likes ?? post.likes ?? 0;
+            const revertedLiked = !currentlyLiked;
+            const revertedCount = currentlyLiked ? Math.max(0, count - 1) : count + 1;
+            return {
+              ...post,
+              isLiked: revertedLiked,
+              _count: {
+                ...post._count,
+                likes: revertedCount,
+                comments: post._count?.comments ?? post.comments?.length ?? 0,
+              },
+              likes: revertedCount,
+            };
+          }
+          return post;
+        })
+      );
     }
   };
 
@@ -992,6 +1059,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({
         currentUser,
         users,
         posts,
+        setPosts,
+        upsertPost,
+        upsertPosts,
         chats,
         isLoading,
         addPost,
